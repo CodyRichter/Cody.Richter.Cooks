@@ -1,0 +1,97 @@
+Resources:
+  RecipeTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: recipes
+      AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: name
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  CreateRecipeLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/recipes/create_recipe
+      Handler: create_recipe.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref RecipeTable
+      FunctionName: CreateRecipeLambda
+      Events:
+        ApiGateway:
+          Type: Api
+          Properties:
+            Path: /recipes/create
+            Method: POST
+
+  GetRecipeLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/recipes/get_recipe
+      Handler: get_recipe.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref RecipeTable
+      FunctionName: GetRecipeLambda
+      Events:
+        ApiGateway:
+          Type: Api
+          Properties:
+            Path: /recipes/{id}
+            Method: GET
+
+  DeleteRecipeLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/recipes/delete_recipe
+      Handler: delete_recipe.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref RecipeTable
+      FunctionName: DeleteRecipeLambda
+      Events:
+        ApiGateway:
+          Type: Api
+          Properties:
+            Path: /recipes/{id}
+            Method: DELETE
+
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          title: "API Gateway for Lambdas"
+        paths:
+          /recipes/create:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateRecipeLambda.Arn}/invocations
+              responses: {}
+          /recipes/{id}:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetRecipeLambda.Arn}/invocations
+              responses: {}
+            delete:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteRecipeLambda.Arn}/invocations
+              responses: {}
+      EndpointConfiguration:
+        Type: REGIONAL
