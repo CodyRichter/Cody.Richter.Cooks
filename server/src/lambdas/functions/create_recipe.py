@@ -3,9 +3,16 @@ from constants import table
 
 def lambda_handler(event, context):
     # Parse the HTTP input payload
-    body = json.loads(event['body'])
-    recipe_name = body['name']
-    recipe_payload = body['payload']
+    try:
+        body = json.loads(event['body'])
+        recipe_name = body['name']
+        recipe_payload = body['payload']
+    except (KeyError, json.JSONDecodeError) as e: 
+        response = {
+            'statusCode': 400,
+            'body': json.dumps({'detail': 'Unable to parse request body.'})
+        }
+        return response
     
     # Add the recipe to DynamoDB
     recipe = {
