@@ -7,3 +7,9 @@
 2. Configure the AWS CLI with your credentials
 
 3. Deploy with the `python deploy_stack.py` script (run from root of `server` folder)
+
+## Future Work
+
+1. Create Congito authorizer for API
+
+2. Implement full lambda functionality

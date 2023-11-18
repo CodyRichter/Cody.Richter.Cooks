@@ -7,10 +7,7 @@ def lambda_handler(event, context):
     try:
         recipe_name = event['queryStringParameters'].get('name')
     except:
-        return {
-            'statusCode': 400,
-            'body': json.dumps({'error': 'No recipe name provided'})
-        }
+        recipe_name = None
 
     if recipe_name:
         # Get the recipe by name
