@@ -4,7 +4,13 @@ from constants import table
 
 def lambda_handler(event, context):
     # Get the recipe name from the query params
-    recipe_name = event['queryStringParameters'].get('name')
+    try:
+        recipe_name = event['queryStringParameters'].get('name')
+    except:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': 'No recipe name provided'})
+        }
 
     if recipe_name:
         # Get the recipe by name

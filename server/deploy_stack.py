@@ -20,72 +20,12 @@ apigateway_client = boto3.client('apigateway')
 s3_client = boto3.client('s3', region_name=aws_region)
 sts_client = boto3.client('sts')
 iam_client = boto3.client('iam')
+logs_client = boto3.client('logs')
 dynamodb_client = boto3.client('dynamodb', region_name=aws_region)
 
 
 # Get AWS account ID
 aws_account_id = sts_client.get_caller_identity()['Account']
-
-
-# --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
-#                   AWS IAM Setup
-# --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
-
-role_name = 'CodyRichterCooksLambdaRole'
-
-assume_role_policy_document = json.dumps({
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "lambda.amazonaws.com",
-          "edgelambda.amazonaws.com"
-        ]
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-})
-
-try:
-    existing_role = iam_client.get_role(RoleName=role_name)
-    role_exists = True
-except iam_client.exceptions.NoSuchEntityException:
-    role_exists = False
-
-if role_exists:
-    # If the role exists, update its assume role policy
-    iam_client.update_assume_role_policy(
-        RoleName=role_name,
-        PolicyDocument=assume_role_policy_document,
-    )
-    print(f"IAM Role '{role_name}' assume role policy updated successfully!")
-else:
-    # If the role doesn't exist, create it
-    response = iam_client.create_role(
-        RoleName=role_name,
-        AssumeRolePolicyDocument=str(assume_role_policy_document),
-        Description='Role for Lambdas in CodyRichterCooks'
-    )
-    print(f"IAM Role '{role_name}' created successfully!")
-
-
-iam_client.attach_role_policy(
-    RoleName=role_name,
-    PolicyArn='arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-)
-
-iam_client.attach_role_policy(
-    RoleName=role_name,
-    PolicyArn='arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
-)
-
-iam_client.attach_role_policy(
-    RoleName=role_name,
-    PolicyArn='arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
-)
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 #                   AWS DynamoDB Setup
@@ -166,6 +106,22 @@ for lambda_operation in lambda_operations:
         )
         print(f"Lambda function {function_name} created successfully!")
 
+    # Name of the log group associated with your Lambda function
+    log_group_name = f'/aws/lambda/{function_name}'
+    try:
+        logs_client.create_log_group(logGroupName=log_group_name)
+        print(f"Log group '{log_group_name}' created.")
+    except logs_client.exceptions.ResourceAlreadyExistsException:
+        print(f"Log group '{log_group_name}' already exists.")
+
+    retention_days = 7
+    logs_client.put_retention_policy(
+        logGroupName=log_group_name,
+        retentionInDays=retention_days
+    )
+    print(f'Lambda function {function_name} log retention policy set to {retention_days} days')
+
+
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 #                   AWS API Gateway Setup
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
@@ -181,13 +137,16 @@ rest_api_id = None
 for api in existing_rest_apis['items']:
     if api['name'] == api_name:
         rest_api_id = api['id']
-        print(f"API Gateway {api_name} exists, skipping creation...")
+        print(f"API Gateway {api_name} exists with id {rest_api_id}, skipping creation...")
         break
 
-if not rest_api_id:
+if rest_api_id is None:
     # If the API Gateway doesn't exist, create it
     response = apigateway_client.create_rest_api(
         name=api_name,
+        endpointConfiguration={
+            'types': ['REGIONAL']
+        },
         description='CodyRichterCooks API Gateway'
     )
     print(f"API Gateway {api_name} created successfully!")
@@ -199,7 +158,7 @@ resources = apigateway_client.get_resources(restApiId=rest_api_id)
 root_resource_id = next(res['id'] for res in resources['items'] if res['path'] == '/')
 
 # Try to find the resource by name, otherwise create it
-recipe_resource_id = next((resource['id'] for resource in resources['items'] if resource['pathPart'] == resource_name), None)
+recipe_resource_id = next((resource['id'] for resource in resources['items'] if resource and 'pathPart' in resource and resource['pathPart'] == resource_name), None)
 if not recipe_resource_id:
     response = apigateway_client.create_resource(
         restApiId=rest_api_id,
@@ -236,7 +195,7 @@ for api_operation in lambda_operations:
             httpMethod=api_operation["method"],
             type='AWS_PROXY',
             integrationHttpMethod="POST",
-            uri=f"arn:aws:apigateway:{aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{aws_region}:{aws_account_id}:function:{api_operation['name']}/invocations"
+            uri=f"arn:aws:apigateway:{aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{aws_region}:{aws_account_id}:function:{api_operation['name']}-recipe-lambda/invocations"
         )
         print(f'API Gateway method {api_operation["method"]} created successfully!')
 
@@ -246,6 +205,89 @@ deployment_response = apigateway_client.create_deployment(
     stageName='Prod'
 )
 print(f'API Gateway {api_name} deployed successfully!')
+
+
+
+# --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+#                   AWS IAM Setup
+# --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+
+role_name = 'CodyRichterCooksLambdaRole'
+
+assume_role_policy_document = json.dumps({
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "lambda.amazonaws.com",
+          "edgelambda.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+})
+
+try:
+    existing_role = iam_client.get_role(RoleName=role_name)
+    role_exists = True
+except iam_client.exceptions.NoSuchEntityException:
+    role_exists = False
+
+if role_exists:
+    # If the role exists, update its assume role policy
+    iam_client.update_assume_role_policy(
+        RoleName=role_name,
+        PolicyDocument=assume_role_policy_document,
+    )
+    print(f"IAM Role '{role_name}' assume role policy updated successfully!")
+else:
+    # If the role doesn't exist, create it
+    response = iam_client.create_role(
+        RoleName=role_name,
+        AssumeRolePolicyDocument=str(assume_role_policy_document),
+        Description='Role for Lambdas in CodyRichterCooks'
+    )
+    print(f"IAM Role '{role_name}' created successfully!")
+
+iam_client.attach_role_policy(
+    RoleName=role_name,
+    PolicyArn='arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+)
+
+
+iam_client.attach_role_policy(
+    RoleName=role_name,
+    PolicyArn='arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
+)
+
+iam_client.attach_role_policy(
+    RoleName=role_name,
+    PolicyArn='arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+)
+
+iam_client.attach_role_policy(
+    RoleName=role_name,
+    PolicyArn='arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess'
+)
+
+for api_operation in lambda_operations:
+    function_name = f'{api_operation["name"]}-recipe-lambda'
+    # Create permission for API Gateway to invoke the Lambda function
+    try:
+        lambda_client.add_permission(
+            FunctionName=function_name,
+            StatementId=f'apigateway-invoke-{api_operation["name"]}',
+            Action='lambda:InvokeFunction',
+            Principal='apigateway.amazonaws.com',
+            SourceArn=f'arn:aws:execute-api:{aws_region}:{aws_account_id}:{rest_api_id}/*/{api_operation["method"]}/{resource_name}'
+        )
+        print(f'Lambda function {function_name} permission for API Gateway created successfully!')
+    except lambda_client.exceptions.ResourceConflictException:
+        print(f'Lambda function {function_name} permission for API Gateway exists, skipping creation...')
+
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 #                   Cleanup
