@@ -1,8 +1,13 @@
-import React from 'react';
-import { AppShell, Group, Burger, Skeleton } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { Routes, Route } from 'react-router-dom';
-import Home from 'src/routes/home/Home';
+import { Route, Routes } from "react-router-dom";
+
+import { AppShell } from "@mantine/core";
+import Home from "src/routes/Home/Home";
+import NavigationHeader from "./common/components/Navigation/Header/NavigationHeader";
+import NavigationSidebar from "./common/components/Navigation/Sidebar/NavigationSidebar";
+import React from "react";
+import Recipe from "./routes/Recipe/RecipePage";
+import RecipePage from "./routes/Recipe/RecipePage";
+import { useDisclosure } from "@mantine/hooks";
 
 function App() {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -13,29 +18,23 @@ function App() {
       header={{ height: { base: 60, md: 70, lg: 80 } }}
       navbar={{
         width: { base: 200, md: 300, lg: 400 },
-        breakpoint: 'sm',
+        breakpoint: "sm",
         collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
-          <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
-          <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
-          <div style={{ flex: 1 }} />
-        </Group>
+        <NavigationHeader
+          {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }}
+        />
       </AppShell.Header>
       <AppShell.Navbar p="md">
-        Navbar
-        {Array(15)
-          .fill(0)
-          .map((_, index) => (
-            <Skeleton key={index} h={28} mt="sm" animate={false} />
-          ))}
+        <NavigationSidebar />
       </AppShell.Navbar>
       <AppShell.Main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/recipes/:recipeId" element={<RecipePage />} />
         </Routes>
       </AppShell.Main>
     </AppShell>

@@ -18,7 +18,7 @@ class ServerlessStack(Stack):
             function_name='CookingEventLambda',
             runtime=_lambda.Runtime.PYTHON_3_9,
             code=_lambda.Code.from_asset('../src'),
-            handler='handler.handle_event',
+            handler='app.handler.handle_event',
         )
 
         recipe_table = ddb.Table(

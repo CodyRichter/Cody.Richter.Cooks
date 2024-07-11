@@ -23,6 +23,10 @@
 
    - If you run this command after the repository is set up, make sure that your virutal environment is activated first! (`source .venv/bin/activate`)
 
+## Running Test Cases
+
+From the `src/` directory, run the following command to run Python Tests: `python3 -m pytest`
+
 ## Future Work
 
 1. Create Congito authorizer for API

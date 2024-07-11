@@ -1,10 +1,12 @@
 import json
 from typing import Optional
 
-def http_200(body: str):
+from app.constants import DecimalEncoder
+
+def http_200(body):
     return {
         'statusCode': 200,
-        'body': json.dumps(body)
+        'body': json.dumps(body, cls=DecimalEncoder)
     }
 
 def http_400(error_message: str):
