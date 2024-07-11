@@ -6,6 +6,8 @@ from moto import mock_aws
 import pytest
 from decimal import Decimal
 
+from app.constants import DecimalEncoder
+
 test_recipe_data = {
     'id': '1',
     'title': 'Test Recipe',
@@ -51,7 +53,6 @@ def aws_client(aws_credentials):
         yield boto3.client("dynamodb", region_name="us-east-1")
 
 
-
 @pytest.fixture
 def mock_recipes_table(aws_resource):
         aws_resource.create_table(
@@ -65,37 +66,11 @@ def mock_recipes_table(aws_resource):
 
         yield table
 
-# When no recipe ID is provided, a list of all recipe names should be returned
-def test_get_all_recipes(mock_recipes_table):
-    mock_recipes_table.put_item(Item=test_recipe_data)
-    response = handle_event({'httpMethod': 'GET'}, {})
-    
-    assert response['statusCode'] == 200
-    body = json.loads(response['body'])
-    assert 'recipes' in body
-    assert len(body['recipes']) == 1
-    assert body['recipes'][0] == 'Test Recipe'
-
-# When a recipe ID is provided, the recipe data should be returned
-def test_get_recipe(mock_recipes_table):
-    mock_recipes_table.put_item(Item=test_recipe_data)
-    response = handle_event({'httpMethod': 'GET', 'queryStringParameters': {'id': '1'}}, {})
-    
-    assert response['statusCode'] == 200
-    body = json.loads(response['body'])
-    assert 'recipe' in body
-    assert body['recipe']['id'] == '1'
-    assert body['recipe']['title'] == 'Test Recipe'
-    assert body['recipe']['description'] == 'This is a test recipe'
-    assert body['recipe']['ingredients'] == test_recipe_data['ingredients']
-    assert body['recipe']['instructions'] == test_recipe_data['instructions']
-
-
-# When an invalid recipe ID is provided, a 404 response should be returned
-def test_get_invalid_recipe(mock_recipes_table):
-    mock_recipes_table.put_item(Item=test_recipe_data)
-    response = handle_event({'httpMethod': 'GET', 'queryStringParameters': {'id': '2'}}, {})
-    
-    assert response['statusCode'] == 404
-    body = json.loads(response['body'])
-    assert body['detail'] == 'Recipe not found'
+def test_put_recipe(mock_recipes_table):
+    test_create_recipe_request = {
+        'httpMethod': 'POST',
+        'path': '/recipe',
+        'body': json.dumps(test_recipe_data, cls=DecimalEncoder)
+    }
+    response = handle_event(test_create_recipe_request, None)
+    assert response['statusCode'] == 201

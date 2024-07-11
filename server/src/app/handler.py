@@ -1,4 +1,4 @@
-from app.network.responses import http_200, http_404, http_405, http_500
+from app.network.responses import http_200, http_201, http_404, http_405, http_500
 from app.methods.get_recipe import get_recipe
 from app.methods.list_recipes import list_recipes
 import traceback
@@ -35,7 +35,7 @@ def handle_event(event, context):
         # AuthN/AuthZ is required for this method. This is handled by the API Gateway.
         # We can assume that if the request reaches this point, the user is authorized to perform the action.
         if (event['httpMethod'] == 'POST'):
-            return http_200({
+            return http_201({
                 'message': 'Sample Event Received!',
                 'input': event,    
             })
