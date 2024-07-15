@@ -9,14 +9,13 @@ from decimal import Decimal
 from app.constants import DecimalEncoder
 
 test_recipe_data = {
-    'id': '1',
     'title': 'Test Recipe',
     'description': 'This is a test recipe',
     'ingredients': [
         {
             'id': '1',
             'name': 'Test Ingredient',
-            'quantity': Decimal(1.0),
+            'quantity': '1',
             'unit': 'cup',
             'subtext': 'Optional subtext'
         }
@@ -24,7 +23,7 @@ test_recipe_data = {
     'instructions': [
         {
             'id': '1',
-            'step_number': Decimal(0),
+            'step_number': '0',
             'title': 'Step 1',
             'description': 'This is step 1'
         }
@@ -66,7 +65,7 @@ def mock_recipes_table(aws_resource):
 
         yield table
 
-def test_put_recipe(mock_recipes_table):
+def test_put_new_recipe(mock_recipes_table):
     test_create_recipe_request = {
         'httpMethod': 'POST',
         'path': '/recipe',
@@ -74,3 +73,32 @@ def test_put_recipe(mock_recipes_table):
     }
     response = handle_event(test_create_recipe_request, None)
     assert response['statusCode'] == 201
+    parsed_body = json.loads(response['body'])
+    assert 'recipe' in parsed_body
+    assert 'id' in parsed_body['recipe']
+
+
+def test_put_invalid_recipe(mock_recipes_table):
+    test_create_recipe_request = {
+        'httpMethod': 'POST',
+        'path': '/recipe',
+        'body': json.dumps({'invalid': 'data'}, cls=DecimalEncoder)
+    }
+    response = handle_event(test_create_recipe_request, None)
+    assert response['statusCode'] == 400
+
+def test_update_recipe(mock_recipes_table):
+    test_recipe_with_id = {**test_recipe_data, **{'id': '123'}}
+
+    test_create_recipe_request = {
+        'httpMethod': 'POST',
+        'path': '/recipe',
+        'body': json.dumps(test_recipe_with_id, cls=DecimalEncoder)
+    }
+
+    response = handle_event(test_create_recipe_request, None)
+    assert response['statusCode'] == 201
+    parsed_body = json.loads(response['body'])
+    assert 'recipe' in parsed_body
+    assert 'id' in parsed_body['recipe']
+    assert parsed_body['recipe']['id'] == '123'

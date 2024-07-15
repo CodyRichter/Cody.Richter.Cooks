@@ -13,7 +13,7 @@
    - One-time local setup steps:
      1. Create the venv: `python -m venv .venv`
      2. Activate the venv: `source .venv/bin/activate`
-     3. Install requirements: `pip install -r requirements.txt`
+     3. Install requirements: `pip install -r ../src/requirements.txt -r requirements.txt`
 
 5. If this AWS account has not been used with CDK before, run `cdk bootstrap`
 

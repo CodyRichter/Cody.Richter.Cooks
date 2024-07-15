@@ -1,11 +1,12 @@
 from aws_cdk import (
-    # Duration,
+    Duration,
     Stack,
     aws_lambda as _lambda,
     aws_dynamodb as ddb,
     aws_apigateway as apigw,
     aws_cognito as cognito,
 )
+from aws_cdk.aws_lambda_python_alpha import PythonFunction, PythonLayerVersion, BundlingOptions
 from constructs import Construct
 
 class ServerlessStack(Stack):
@@ -13,12 +14,25 @@ class ServerlessStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        lambda_function = _lambda.Function(
+        lambda_layer = PythonLayerVersion(
+            self, 'CookingEventLayer',
+            entry='../src',
+            layer_version_name='CookingEventLayer',
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_9],
+        )
+
+        lambda_function = PythonFunction(
             self, 'CookingEventLambda',
             function_name='CookingEventLambda',
             runtime=_lambda.Runtime.PYTHON_3_9,
-            code=_lambda.Code.from_asset('../src'),
-            handler='app.handler.handle_event',
+            entry='../src',
+            index='app/handler.py',
+            handler='handle_event',
+            timeout=Duration.seconds(10),
+            layers=[lambda_layer],
+            bundling=BundlingOptions(
+                asset_excludes=[".venv", ".gitignore", '.pytest_cache', 'tests'],
+            )
         )
 
         recipe_table = ddb.Table(
@@ -42,12 +56,18 @@ class ServerlessStack(Stack):
             prevent_user_existence_errors=True,
         )
 
+        user_pool.add_domain(
+            "CookingUserPoolDomain",
+            cognito_domain=cognito.CognitoDomainOptions(
+                domain_prefix="cody-richter-cooks",
+            ),
+        )
+
         gateway = apigw.LambdaRestApi(
             self, 'CookingEventGateway',
             rest_api_name='CookingEventGateway',
             handler=lambda_function,
             proxy=False,
-            
         )
 
         authorizer = apigw.CognitoUserPoolsAuthorizer(

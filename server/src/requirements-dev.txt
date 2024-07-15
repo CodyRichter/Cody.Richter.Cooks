@@ -1,0 +1,3 @@
+pytest==6.2.5
+moto[lambda, dynamodb]==5.0.11
+aws-cdk.aws-lambda-python-alpha

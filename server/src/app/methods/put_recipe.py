@@ -1,9 +1,11 @@
 from app.constants import get_table
+from app.data.model.Recipe import Recipe
 
-def put_recipe(name: str, recipe: dict):
+def put_recipe(recipe: Recipe):
     table = get_table()
-    recipe = {
-            'name': name,
-            'recipe': recipe
-        }
-    table.put_item(Item=recipe)
+    created_recipe = put_recipe_internal(table, recipe)
+    return {"recipe": created_recipe}
+
+def put_recipe_internal(table, recipe: Recipe):
+    table.put_item(Item=recipe.model_dump())
+    return recipe.model_dump()

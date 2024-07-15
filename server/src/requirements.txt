@@ -1,2 +1,1 @@
 pydantic
-moto[lambda, dynamodb]==5.0.11
