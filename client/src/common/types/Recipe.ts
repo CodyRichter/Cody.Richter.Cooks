@@ -3,7 +3,7 @@ import InstructionStep from "./InstructionStep";
 
 export default interface Recipe {
   id: string;
-  name: string;
+  title: string;
   description: string;
   ingredients: Ingredient[];
   instructions: InstructionStep[];

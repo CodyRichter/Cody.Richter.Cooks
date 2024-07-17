@@ -9,10 +9,9 @@ def list_recipes():
 
 
 def list_recipes_internal(table):
-    response = table.scan(ProjectionExpression='title')
+    response = table.scan(ProjectionExpression='id,title')
     
     if not is_defined(response, ['Items']):
         return []
     
-    recipes = [item['title'] for item in response['Items']]
-    return recipes
+    return response['Items']

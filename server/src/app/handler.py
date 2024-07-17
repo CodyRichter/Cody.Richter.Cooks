@@ -34,8 +34,8 @@ def handle_event(event, context):
                 try:
                     recipes = list_recipes()
                     return http_200(recipes)
-                except e:
-                    print(f"Interal Error: {traceback.format_exc()}")
+                except Exception as e:
+                    print(f"Interal Error: {traceback.format_exc(e)}")
                     return http_500("Internal Server Error. Please try again later. Code: LR-001")
 
 

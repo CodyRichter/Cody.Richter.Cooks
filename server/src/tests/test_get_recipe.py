@@ -74,7 +74,9 @@ def test_get_all_recipes(mock_recipes_table):
     body = json.loads(response['body'])
     assert 'recipes' in body
     assert len(body['recipes']) == 1
-    assert body['recipes'][0] == 'Test Recipe'
+    assert body['recipes'][0]['id'] == '1'
+    assert body['recipes'][0]['title'] == 'Test Recipe'
+
 
 # When a recipe ID is provided, the recipe data should be returned
 def test_get_recipe(mock_recipes_table):

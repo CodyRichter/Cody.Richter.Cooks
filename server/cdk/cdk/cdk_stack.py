@@ -68,6 +68,11 @@ class ServerlessStack(Stack):
             rest_api_name='CookingEventGateway',
             handler=lambda_function,
             proxy=False,
+            default_cors_preflight_options={
+                "allow_origins": apigw.Cors.ALL_ORIGINS,
+                "allow_methods": apigw.Cors.ALL_METHODS,
+                "allow_headers": apigw.Cors.DEFAULT_HEADERS,
+            }
         )
 
         authorizer = apigw.CognitoUserPoolsAuthorizer(
@@ -81,7 +86,7 @@ class ServerlessStack(Stack):
         # Add GET method, no authorization required
         get_method = recipe.add_method(
             'GET',
-            authorization_type=apigw.AuthorizationType.NONE
+            authorization_type=apigw.AuthorizationType.NONE,
         )
 
         # Add POST method, authorization is required

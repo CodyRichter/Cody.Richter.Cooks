@@ -1,8 +1,9 @@
-import { ActionIcon, Burger, Group } from "@mantine/core";
+import { ActionIcon, Burger, Group, Text } from "@mantine/core";
 
 import { IconUser } from "@tabler/icons-react";
 import LoginDialog from "./Auth/LoginDialog";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface NavigationHeaderProps {
   mobileOpened: boolean;
@@ -18,10 +19,11 @@ export default function NavigationHeader({
   toggleDesktop,
 }: NavigationHeaderProps) {
   const [loginDialogOpened, setLoginDialogOpened] = React.useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
-      <Group h="100%" px="md">
+      <Group h="100%" px="md" justify="space-between" align="center">
         <Burger
           opened={mobileOpened}
           onClick={toggleMobile}
@@ -34,7 +36,19 @@ export default function NavigationHeader({
           visibleFrom="sm"
           size="sm"
         />
-        <div style={{ flex: 1 }} />
+
+        <Text
+          ta="center"
+          size="xl"
+          fw={700}
+          variant="gradient"
+          gradient={{ from: "blue", to: "cyan", deg: 90 }}
+          onClick={() => navigate("/")}
+          style={{ cursor: "pointer" }}
+        >
+          Cody Richter Cooks
+        </Text>
+
         <ActionIcon
           variant="subtle"
           size="lg"

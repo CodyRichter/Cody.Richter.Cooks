@@ -5,7 +5,6 @@ import Home from "src/routes/Home/Home";
 import NavigationHeader from "./common/components/Navigation/Header/NavigationHeader";
 import NavigationSidebar from "./common/components/Navigation/Sidebar/NavigationSidebar";
 import React from "react";
-import Recipe from "./routes/Recipe/RecipePage";
 import RecipePage from "./routes/Recipe/RecipePage";
 import { useDisclosure } from "@mantine/hooks";
 
