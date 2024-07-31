@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://codyrichter.github.io/cody.richter.cooks",
+  "homepage": "https://codyrichter.github.io/and/cooks",
   "dependencies": {
     "@aws-amplify/ui-react": "^6.1.14",
     "@mantine/core": "^7.2.1",
