@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://codyrichter.github.io/and/cooks",
+  "homepage": "https://codyrichter.github.io/cody.richter.cooks",
   "dependencies": {
     "@aws-amplify/ui-react": "^6.1.14",
     "@mantine/core": "^7.2.1",
@@ -57,6 +57,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-transform-private-property-in-object": "^7.24.7",
     "gh-pages": "^6.1.1"
   }
 }

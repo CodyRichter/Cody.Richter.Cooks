@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Divider,
   Grid,
   NumberInput,
   Paper,
@@ -9,7 +8,6 @@ import {
 } from "@mantine/core";
 
 import { IconTrash } from "@tabler/icons-react";
-import Ingredient from "src/common/types/Ingredient";
 import InstructionStep from "src/common/types/InstructionStep";
 import React from "react";
 import Recipe from "src/common/types/Recipe";

@@ -1,11 +1,4 @@
-import {
-  ActionIcon,
-  Divider,
-  Grid,
-  NumberInput,
-  Paper,
-  TextInput,
-} from "@mantine/core";
+import { ActionIcon, Grid, NumberInput, Paper, TextInput } from "@mantine/core";
 
 import { IconTrash } from "@tabler/icons-react";
 import Ingredient from "src/common/types/Ingredient";

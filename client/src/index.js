@@ -6,7 +6,7 @@ import { MantineProvider, createTheme } from "@mantine/core";
 
 import App from "./App";
 import { AuthProvider } from "src/common/contexts/AuthContext/AuthContext";
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 import { Notifications } from "@mantine/notifications";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -19,11 +19,11 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <MantineProvider theme={theme}>
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <App />
       </AuthProvider>
       <Notifications autoClose={4000} position="top-center" />
-    </BrowserRouter>
+    </HashRouter>
   </MantineProvider>
 );
