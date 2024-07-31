@@ -11,6 +11,7 @@ import traceback
 # Main handler function for all Recipe interactions
 # This function will handle the lambda-API gateway integration
 def handle_event(event, context):
+    print(f"Received event: {event} with context: {context}")
     try:
         # GET method will be used to retrieve recipe(s)
         # No AuthN/AuthZ is required for this method

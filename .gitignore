@@ -1,10 +1,12 @@
 build/
 node_modules/
 .venv/
+htmlcov/
 *.swp
 package-lock.json
 __pycache__
 .pytest_cache
+.coverage
 .venv
 *.egg-info
 
