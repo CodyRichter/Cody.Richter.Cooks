@@ -1,7 +1,6 @@
-from app.constants import get_table
+from app.constants import table
 
 def get_recipe(recipe_id: str):
-    table = get_table()
     recipe_data = get_recipe_internal(table, recipe_id)
     return {'recipe': recipe_data}
 

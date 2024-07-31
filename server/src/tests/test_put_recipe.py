@@ -1,8 +1,8 @@
 import os
+from moto import mock_aws  # THIS IMPORT MUST BE ABOVE ALL OTHERS IN ORDER TO MOCK AWS SERVICES
 from app.handler import handle_event
 import json
 import boto3
-from moto import mock_aws
 import pytest
 from decimal import Decimal
 

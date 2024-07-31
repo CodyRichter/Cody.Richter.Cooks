@@ -1,8 +1,7 @@
-from app.constants import get_table
+from app.constants import table
 from app.data.model.Recipe import Recipe
 
 def put_recipe(recipe: Recipe):
-    table = get_table()
     created_recipe = put_recipe_internal(table, recipe)
     return {"recipe": created_recipe}
 

@@ -1,8 +1,8 @@
 import os
+from moto import mock_aws  # THIS IMPORT MUST BE ABOVE ALL OTHERS IN ORDER TO MOCK AWS SERVICES
 from app.handler import handle_event
 import json
 import boto3
-from moto import mock_aws
 import pytest
 from decimal import Decimal
 
@@ -29,6 +29,11 @@ test_recipe_data = {
     ]
 }
 
+@pytest.fixture(scope="session")
+def clear_default_boto3_session(): 
+    boto3.DEFAULT_SESSION = None
+
+
 @pytest.fixture(scope="function")
 def aws_credentials():
     """Mocked AWS Credentials for moto."""
@@ -46,13 +51,6 @@ def aws_resource(aws_credentials):
 
 
 @pytest.fixture
-def aws_client(aws_credentials):
-    with mock_aws():
-        yield boto3.client("dynamodb", region_name="us-east-1")
-
-
-
-@pytest.fixture
 def mock_recipes_table(aws_resource):
         aws_resource.create_table(
             AttributeDefinitions=[{"AttributeName": "id", "AttributeType": "S"}],
@@ -62,7 +60,6 @@ def mock_recipes_table(aws_resource):
         )
         table = aws_resource.Table("RecipeTable")
         table.wait_until_exists()
-
         yield table
 
 # When no recipe ID is provided, a list of all recipe names should be returned
