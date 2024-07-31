@@ -1,4 +1,4 @@
-import { NavLink, Skeleton, Text } from "@mantine/core";
+import { Container, NavLink, Skeleton, Text } from "@mantine/core";
 import React, { useEffect } from "react";
 
 import { BASE_URL } from "src/common/network/constants";
@@ -61,7 +61,7 @@ export default function NavigationSidebar() {
       {networkStatus.isLoading && <Skeleton h={28} mt="sm" animate={false} />}
       {networkStatus.error && <Skeleton h={28} mt="sm" animate={false} />}
       {!networkStatus.error && !networkStatus.isLoading && (
-        <>
+        <Container mt="sm" ml="xs">
           <Text fw={300} ml="sm" mb="md" size="xl">
             Recipes
           </Text>
@@ -76,7 +76,7 @@ export default function NavigationSidebar() {
               color="orange"
             />
           ))}
-        </>
+        </Container>
       )}
     </>
   );

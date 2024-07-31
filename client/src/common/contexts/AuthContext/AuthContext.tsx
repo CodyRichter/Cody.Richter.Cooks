@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getAuthToken, removeAuthToken, storeAuthToken } from "./authUtils";
 
+import { notifications } from "@mantine/notifications";
 import { validateCredentials } from "./authUtils";
 
 const AuthContext = createContext({
@@ -16,15 +17,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   function logout() {
     setIsAuthenticated(false);
     removeAuthToken();
+    notifications.show({
+      title: "Logout Successful",
+      message: "You have been logged out.",
+      color: "blue",
+    });
   }
 
   async function login(email: string, password: string) {
-    const authToken = validateCredentials(email, password);
-    if (authToken) {
-      storeAuthToken(authToken);
-      setIsAuthenticated(true);
-    } else {
-      logout();
+    try {
+      const authToken = validateCredentials(email, password);
+
+      if (authToken) {
+        storeAuthToken(authToken);
+        setIsAuthenticated(true);
+        notifications.show({
+          title: "Login Successful",
+          message: "Welcome back!",
+          color: "green",
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: "Unable to Login",
+        message: "Invalid email or password.",
+        color: "red",
+      });
+      return;
     }
   }
 

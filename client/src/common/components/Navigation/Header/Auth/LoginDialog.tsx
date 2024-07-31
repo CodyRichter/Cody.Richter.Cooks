@@ -10,6 +10,7 @@ import {
 
 import { PiChefHatThin } from "react-icons/pi";
 import React from "react";
+import { useAuth } from "src/common/contexts/AuthContext/AuthContext";
 
 interface LoginDialogProps {
   opened: boolean;
@@ -19,6 +20,14 @@ interface LoginDialogProps {
 export default function LoginDialog({ opened, close }: LoginDialogProps) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+
+  // Handle Auth Context
+  const { login } = useAuth();
+
+  function handleLogin() {
+    login(email, password);
+    close();
+  }
 
   return (
     <Modal opened={opened} onClose={close} title="Welcome Back!">
@@ -55,7 +64,11 @@ export default function LoginDialog({ opened, close }: LoginDialogProps) {
         <Button onClick={close} color="gray">
           Cancel
         </Button>
-        <Button color="blue" disabled={!email || !password}>
+        <Button
+          color="blue"
+          disabled={!email || !password}
+          onClick={handleLogin}
+        >
           Login
         </Button>
       </Group>
