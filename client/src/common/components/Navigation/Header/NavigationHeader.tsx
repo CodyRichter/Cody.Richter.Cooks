@@ -3,8 +3,8 @@ import { IconLogin, IconLogout, IconPencilPlus } from "@tabler/icons-react";
 
 import LoginDialog from "./Auth/LoginDialog";
 import React from "react";
-import { useAuth } from "src/common/contexts/AuthContext/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
+import { useRouter } from "next/router";
 
 interface NavigationHeaderProps {
   mobileOpened: boolean;
@@ -19,8 +19,9 @@ export default function NavigationHeader({
   toggleMobile,
   toggleDesktop,
 }: NavigationHeaderProps) {
+  const router = useRouter();
+
   const [loginDialogOpened, setLoginDialogOpened] = React.useState(false);
-  const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
 
   return (
@@ -47,7 +48,7 @@ export default function NavigationHeader({
             fw={700}
             variant="gradient"
             gradient={{ from: "blue", to: "cyan", deg: 90 }}
-            onClick={() => navigate("/")}
+            onClick={() => router.push("/")}
             style={{ cursor: "pointer" }}
           >
             Cody Richter Cooks
@@ -65,7 +66,7 @@ export default function NavigationHeader({
                   to: "rgba(45, 237, 237, 1)",
                   deg: 211,
                 }}
-                onClick={() => navigate("/new-recipe")}
+                onClick={() => router.push("/recipes/create")}
               >
                 Create Recipe
               </Button>
@@ -103,7 +104,6 @@ export default function NavigationHeader({
           </Group>
         </Grid.Col>
       </Grid>
-
       <LoginDialog
         opened={loginDialogOpened}
         close={() => setLoginDialogOpened(false)}

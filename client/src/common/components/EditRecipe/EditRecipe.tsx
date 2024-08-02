@@ -11,7 +11,7 @@ import EditRecipeIngredients from "./EditRecipeIngredients";
 import EditRecipeInstructions from "./EditRecipeInstructions";
 import { IconPlus } from "@tabler/icons-react";
 import React from "react";
-import Recipe from "src/common/types/Recipe";
+import Recipe from "@/common/types/Recipe";
 
 export default function EditRecipe({
   recipe,

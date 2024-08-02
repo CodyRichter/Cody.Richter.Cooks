@@ -8,9 +8,9 @@ import {
 } from "@mantine/core";
 
 import { IconTrash } from "@tabler/icons-react";
-import InstructionStep from "src/common/types/InstructionStep";
+import InstructionStep from "@/common/types/InstructionStep";
 import React from "react";
-import Recipe from "src/common/types/Recipe";
+import Recipe from "@/common/types/Recipe";
 
 interface EditRecipeInstructionsProps {
   recipe: Recipe;

@@ -1,7 +1,8 @@
-import React from 'react';
-import { Grid, Text } from '@mantine/core';
+import { Grid, Text } from "@mantine/core";
 
-function Home() {
+import React from "react";
+
+export default function Index() {
   return (
     <Grid>
       <Grid.Col>
@@ -14,5 +15,3 @@ function Home() {
     </Grid>
   );
 }
-
-export default Home;

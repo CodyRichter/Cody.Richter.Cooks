@@ -1,21 +1,22 @@
 import { Divider, Grid, Text } from "@mantine/core";
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { BASE_URL } from "src/common/network/constants";
-import Recipe from "src/common/types/Recipe";
-import RecipeIngredientCard from "./RecipeIngredientCard";
-import RecipeInstructionsCard from "./RecipeInstructionsCard";
-import RecipeLoadingSkeleton from "./RecipeLoadingSkeleton";
-import { useParams } from "react-router-dom";
+import { BASE_URL } from "@/common/network/constants";
+import Recipe from "@/common/types/Recipe";
+import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
+import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
+import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
+import { useRouter } from "next/router";
 
 const LOADING_NO_ERROR = { isLoading: true, error: "" };
 const LOADED_NO_ERROR = { isLoading: false, error: "" };
 
-function RecipePage() {
-  const { recipeId } = useParams();
+export default function ViewRecipe() {
+  const router = useRouter();
+  const recipe_id: string = router.query.recipe_id as string;
 
-  const [networkStatus, setNetworkStatus] = React.useState(LOADING_NO_ERROR);
-  const [rawRecipe, setRawRecipe] = React.useState<Recipe | null>(null);
+  const [networkStatus, setNetworkStatus] = useState(LOADING_NO_ERROR);
+  const [rawRecipe, setRawRecipe] = useState<Recipe | null>(null);
 
   // Memoize the recipe data
   const recipe = useMemo(() => {
@@ -24,11 +25,18 @@ function RecipePage() {
 
   useEffect(() => {
     setNetworkStatus(LOADING_NO_ERROR);
+    if (!recipe_id) {
+      setNetworkStatus({
+        isLoading: false,
+        error: "No recipe ID provided. Please try again later.",
+      });
+      return;
+    }
     fetch(
       BASE_URL +
         `/recipes?` +
         new URLSearchParams({
-          id: recipeId!,
+          id: recipe_id!,
         }),
       {
         method: "GET",
@@ -39,7 +47,6 @@ function RecipePage() {
           response
             .json()
             .then((data) => {
-              console.log("Recipe Load Success", data["recipe"]["title"]);
               setRawRecipe(data["recipe"] as Recipe);
               setNetworkStatus(LOADED_NO_ERROR);
             })
@@ -61,7 +68,7 @@ function RecipePage() {
             "An error occurred while fetching the recipe. Please try again later.",
         });
       });
-  }, [recipeId]);
+  }, [recipe_id]);
 
   return (
     <>
@@ -103,5 +110,3 @@ function RecipePage() {
     </>
   );
 }
-
-export default RecipePage;

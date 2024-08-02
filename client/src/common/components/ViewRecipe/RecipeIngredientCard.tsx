@@ -1,6 +1,6 @@
 import { Checkbox, Group, Stack, Text } from "@mantine/core";
 
-import Ingredient from "src/common/types/Ingredient";
+import Ingredient from "@/common/types/Ingredient";
 import React from "react";
 
 export default function RecipeIngredientCard({

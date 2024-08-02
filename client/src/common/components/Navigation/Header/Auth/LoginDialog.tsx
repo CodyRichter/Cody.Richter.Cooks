@@ -10,7 +10,7 @@ import {
 
 import { PiChefHatThin } from "react-icons/pi";
 import React from "react";
-import { useAuth } from "src/common/contexts/AuthContext/AuthContext";
+import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
 
 interface LoginDialogProps {
   opened: boolean;

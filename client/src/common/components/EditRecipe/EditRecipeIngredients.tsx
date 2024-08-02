@@ -1,9 +1,9 @@
 import { ActionIcon, Grid, NumberInput, Paper, TextInput } from "@mantine/core";
 
 import { IconTrash } from "@tabler/icons-react";
-import Ingredient from "src/common/types/Ingredient";
+import Ingredient from "@/common/types/Ingredient";
 import React from "react";
-import Recipe from "src/common/types/Recipe";
+import Recipe from "@/common/types/Recipe";
 
 interface EditRecipeIngredientsProps {
   recipe: Recipe;

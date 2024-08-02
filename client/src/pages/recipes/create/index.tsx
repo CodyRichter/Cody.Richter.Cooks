@@ -1,11 +1,11 @@
 import { Grid, Text } from "@mantine/core";
 
-import EditRecipe from "./EditRecipe/EditRecipe";
-import React from "react";
-import Recipe from "src/common/types/Recipe";
+import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
+import Recipe from "@/common/types/Recipe";
+import { useState } from "react";
 
-export default function CreateRecipePage() {
-  const [newRecipe, setNewRecipe] = React.useState<Recipe>({
+export default function CreateRecipe() {
+  const [newRecipe, setNewRecipe] = useState<Recipe>({
     id: crypto.randomUUID(),
     title: "",
     description: "",

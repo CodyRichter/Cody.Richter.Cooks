@@ -1,9 +1,9 @@
 import { Container, NavLink, Skeleton, Text } from "@mantine/core";
 import React, { useEffect } from "react";
 
-import { BASE_URL } from "src/common/network/constants";
+import { BASE_URL } from "@/common/network/constants";
 import { IconChevronRight } from "@tabler/icons-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/router";
 
 const LOADING_NO_ERROR = { isLoading: true, error: "" };
 const LOADED_NO_ERROR = { isLoading: false, error: "" };
@@ -14,7 +14,7 @@ interface RecipeListItem {
 }
 
 export default function NavigationSidebar() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [recipeList, setRecipeList] = React.useState<RecipeListItem[]>([]);
   const [networkStatus, setNetworkStatus] = React.useState({
@@ -32,7 +32,6 @@ export default function NavigationSidebar() {
           response
             .json()
             .then((data) => {
-              console.log("Recipe List Load Success", data["recipes"]);
               setRecipeList(data["recipes"] as RecipeListItem[]);
               setNetworkStatus(LOADED_NO_ERROR);
             })
@@ -69,7 +68,7 @@ export default function NavigationSidebar() {
           {recipeList.map((recipe) => (
             <NavLink
               key={`sidebar-recipe-${recipe.id}`}
-              onClick={() => navigate(`/recipes/${recipe.id}`)}
+              onClick={() => router.push(`/recipes/view/${recipe.id}`)}
               label={recipe.title}
               leftSection={<IconChevronRight />}
               variant="subtle"
