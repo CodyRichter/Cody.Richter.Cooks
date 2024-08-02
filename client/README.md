@@ -8,6 +8,12 @@
 
 3. `npm run dev`
 
+## Deployment
+
+This app is set up with CI/CD deployment via [Vercel](https://vercel.com). Login is done via Github integration.
+To ensure that the build is successful and that the app is able to deploy, the `npm run build`
+command must pass successfully.
+
 ## NextJS General Application Information
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
