@@ -14,22 +14,36 @@ class ServerlessStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        lambda_layer = PythonLayerVersion(
+        python_dependency_layer = PythonLayerVersion(
             self, 'CookingEventLayer',
             entry='../src',
             layer_version_name='CookingEventLayer',
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_9],
         )
 
-        lambda_function = PythonFunction(
-            self, 'CookingEventLambda',
-            function_name='CookingEventLambda',
+        get_event_lambda = PythonFunction(
+            self, 'CookingGetEventLambda',
+            function_name='CookingGetEventLambda',
             runtime=_lambda.Runtime.PYTHON_3_9,
             entry='../src',
-            index='app/handler.py',
+            index='app/get_event_handler.py',
             handler='handle_event',
             timeout=Duration.seconds(10),
-            layers=[lambda_layer],
+            layers=[python_dependency_layer],
+            bundling=BundlingOptions(
+                asset_excludes=[".venv", ".gitignore", '.pytest_cache', 'tests'],
+            )
+        )
+
+        post_event_lambda = PythonFunction(
+            self, 'CookingPostEventLambda',
+            function_name='CookingPostEventLambda',
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            entry='../src',
+            index='app/post_event_handler.py',
+            handler='handle_event',
+            timeout=Duration.seconds(10),
+            layers=[python_dependency_layer],
             bundling=BundlingOptions(
                 asset_excludes=[".venv", ".gitignore", '.pytest_cache', 'tests'],
             )
@@ -43,7 +57,8 @@ class ServerlessStack(Stack):
                 type=ddb.AttributeType.STRING
             )
         )
-        recipe_table.grant_read_write_data(lambda_function)
+        recipe_table.grant_read_data(get_event_lambda)
+        recipe_table.grant_read_write_data(post_event_lambda)
 
         user_pool = cognito.UserPool(
             self, "CookingUserPool",
@@ -63,11 +78,12 @@ class ServerlessStack(Stack):
             ),
         )
 
+
         gateway = apigw.LambdaRestApi(
             self, 'CookingEventGateway',
             rest_api_name='CookingEventGateway',
-            handler=lambda_function,
-            proxy=False,
+            handler=get_event_lambda,
+            proxy=True,
             default_cors_preflight_options={
                 "allow_origins": apigw.Cors.ALL_ORIGINS,
                 "allow_methods": apigw.Cors.ALL_METHODS,
@@ -84,14 +100,17 @@ class ServerlessStack(Stack):
         recipe = gateway.root.add_resource('recipes')
 
         # Add GET method, no authorization required
+        # This will call the Get Event Lambda
         get_method = recipe.add_method(
             'GET',
+            integration=apigw.LambdaIntegration(get_event_lambda),
             authorization_type=apigw.AuthorizationType.NONE,
         )
 
         # Add POST method, authorization is required
         post_method = recipe.add_method(
             'POST',
+            integration=apigw.LambdaIntegration(post_event_lambda),
             authorization_type=apigw.AuthorizationType.COGNITO,
             authorizer=authorizer,
         )
