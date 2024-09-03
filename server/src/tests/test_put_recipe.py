@@ -4,7 +4,6 @@ from app.post_event_handler import handle_event
 import json
 import boto3
 import pytest
-from decimal import Decimal
 
 from app.constants import DecimalEncoder
 

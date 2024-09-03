@@ -26,6 +26,7 @@ def handle_event(event, context):
                     return http_500("Internal Server Error. Please try again later. Code: GR-001")
 
                 if not is_defined(recipe, ['recipe']) or len(recipe['recipe']) == 0:
+                    print(f"Recipe not found with ID: {recipe_id}")
                     return http_404('Recipe not found')
 
                 return http_200(recipe)
@@ -34,11 +35,13 @@ def handle_event(event, context):
             else:
                 try:
                     recipes = list_recipes()
+                    print(f"Returning {len(recipes)} recipes.")
                     return http_200(recipes)
                 except Exception as e:
                     print(f"Interal Error: {traceback.format_exc(e)}")
                     return http_500("Internal Server Error. Please try again later. Code: LR-001")
         
+        print(f"Method not allowed: {event['httpMethod']}")
         return http_405() # Method not allowed
     except Exception as e:
         print(f"Interal Error: {traceback.format_exc()}")

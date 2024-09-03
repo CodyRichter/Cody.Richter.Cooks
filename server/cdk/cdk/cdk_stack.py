@@ -78,7 +78,6 @@ class ServerlessStack(Stack):
             ),
         )
 
-
         gateway = apigw.LambdaRestApi(
             self, 'CookingEventGateway',
             rest_api_name='CookingEventGateway',
@@ -91,11 +90,11 @@ class ServerlessStack(Stack):
             }
         )
 
-        authorizer = apigw.CognitoUserPoolsAuthorizer(
-            self, 'CookingUserPoolAuthorizer',
-            authorizer_name='CookingUserPoolAuthorizer',
-            cognito_user_pools=[user_pool],
-        )
+        # authorizer = apigw.CognitoUserPoolsAuthorizer(
+        #     self, 'CookingUserPoolAuthorizer',
+        #     authorizer_name='CookingUserPoolAuthorizer',
+        #     cognito_user_pools=[user_pool],
+        # )
 
         recipe = gateway.root.add_resource('recipes')
 
@@ -111,6 +110,7 @@ class ServerlessStack(Stack):
         post_method = recipe.add_method(
             'POST',
             integration=apigw.LambdaIntegration(post_event_lambda),
-            authorization_type=apigw.AuthorizationType.COGNITO,
-            authorizer=authorizer,
+            # authorization_type=apigw.AuthorizationType.COGNITO,
+            # authorizer=authorizer,
+            authorization_type=apigw.AuthorizationType.NONE,
         )

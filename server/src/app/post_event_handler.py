@@ -20,12 +20,16 @@ def handle_event(event, context):
             try:
                 recipe_dict = json.loads(event['body'], parse_float=Decimal)
                 recipe = serialize_recipe(recipe_dict)
-            except:
+            except Exception as e:
+                print("Invalid request body. Unable to parse Recipe JSON.")
+                print(e)
                 return http_400("Invalid request body. Unable to parse Recipe JSON.")
 
             created_recipe = put_recipe(recipe)
+            print(f"Created recipe: {created_recipe}")
             return http_201(created_recipe)
         
+        print(f"Method not allowed: {event['httpMethod']}")
         return http_405() # Method not allowed
     except Exception as e:
         print(f"Interal Error: {traceback.format_exc()}")

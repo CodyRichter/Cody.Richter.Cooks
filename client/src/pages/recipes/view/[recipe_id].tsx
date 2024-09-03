@@ -1,4 +1,4 @@
-import { Divider, Grid, Text } from "@mantine/core";
+import { Button, Divider, Grid, Group, Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
@@ -6,6 +6,7 @@ import Recipe from "@/common/types/Recipe";
 import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
+import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
 import { useRouter } from "next/router";
 
 const LOADING_NO_ERROR = { isLoading: true, error: "" };
@@ -17,6 +18,8 @@ export default function ViewRecipe() {
 
   const [networkStatus, setNetworkStatus] = useState(LOADING_NO_ERROR);
   const [rawRecipe, setRawRecipe] = useState<Recipe | null>(null);
+
+  const { isAuthenticated } = useAuth();
 
   // Memoize the recipe data
   const recipe = useMemo(() => {
@@ -86,6 +89,16 @@ export default function ViewRecipe() {
         <>
           <Grid>
             <Grid.Col>
+              {isAuthenticated && (
+                <Button
+                  onClick={() => {
+                    router.push(`/recipes/edit/${recipe.id}`);
+                  }}
+                >
+                  Edit Recipe
+                </Button>
+              )}
+
               <Grid.Col span={12}>
                 <Text fw={700} size="xl">
                   {recipe.title}

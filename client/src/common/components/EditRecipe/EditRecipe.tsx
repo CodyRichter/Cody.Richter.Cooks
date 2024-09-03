@@ -34,13 +34,14 @@ export default function EditRecipe({
         />
       </Grid.Col>
 
-      <Grid.Col span={7}>
+      <Grid.Col span={9}>
         <Textarea
           label="Description"
           placeholder="A recipe passed down through the generations..."
           withAsterisk
           autosize
-          maxRows={8}
+          maxRows={10}
+          minRows={3}
           value={recipe.description}
           onChange={(e) =>
             setRecipe({ ...recipe, description: e.currentTarget.value })
@@ -63,6 +64,7 @@ export default function EditRecipe({
                 quantity: 0,
                 name: "",
                 unit: "",
+                subtext: "",
               });
               setRecipe({ ...recipe, ingredients: newIngredients });
             }}

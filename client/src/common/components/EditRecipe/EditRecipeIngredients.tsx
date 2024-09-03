@@ -28,7 +28,7 @@ export default function EditRecipeIngredients({
                 label="Quantity"
                 value={ingredient.quantity}
                 withAsterisk
-                min={1}
+                min={0.01}
                 onChange={(newValue) => {
                   const newIngredients = [...recipe.ingredients];
                   newIngredients[index].quantity = newValue as number;
