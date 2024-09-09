@@ -30,7 +30,7 @@ export default function App({ Component, pageProps }: any) {
             name="viewport"
             content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
           />
-          <link rel="shortcut icon" href="/square.svg" />
+          <link rel="shortcut icon" href="/chef-hat.svg" />
         </Head>
         <Notifications autoClose={4000} position="top-center" />
         <AppShell
