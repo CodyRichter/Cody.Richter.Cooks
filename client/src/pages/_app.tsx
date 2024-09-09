@@ -48,7 +48,9 @@ export default function App({ Component, pageProps }: any) {
             />
           </AppShell.Header>
           <AppShell.Navbar>
-            <NavigationSidebar />
+            <NavigationSidebar
+              {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }}
+            />
           </AppShell.Navbar>
           <AppShell.Main>
             <Component {...pageProps} />

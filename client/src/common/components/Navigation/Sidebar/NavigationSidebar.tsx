@@ -13,7 +13,19 @@ interface RecipeListItem {
   title: string;
 }
 
-export default function NavigationSidebar() {
+interface NavigationSidebarProps {
+  mobileOpened: boolean;
+  desktopOpened: boolean;
+  toggleMobile(): void;
+  toggleDesktop(): void;
+}
+
+export default function NavigationSidebar({
+  mobileOpened,
+  desktopOpened,
+  toggleMobile,
+  toggleDesktop,
+}: NavigationSidebarProps) {
   const router = useRouter();
 
   const [recipeList, setRecipeList] = React.useState<RecipeListItem[]>([]);
@@ -55,6 +67,14 @@ export default function NavigationSidebar() {
       });
   }, []);
 
+  function handleRecipeClick(recipeId: string) {
+    router.push(`/recipes/view/${recipeId}`);
+
+    if (mobileOpened) {
+      toggleMobile();
+    }
+  }
+
   return (
     <>
       {networkStatus.isLoading && <Skeleton h={28} mt="sm" animate={false} />}
@@ -71,7 +91,7 @@ export default function NavigationSidebar() {
             <NavLink
               w="100%"
               key={`sidebar-recipe-${recipe.id}`}
-              onClick={() => router.push(`/recipes/view/${recipe.id}`)}
+              onClick={() => handleRecipeClick(recipe.id)}
               label={recipe.title}
               rightSection={<IconChevronRight />}
               color="orange"
