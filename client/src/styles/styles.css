@@ -12,3 +12,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.navigationSidebarContainer {
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+}

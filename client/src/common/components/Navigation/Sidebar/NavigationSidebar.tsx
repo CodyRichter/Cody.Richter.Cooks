@@ -1,4 +1,4 @@
-import { Container, NavLink, Skeleton, Text } from "@mantine/core";
+import { Container, Divider, NavLink, Skeleton, Text } from "@mantine/core";
 import React, { useEffect } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
@@ -60,22 +60,25 @@ export default function NavigationSidebar() {
       {networkStatus.isLoading && <Skeleton h={28} mt="sm" animate={false} />}
       {networkStatus.error && <Skeleton h={28} mt="sm" animate={false} />}
       {!networkStatus.error && !networkStatus.isLoading && (
-        <Container mt="sm" ml="xs">
-          <Text fw={300} ml="sm" mb="md" size="xl">
-            Recipes
+        <div className="navigationSidebarContainer">
+          <Text fw={300} ml="md" mb="sm" mt="xs" size="xl">
+            Available Recipes
           </Text>
+
+          <Divider mb="xs" />
 
           {recipeList.map((recipe) => (
             <NavLink
+              w="100%"
               key={`sidebar-recipe-${recipe.id}`}
               onClick={() => router.push(`/recipes/view/${recipe.id}`)}
+              href={`${window.location.origin}/recipes/view/${recipe.id}`}
               label={recipe.title}
-              leftSection={<IconChevronRight />}
-              variant="subtle"
+              rightSection={<IconChevronRight />}
               color="orange"
             />
           ))}
-        </Container>
+        </div>
       )}
     </>
   );

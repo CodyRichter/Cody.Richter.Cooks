@@ -36,7 +36,7 @@ export default function App({ Component, pageProps }: any) {
         <AppShell
           header={{ height: { base: 60, md: 65, lg: 65 } }}
           navbar={{
-            width: { base: 200, md: 300, lg: 400 },
+            width: { base: 200, md: 300, lg: 300 },
             breakpoint: "sm",
             collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
           }}
