@@ -2,11 +2,13 @@ import { Button, Divider, Grid, Group, Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
+import DeleteRecipeModal from "@/common/components/ViewRecipe/DeleteRecipeModal";
 import Recipe from "@/common/types/Recipe";
 import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
 import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
+import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
 
 const LOADING_NO_ERROR = { isLoading: true, error: "" };
@@ -18,6 +20,7 @@ export default function ViewRecipe() {
 
   const [networkStatus, setNetworkStatus] = useState(LOADING_NO_ERROR);
   const [rawRecipe, setRawRecipe] = useState<Recipe | null>(null);
+  const [deleteModalOpened, { open, close }] = useDisclosure(false);
 
   const { isAuthenticated } = useAuth();
 
@@ -90,13 +93,24 @@ export default function ViewRecipe() {
           <Grid>
             <Grid.Col>
               {isAuthenticated && (
-                <Button
-                  onClick={() => {
-                    router.push(`/recipes/edit/${recipe.id}`);
-                  }}
-                >
-                  Edit Recipe
-                </Button>
+                <Grid.Col span={12} className="viewRecipeAdminHeader">
+                  <Group>
+                    <Text size="md" fw={500} ml="sm">
+                      Actions
+                    </Text>
+                    <Divider orientation="vertical" />
+                    <Button
+                      onClick={() => {
+                        router.push(`/recipes/edit/${recipe.id}`);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button color="red" onClick={open}>
+                      Delete
+                    </Button>
+                  </Group>
+                </Grid.Col>
               )}
 
               <Grid.Col span={12}>
@@ -118,6 +132,12 @@ export default function ViewRecipe() {
               <RecipeInstructionsCard instructions={recipe.instructions} />
             </Grid.Col>
           </Grid>
+
+          <DeleteRecipeModal
+            recipeTitle={recipe.title}
+            opened={deleteModalOpened}
+            close={close}
+          />
         </>
       )}
     </>

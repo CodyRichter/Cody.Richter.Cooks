@@ -1,8 +1,9 @@
-import { Button, Grid, Group, Text } from "@mantine/core";
+import { ActionIcon, Button, Grid, Group, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
+import { IconChevronLeft } from "@tabler/icons-react";
 import Recipe from "@/common/types/Recipe";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
 import { notifications } from "@mantine/notifications";
@@ -183,9 +184,21 @@ export default function EditRecipePage() {
           <Grid>
             <Grid.Col>
               <Grid.Col span={12}>
-                <Text fw={700} size="xl">
-                  Edit Recipe
-                </Text>
+                <Group>
+                  <ActionIcon
+                    onClick={() => {
+                      router.push(`/recipes/view/${recipe.id}`);
+                    }}
+                    variant="subtle"
+                    size="lg"
+                    color="black"
+                  >
+                    <IconChevronLeft />
+                  </ActionIcon>
+                  <Text fw={700} size="xl">
+                    Edit Recipe
+                  </Text>
+                </Group>
               </Grid.Col>
 
               <Grid.Col span={12}>
