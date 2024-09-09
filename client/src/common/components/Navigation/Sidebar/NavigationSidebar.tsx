@@ -72,7 +72,6 @@ export default function NavigationSidebar() {
               w="100%"
               key={`sidebar-recipe-${recipe.id}`}
               onClick={() => router.push(`/recipes/view/${recipe.id}`)}
-              href={`${window.location.origin}/recipes/view/${recipe.id}`}
               label={recipe.title}
               rightSection={<IconChevronRight />}
               color="orange"

@@ -1,4 +1,4 @@
-import { Card, Stack, Text } from "@mantine/core";
+import { Card, Checkbox, Group, Stack, Text } from "@mantine/core";
 
 import InstructionStep from "@/common/types/InstructionStep";
 import React from "react";
@@ -21,9 +21,12 @@ export default function RecipeInstructionsCard({
           withBorder
           key={`instructionStep-${instructionStep.id}`}
         >
-          <Text size="lg" w="85%">
-            Step {instructionStep.step_number}: {instructionStep.title}
-          </Text>
+          <Group>
+            <Checkbox />
+            <Text size="lg" w="80%">
+              Step {instructionStep.step_number}: {instructionStep.title}
+            </Text>
+          </Group>
           <Text size="sm" mt="sm" w="85%">
             {instructionStep.description}
           </Text>

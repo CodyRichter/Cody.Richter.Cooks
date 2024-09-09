@@ -1,8 +1,9 @@
-import { Burger, Button, Grid, Group, Text } from "@mantine/core";
+import { Burger, Button, Divider, Grid, Group, Text } from "@mantine/core";
 import { IconLogin, IconLogout, IconPencilPlus } from "@tabler/icons-react";
 
 import LoginDialog from "./Auth/LoginDialog";
 import React from "react";
+import Typist from "react-typist-component";
 import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
 import { useRouter } from "next/router";
 
@@ -27,32 +28,58 @@ export default function NavigationHeader({
   return (
     <>
       <Grid mt="md" ml="md" mr="md">
-        <Grid.Col span={4}>
-          <Burger
-            opened={mobileOpened}
-            onClick={toggleMobile}
-            hiddenFrom="sm"
-            size="sm"
-          />
-          <Burger
-            opened={desktopOpened}
-            onClick={toggleDesktop}
-            visibleFrom="sm"
-            size="sm"
-          />
-        </Grid.Col>
-        <Grid.Col span={4}>
-          <Text
-            ta="center"
-            size="xl"
-            fw={700}
-            variant="gradient"
-            gradient={{ from: "blue", to: "cyan", deg: 90 }}
-            onClick={() => router.push("/")}
-            style={{ cursor: "pointer" }}
-          >
-            Cody Richter Cooks
-          </Text>
+        <Grid.Col span={8}>
+          <Group gap="0">
+            <Burger
+              opened={mobileOpened}
+              onClick={toggleMobile}
+              hiddenFrom="sm"
+              size="sm"
+              className="headerSidebarNavContainer"
+            />
+            <Burger
+              opened={desktopOpened}
+              onClick={toggleDesktop}
+              visibleFrom="sm"
+              size="sm"
+              className="headerSidebarNavContainer"
+            />
+
+            <Divider orientation="vertical" size="xs" ml="sm" mr="sm" />
+
+            <Text
+              span
+              size="xl"
+              fw={500}
+              style={{ cursor: "pointer" }}
+              className="zeroRight"
+            >
+              Cody Richter C
+            </Text>
+
+            <Typist
+              typingDelay={130}
+              loop={false}
+              hideCursorWhenDone
+              cursor={
+                <Text span size="xl" fw={500}>
+                  |
+                </Text>
+              }
+            >
+              <Text span size="xl" fw={500} style={{ cursor: "pointer" }}>
+                odes
+              </Text>
+              <Text>&#8203;</Text>
+              <Typist.Delay ms={5000} />
+              <Typist.Backspace count={5} />
+              <Text span size="xl" fw={500} style={{ cursor: "pointer" }}>
+                ooks
+              </Text>
+            </Typist>
+          </Group>
+
+          {/* <PiChefHatDuotone color="blue" height="100%" /> */}
         </Grid.Col>
         <Grid.Col span={4}>
           <Group justify="flex-end">
