@@ -1,4 +1,12 @@
-import { Burger, Button, Divider, Grid, Group, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Burger,
+  Button,
+  Divider,
+  Grid,
+  Group,
+  Text,
+} from "@mantine/core";
 import { IconLogin, IconLogout, IconPencilPlus } from "@tabler/icons-react";
 
 import LoginDialog from "./Auth/LoginDialog";
@@ -93,49 +101,82 @@ export default function NavigationHeader({
 
         <Group>
           {isAuthenticated && (
-            <Button
-              rightSection={<IconPencilPlus />}
-              variant="subtle"
-              size="sm"
-              gradient={{
-                from: "rgba(80, 70, 232, 1)",
-                to: "rgba(45, 237, 237, 1)",
-                deg: 211,
-              }}
-              onClick={() => router.push("/recipes/create")}
-            >
-              Create Recipe
-            </Button>
+            <>
+              <Button
+                rightSection={<IconPencilPlus />}
+                variant="subtle"
+                size="sm"
+                visibleFrom="sm"
+                gradient={{
+                  from: "rgba(80, 70, 232, 1)",
+                  to: "rgba(45, 237, 237, 1)",
+                  deg: 211,
+                }}
+                onClick={() => router.push("/recipes/create")}
+              >
+                Create Recipe
+              </Button>
+              <ActionIcon
+                variant="subtle"
+                size="lg"
+                hiddenFrom="sm"
+                onClick={() => router.push("/recipes/create")}
+              >
+                <IconPencilPlus />
+              </ActionIcon>
+            </>
           )}
           {isAuthenticated && (
-            <Button
-              rightSection={<IconLogout />}
-              variant="subtle"
-              size="sm"
-              gradient={{
-                from: "rgba(80, 70, 232, 1)",
-                to: "rgba(45, 237, 237, 1)",
-                deg: 211,
-              }}
-              onClick={logout}
-            >
-              Logout
-            </Button>
+            <>
+              <Button
+                rightSection={<IconLogout />}
+                variant="subtle"
+                size="sm"
+                visibleFrom="sm"
+                gradient={{
+                  from: "rgba(80, 70, 232, 1)",
+                  to: "rgba(45, 237, 237, 1)",
+                  deg: 211,
+                }}
+                onClick={logout}
+              >
+                Logout
+              </Button>
+              <ActionIcon
+                variant="subtle"
+                size="lg"
+                hiddenFrom="sm"
+                onClick={logout}
+              >
+                <IconLogout />
+              </ActionIcon>
+            </>
           )}
           {!isAuthenticated && (
-            <Button
-              rightSection={<IconLogin />}
-              variant="subtle"
-              size="sm"
-              gradient={{
-                from: "rgba(80, 70, 232, 1)",
-                to: "rgba(45, 237, 237, 1)",
-                deg: 211,
-              }}
-              onClick={() => setLoginDialogOpened(true)}
-            >
-              Login
-            </Button>
+            <>
+              <Button
+                rightSection={<IconLogin />}
+                variant="subtle"
+                size="sm"
+                visibleFrom="sm"
+                gradient={{
+                  from: "rgba(80, 70, 232, 1)",
+                  to: "rgba(45, 237, 237, 1)",
+                  deg: 211,
+                }}
+                onClick={() => setLoginDialogOpened(true)}
+              >
+                Login
+              </Button>
+              <ActionIcon
+                variant="subtle"
+                size="lg"
+                hiddenFrom="sm"
+                onClick={() => setLoginDialogOpened(true)}
+              >
+                <IconLogin />
+              </ActionIcon>
+            </>
           )}
         </Group>
       </Group>

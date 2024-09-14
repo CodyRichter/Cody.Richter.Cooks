@@ -5,12 +5,14 @@ import {
   Paper,
   TextInput,
   Textarea,
+  em,
 } from "@mantine/core";
 
 import { IconTrash } from "@tabler/icons-react";
 import InstructionStep from "@/common/types/InstructionStep";
 import React from "react";
 import Recipe from "@/common/types/Recipe";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface EditRecipeInstructionsProps {
   recipe: Recipe;
@@ -21,6 +23,8 @@ export default function EditRecipeInstructions({
   recipe,
   setRecipe,
 }: EditRecipeInstructionsProps) {
+  const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
+
   return (
     <Grid.Col span={12}>
       {recipe.instructions
@@ -32,7 +36,7 @@ export default function EditRecipeInstructions({
               justify="flex-start"
               align="flex-end"
             >
-              <Grid.Col span={2}>
+              <Grid.Col span={{ base: 8, sm: 2 }}>
                 <NumberInput
                   label="Step Number"
                   value={instructionStep.step_number}
@@ -45,7 +49,7 @@ export default function EditRecipeInstructions({
                   }}
                 />
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <TextInput
                   label="Title"
                   placeholder="Dice onions..."
@@ -59,7 +63,7 @@ export default function EditRecipeInstructions({
                 />
               </Grid.Col>
 
-              <Grid.Col span={8}>
+              <Grid.Col span={{ base: 12, sm: 8 }}>
                 <Textarea
                   label="Description"
                   placeholder="Using a 10in chef's knife, cut the onions into small pieces..."
@@ -75,10 +79,11 @@ export default function EditRecipeInstructions({
                 />
               </Grid.Col>
 
-              <Grid.Col span={1}>
+              <Grid.Col span={{ base: 12, sm: 1 }}>
                 <ActionIcon
                   variant="filled"
                   color="red"
+                  w={isMobile ? "100%" : "auto"}
                   aria-label="Gradient action icon"
                   onClick={() => {
                     const newInstructions = [...recipe.instructions];

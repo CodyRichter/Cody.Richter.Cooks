@@ -23,7 +23,7 @@ export default function EditRecipeIngredients({
             justify="flex-start"
             align="flex-end"
           >
-            <Grid.Col span={1}>
+            <Grid.Col span={{ base: 6, sm: 1 }}>
               <NumberInput
                 label="Quantity"
                 value={ingredient.quantity}
@@ -36,7 +36,7 @@ export default function EditRecipeIngredients({
                 }}
               />
             </Grid.Col>
-            <Grid.Col span={2}>
+            <Grid.Col span={{ base: 6, sm: 2 }}>
               <TextInput
                 label="Units"
                 placeholder="Tbsp..."
@@ -50,7 +50,7 @@ export default function EditRecipeIngredients({
               />
             </Grid.Col>
 
-            <Grid.Col span={4}>
+            <Grid.Col span={{ base: 10, sm: 4 }}>
               <TextInput
                 label="Name"
                 placeholder="Onions..."

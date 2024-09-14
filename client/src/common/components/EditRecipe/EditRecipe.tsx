@@ -22,7 +22,7 @@ export default function EditRecipe({
 }) {
   return (
     <Grid>
-      <Grid.Col span={7}>
+      <Grid.Col span={{ base: 12, sm: 7 }}>
         <TextInput
           label="Title"
           placeholder="French Onion Soup"
@@ -34,7 +34,7 @@ export default function EditRecipe({
         />
       </Grid.Col>
 
-      <Grid.Col span={9}>
+      <Grid.Col span={{ base: 12, sm: 9 }}>
         <Textarea
           label="Description"
           placeholder="A recipe passed down through the generations..."
