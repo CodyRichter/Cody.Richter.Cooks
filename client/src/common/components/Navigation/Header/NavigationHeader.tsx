@@ -3,7 +3,6 @@ import {
   Burger,
   Button,
   Divider,
-  Grid,
   Group,
   Text,
 } from "@mantine/core";
@@ -85,7 +84,7 @@ export default function NavigationHeader({
               odes
             </Text>
             <Text>&#8203;</Text>
-            <Typist.Delay ms={5000} />
+            <Typist.Delay ms={2000} />
             <Typist.Backspace count={5} />
             <Text
               span

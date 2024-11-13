@@ -1,14 +1,16 @@
 import { Button, Grid, Group, Text } from "@mantine/core";
+import { useEffect, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
 import Recipe from "@/common/types/Recipe";
 import { notifications } from "@mantine/notifications";
+import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
 import { useRouter } from "next/router";
-import { useState } from "react";
 
 export default function CreateRecipe() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const [newRecipe, setNewRecipe] = useState<Recipe>({
     id: crypto.randomUUID(),
@@ -19,6 +21,12 @@ export default function CreateRecipe() {
   });
 
   const [isCreateButtonLoading, setIsCreateButtonLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated]);
 
   function isRecipeValid(): boolean {
     const baseFieldsValid =

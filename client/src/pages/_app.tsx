@@ -11,11 +11,11 @@ import Head from "next/head";
 import NavigationHeader from "@/common/components/Navigation/Header/NavigationHeader";
 import NavigationSidebar from "@/common/components/Navigation/Sidebar/NavigationSidebar";
 import { Notifications } from "@mantine/notifications";
+import getCodyRichterCooksTheme from "@/styles/theme";
 import { useDisclosure } from "@mantine/hooks";
 
-const theme = createTheme({
-  /* Put your mantine theme override here */
-});
+const primaryFont = "Nunito, sans-serif";
+const theme = createTheme(getCodyRichterCooksTheme(primaryFont));
 
 export default function App({ Component, pageProps }: any) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -42,7 +42,7 @@ export default function App({ Component, pageProps }: any) {
           }}
           padding="md"
         >
-          <AppShell.Header>
+          <AppShell.Header className="navigationHeader">
             <NavigationHeader
               {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }}
             />

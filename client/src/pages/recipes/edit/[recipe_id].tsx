@@ -7,6 +7,7 @@ import { IconChevronLeft } from "@tabler/icons-react";
 import Recipe from "@/common/types/Recipe";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
 import { notifications } from "@mantine/notifications";
+import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
 import { useRouter } from "next/router";
 
 const LOADING_NO_ERROR = { isLoading: true, error: "" };
@@ -14,6 +15,7 @@ const LOADED_NO_ERROR = { isLoading: false, error: "" };
 
 export default function EditRecipePage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const recipe_id: string = router.query.recipe_id as string;
 
   const [networkStatus, setNetworkStatus] = useState(LOADING_NO_ERROR);
@@ -67,6 +69,12 @@ export default function EditRecipePage() {
         });
       });
   }, [recipe_id]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated]);
 
   function isRecipeValid(): boolean {
     if (!recipe) {
