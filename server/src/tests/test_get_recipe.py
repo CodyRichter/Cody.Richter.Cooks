@@ -9,7 +9,7 @@ from decimal import Decimal
 test_recipe_data = {
     'id': '1',
     'title': 'Test Recipe',
-    'description': 'This is a test recipe',
+    'description': 'TestS3Key',
     'ingredients': [
         {
             'id': '1',
@@ -29,6 +29,8 @@ test_recipe_data = {
     ]
 }
 
+test_recipe_description = 'This is a test recipe'
+
 @pytest.fixture(scope="session")
 def clear_default_boto3_session(): 
     boto3.DEFAULT_SESSION = None
@@ -45,25 +47,36 @@ def aws_credentials():
 
 
 @pytest.fixture
-def aws_resource(aws_credentials):
+def mock_dynamodb_resource(aws_credentials):
     with mock_aws():
         yield boto3.resource("dynamodb", region_name="us-east-1")
 
+@pytest.fixture
+def mock_s3_resource(aws_credentials):
+    with mock_aws():
+        yield boto3.resource("s3", region_name="us-east-1")
 
 @pytest.fixture
-def mock_recipes_table(aws_resource):
-        aws_resource.create_table(
+def mock_recipe_bucket(mock_s3_resource):
+    mock_s3_resource.create_bucket(Bucket="cody-richter-cooks-recipes")
+    bucket = mock_s3_resource.Bucket("cody-richter-cooks-recipes")
+    yield bucket
+
+
+@pytest.fixture
+def mock_recipes_table(mock_dynamodb_resource):
+        mock_dynamodb_resource.create_table(
             AttributeDefinitions=[{"AttributeName": "id", "AttributeType": "S"}],
             TableName="RecipeTable",
             KeySchema=[{"AttributeName": "id", "KeyType": "HASH"}],
             ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
         )
-        table = aws_resource.Table("RecipeTable")
+        table = mock_dynamodb_resource.Table("RecipeTable")
         table.wait_until_exists()
         yield table
 
 # When no recipe ID is provided, a list of all recipe names should be returned
-def test_get_all_recipes(mock_recipes_table):
+def test_list_all_recipes(mock_recipes_table):
     mock_recipes_table.put_item(Item=test_recipe_data)
     response = handle_event({'httpMethod': 'GET'}, {})
     
@@ -76,8 +89,10 @@ def test_get_all_recipes(mock_recipes_table):
 
 
 # When a recipe ID is provided, the recipe data should be returned
-def test_get_recipe(mock_recipes_table):
+def test_get_recipe(mock_recipes_table, mock_recipe_bucket):
     mock_recipes_table.put_item(Item=test_recipe_data)
+    mock_recipe_bucket.put_object(Key='TestS3Key', Body=test_recipe_description)
+
     response = handle_event({'httpMethod': 'GET', 'queryStringParameters': {'id': '1'}}, {})
     
     assert response['statusCode'] == 200
@@ -85,7 +100,7 @@ def test_get_recipe(mock_recipes_table):
     assert 'recipe' in body
     assert body['recipe']['id'] == '1'
     assert body['recipe']['title'] == 'Test Recipe'
-    assert body['recipe']['description'] == 'This is a test recipe'
+    assert body['recipe']['description'] == test_recipe_description
     assert body['recipe']['ingredients'] == test_recipe_data['ingredients']
     assert body['recipe']['instructions'] == test_recipe_data['instructions']
 

@@ -40,9 +40,14 @@ def aws_credentials():
 
 
 @pytest.fixture
-def aws_resource(aws_credentials):
+def mock_dynamodb_resource(aws_credentials):
     with mock_aws():
         yield boto3.resource("dynamodb", region_name="us-east-1")
+
+@pytest.fixture
+def mock_s3_resource(aws_credentials):
+    with mock_aws():
+        yield boto3.resource("s3", region_name="us-east-1")
 
 
 @pytest.fixture
@@ -52,19 +57,26 @@ def aws_client(aws_credentials):
 
 
 @pytest.fixture
-def mock_recipes_table(aws_resource):
-        aws_resource.create_table(
+def mock_recipes_table(mock_dynamodb_resource):
+        mock_dynamodb_resource.create_table(
             AttributeDefinitions=[{"AttributeName": "id", "AttributeType": "S"}],
             TableName="RecipeTable",
             KeySchema=[{"AttributeName": "id", "KeyType": "HASH"}],
             ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
         )
-        table = aws_resource.Table("RecipeTable")
+        table = mock_dynamodb_resource.Table("RecipeTable")
         table.wait_until_exists()
 
         yield table
 
-def test_put_new_recipe(mock_recipes_table):
+@pytest.fixture
+def mock_recipe_bucket(mock_s3_resource):
+    mock_s3_resource.create_bucket(Bucket="cody-richter-cooks-recipes")
+    bucket = mock_s3_resource.Bucket("cody-richter-cooks-recipes")
+    yield bucket
+
+
+def test_put_new_recipe(mock_recipes_table, mock_recipe_bucket):
     test_create_recipe_request = {
         'httpMethod': 'POST',
         'path': '/recipe',
@@ -77,7 +89,7 @@ def test_put_new_recipe(mock_recipes_table):
     assert 'id' in parsed_body['recipe']
 
 
-def test_put_invalid_recipe(mock_recipes_table):
+def test_put_invalid_recipe(mock_recipes_table, mock_recipe_bucket):
     test_create_recipe_request = {
         'httpMethod': 'POST',
         'path': '/recipe',
@@ -86,7 +98,7 @@ def test_put_invalid_recipe(mock_recipes_table):
     response = handle_event(test_create_recipe_request, None)
     assert response['statusCode'] == 400
 
-def test_update_recipe(mock_recipes_table):
+def test_update_recipe(mock_recipes_table, mock_recipe_bucket):
     test_recipe_with_id = {**test_recipe_data, **{'id': '123'}}
 
     test_create_recipe_request = {

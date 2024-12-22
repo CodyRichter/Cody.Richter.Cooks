@@ -1,10 +1,12 @@
 from aws_cdk import (
     Duration,
+    RemovalPolicy,
     Stack,
     aws_lambda as _lambda,
     aws_dynamodb as ddb,
     aws_apigateway as apigw,
     aws_cognito as cognito,
+    aws_s3 as s3,
 )
 from aws_cdk.aws_lambda_python_alpha import PythonFunction, PythonLayerVersion, BundlingOptions
 from constructs import Construct
@@ -59,6 +61,19 @@ class ServerlessStack(Stack):
         )
         recipe_table.grant_read_data(get_event_lambda)
         recipe_table.grant_read_write_data(post_event_lambda)
+
+        recipe_bucket = s3.Bucket(
+            self, 'RecipeBucket',
+            bucket_name='cody-richter-cooks-recipes',
+            removal_policy=RemovalPolicy.DESTROY,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            versioned=False,
+            encryption=s3.BucketEncryption.S3_MANAGED,
+            enforce_ssl=True,
+        )
+
+        recipe_bucket.grant_read_write(post_event_lambda)
+        recipe_bucket.grant_read(get_event_lambda)
 
         user_pool = cognito.UserPool(
             self, "CookingUserPool",
