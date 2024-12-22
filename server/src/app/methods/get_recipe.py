@@ -1,5 +1,5 @@
-from app.constants import table, recipe_bucket
-from app.data.model import Recipe
+from app.constants import table, recipe_bucket_name, s3
+from botocore.exceptions import ClientError
 
 def get_recipe(recipe_id: str):
     print(f"Getting recipe with ID: {recipe_id}")
@@ -21,5 +21,13 @@ def get_recipe_internal(table, recipe_id: str):
         return {}
     
     # If the recipe description is stored in S3, fetch it and update the recipe data
-    recipe_data['description'] = recipe_bucket.Object(recipe_data['description']).get()['Body'].read().decode('utf-8')
+    try:
+        s3_object_data = s3.Object(recipe_bucket_name, recipe_id)
+        recipe_data['description'] = s3_object_data.get()['Body'].read().decode('utf-8')
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            print(f'No description found in S3 for recipe {recipe_id}.')
+            recipe_data['description'] = "... No description available ..."
+        else:
+            raise
     return recipe_data

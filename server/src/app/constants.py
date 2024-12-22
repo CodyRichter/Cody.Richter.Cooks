@@ -4,6 +4,7 @@ import boto3
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('RecipeTable')
+s3 = boto3.resource('s3')
 recipe_bucket_name = 'cody-richter-cooks-recipes'
 recipe_bucket = boto3.resource('s3').Bucket(recipe_bucket_name)
 
