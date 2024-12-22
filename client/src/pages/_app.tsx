@@ -6,16 +6,28 @@ import "@/styles/styles.css";
 
 import { AppShell, MantineProvider, createTheme } from "@mantine/core";
 
-import { AuthProvider } from "@/common/contexts/AuthContext/AuthContext";
+import { AuthProvider } from "react-oidc-context";
 import Head from "next/head";
 import NavigationHeader from "@/common/components/Navigation/Header/NavigationHeader";
 import NavigationSidebar from "@/common/components/Navigation/Sidebar/NavigationSidebar";
 import { Notifications } from "@mantine/notifications";
 import getCodyRichterCooksTheme from "@/styles/theme";
+import { isDevEnvironment } from "@/utils/development";
 import { useDisclosure } from "@mantine/hooks";
 
 const primaryFont = "Nunito, sans-serif";
 const theme = createTheme(getCodyRichterCooksTheme(primaryFont));
+
+const cognitoAuthConfig = {
+  authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_g0CKfq7GH",
+  client_id: "7hrbbhv2mj1vmagotgeqej03ec",
+  // Dynamically update the redirect_uri based on the environment
+  redirect_uri: isDevEnvironment
+    ? "http://localhost:3000"
+    : "https://cooking.cody.richter.codes",
+  response_type: "code",
+  scope: "aws.cognito.signin.user.admin email openid phone profile",
+};
 
 export default function App({ Component, pageProps }: any) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -23,7 +35,7 @@ export default function App({ Component, pageProps }: any) {
 
   return (
     <MantineProvider theme={theme}>
-      <AuthProvider>
+      <AuthProvider {...cognitoAuthConfig}>
         <Head>
           <title>Cody Richter Cooks</title>
           <meta

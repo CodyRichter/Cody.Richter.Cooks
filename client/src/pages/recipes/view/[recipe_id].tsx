@@ -7,7 +7,7 @@ import Recipe from "@/common/types/Recipe";
 import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
-import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
+import { useAuth } from "react-oidc-context";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
 
@@ -22,7 +22,7 @@ export default function ViewRecipe() {
   const [rawRecipe, setRawRecipe] = useState<Recipe | null>(null);
   const [deleteModalOpened, { open, close }] = useDisclosure(false);
 
-  const { isAuthenticated } = useAuth();
+  const auth = useAuth();
 
   // Memoize the recipe data
   const recipe = useMemo(() => {
@@ -92,7 +92,7 @@ export default function ViewRecipe() {
         <>
           <Grid>
             <Grid.Col>
-              {isAuthenticated && (
+              {auth.isAuthenticated && (
                 <Grid.Col span={12} className="viewRecipeAdminHeader">
                   <Group>
                     <Text size="md" fw={500} ml="sm">

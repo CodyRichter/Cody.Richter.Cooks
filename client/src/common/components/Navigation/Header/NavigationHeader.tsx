@@ -8,10 +8,9 @@ import {
 } from "@mantine/core";
 import { IconLogin, IconLogout, IconPencilPlus } from "@tabler/icons-react";
 
-import LoginDialog from "./Auth/LoginDialog";
 import React from "react";
 import Typist from "react-typist-component";
-import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
+import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/router";
 
 interface NavigationHeaderProps {
@@ -28,9 +27,7 @@ export default function NavigationHeader({
   toggleDesktop,
 }: NavigationHeaderProps) {
   const router = useRouter();
-
-  const [loginDialogOpened, setLoginDialogOpened] = React.useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const auth = useAuth();
 
   return (
     <>
@@ -99,7 +96,7 @@ export default function NavigationHeader({
         </Group>
 
         <Group>
-          {isAuthenticated && (
+          {auth.isAuthenticated && (
             <>
               <Button
                 rightSection={<IconPencilPlus />}
@@ -125,7 +122,7 @@ export default function NavigationHeader({
               </ActionIcon>
             </>
           )}
-          {isAuthenticated && (
+          {auth.isAuthenticated && (
             <>
               <Button
                 rightSection={<IconLogout />}
@@ -137,7 +134,7 @@ export default function NavigationHeader({
                   to: "rgba(45, 237, 237, 1)",
                   deg: 211,
                 }}
-                onClick={logout}
+                onClick={() => auth.removeUser()}
               >
                 Logout
               </Button>
@@ -145,13 +142,13 @@ export default function NavigationHeader({
                 variant="subtle"
                 size="lg"
                 hiddenFrom="sm"
-                onClick={logout}
+                onClick={() => auth.removeUser()}
               >
                 <IconLogout />
               </ActionIcon>
             </>
           )}
-          {!isAuthenticated && (
+          {!auth.isAuthenticated && (
             <>
               <Button
                 rightSection={<IconLogin />}
@@ -163,7 +160,7 @@ export default function NavigationHeader({
                   to: "rgba(45, 237, 237, 1)",
                   deg: 211,
                 }}
-                onClick={() => setLoginDialogOpened(true)}
+                onClick={() => auth.signinRedirect()}
               >
                 Login
               </Button>
@@ -171,7 +168,7 @@ export default function NavigationHeader({
                 variant="subtle"
                 size="lg"
                 hiddenFrom="sm"
-                onClick={() => setLoginDialogOpened(true)}
+                onClick={() => auth.signinRedirect()}
               >
                 <IconLogin />
               </ActionIcon>
@@ -179,10 +176,6 @@ export default function NavigationHeader({
           )}
         </Group>
       </Group>
-      <LoginDialog
-        opened={loginDialogOpened}
-        close={() => setLoginDialogOpened(false)}
-      />
     </>
   );
 }

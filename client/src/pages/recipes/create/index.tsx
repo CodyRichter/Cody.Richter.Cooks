@@ -5,12 +5,12 @@ import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
 import Recipe from "@/common/types/Recipe";
 import { notifications } from "@mantine/notifications";
-import { useAuth } from "@/common/contexts/AuthContext/AuthContext";
+import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/router";
 
 export default function CreateRecipe() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const auth = useAuth();
 
   const [newRecipe, setNewRecipe] = useState<Recipe>({
     id: crypto.randomUUID(),
@@ -23,10 +23,10 @@ export default function CreateRecipe() {
   const [isCreateButtonLoading, setIsCreateButtonLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!auth.isAuthenticated) {
       router.push("/");
     }
-  }, [isAuthenticated]);
+  }, [auth.isAuthenticated]);
 
   function isRecipeValid(): boolean {
     const baseFieldsValid =
@@ -78,6 +78,7 @@ export default function CreateRecipe() {
       body: JSON.stringify(newRecipe),
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.user?.id_token}`,
       },
     })
       .then((response) => {
