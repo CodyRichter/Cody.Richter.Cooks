@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
+import InvalidPermissionAlert from "@/common/components/Permissions/InvalidPermissionAlert";
 import Recipe from "@/common/types/Recipe";
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";
@@ -21,12 +22,6 @@ export default function CreateRecipe() {
   });
 
   const [isCreateButtonLoading, setIsCreateButtonLoading] = useState(false);
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) {
-      router.push("/");
-    }
-  }, [auth.isAuthenticated]);
 
   function isRecipeValid(): boolean {
     const baseFieldsValid =
@@ -123,7 +118,9 @@ export default function CreateRecipe() {
       });
   }
 
-  return (
+  return !auth.isAuthenticated ? (
+    <InvalidPermissionAlert />
+  ) : (
     <>
       <Grid>
         <Grid.Col>

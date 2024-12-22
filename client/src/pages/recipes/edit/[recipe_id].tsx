@@ -1,9 +1,10 @@
-import { ActionIcon, Button, Grid, Group, Text } from "@mantine/core";
+import { ActionIcon, Alert, Button, Grid, Group, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
 import { IconChevronLeft } from "@tabler/icons-react";
+import InvalidPermissionAlert from "@/common/components/Permissions/InvalidPermissionAlert";
 import Recipe from "@/common/types/Recipe";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
 import { notifications } from "@mantine/notifications";
@@ -69,12 +70,6 @@ export default function EditRecipePage() {
         });
       });
   }, [recipe_id]);
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) {
-      router.push("/");
-    }
-  }, [auth.isAuthenticated]);
 
   function isRecipeValid(): boolean {
     if (!recipe) {
@@ -176,7 +171,9 @@ export default function EditRecipePage() {
       });
   }
 
-  return (
+  return !auth.isAuthenticated ? (
+    <InvalidPermissionAlert />
+  ) : (
     <>
       {networkStatus.isLoading && <RecipeLoadingSkeleton />}
       {networkStatus.error && (
