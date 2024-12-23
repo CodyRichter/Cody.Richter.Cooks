@@ -27,10 +27,9 @@ export default function EditRecipeIngredients({
   setRecipe,
 }: EditRecipeIngredientsProps) {
   return recipe.ingredients.map((ingredient: Ingredient, index: number) => (
-    <>
+    <div key={`ingredient-${ingredient.id}`}>
       <Flex
         mih={65}
-        key={`ingredient-${index}`}
         gap="md"
         justify="flex-start"
         align="flex-end"
@@ -138,6 +137,6 @@ export default function EditRecipeIngredients({
         </Popover>
       </Flex>
       <Divider mt="xl" mb="xl" />
-    </>
+    </div>
   ));
 }

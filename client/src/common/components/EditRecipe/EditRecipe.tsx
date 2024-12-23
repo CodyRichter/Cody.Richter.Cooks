@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Button,
   Divider,
   Grid,
@@ -9,12 +8,12 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
+import React, { useEffect, useState } from "react";
 
 import EditRecipeIngredients from "./EditRecipeIngredients";
 import EditRecipeInstructions from "./EditRecipeInstructions";
 import Highlight from "@tiptap/extension-highlight";
 import { IconPlus } from "@tabler/icons-react";
-import React from "react";
 import Recipe from "@/common/types/Recipe";
 import StarterKit from "@tiptap/starter-kit";
 import SubScript from "@tiptap/extension-subscript";
@@ -30,6 +29,13 @@ export default function EditRecipe({
   recipe: Recipe;
   setRecipe: (recipe: Recipe) => void;
 }) {
+  // Due to how the TipTap RichTextEditor works, we need to use a separate state for the description
+  // and update the recipe object when the description changes.
+  const [description, setDescription] = useState(recipe.description);
+  useEffect(() => {
+    setRecipe({ ...recipe, description });
+  }, [description]);
+
   const editor = useEditor({
     extensions: [
       Underline,
@@ -40,9 +46,10 @@ export default function EditRecipe({
       StarterKit,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
-    content: recipe.description,
+    immediatelyRender: false,
+    content: description,
     onUpdate({ editor }) {
-      setRecipe({ ...recipe, description: editor.getHTML() });
+      setDescription(editor.getHTML());
     },
   });
 

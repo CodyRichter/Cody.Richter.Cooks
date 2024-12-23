@@ -30,10 +30,9 @@ export default function EditRecipeInstructions({
   return recipe.instructions
     .sort((a, b) => a.step_number - b.step_number)
     .map((instructionStep: InstructionStep, index: number) => (
-      <>
+      <div key={`instruction-${instructionStep.id}`}>
         <Flex
           mih={150}
-          key={`instruction-${index}`}
           gap="md"
           justify="flex-start"
           align="flex-end"
@@ -166,6 +165,6 @@ export default function EditRecipeInstructions({
           )}
         </Flex>
         <Divider mt="md" size="md" />
-      </>
+      </div>
     ));
 }
