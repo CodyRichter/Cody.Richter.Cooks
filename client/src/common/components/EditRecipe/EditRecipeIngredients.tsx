@@ -98,7 +98,6 @@ export default function EditRecipeIngredients({
               value={ingredient.subtext}
               size="xs"
               radius="md"
-              // style={{ width: 200 }}
               onChange={(e) => {
                 const newIngredients = [...recipe.ingredients];
                 newIngredients[index].subtext = e.currentTarget.value;
@@ -138,7 +137,7 @@ export default function EditRecipeIngredients({
           </Popover.Dropdown>
         </Popover>
       </Flex>
-      <Divider mt="md" />
+      <Divider mt="xl" mb="xl" />
     </>
   ));
 }

@@ -134,7 +134,7 @@ export default function EditRecipe({
                 setRecipe({ ...recipe, ingredients: newIngredients });
               }}
             >
-              New Ingredient
+              Add New Ingredient
             </Button>
           </Group>
 
@@ -144,31 +144,37 @@ export default function EditRecipe({
         </Paper>
       </Grid.Col>
 
-      <Grid.Col span={9} mt="md">
-        <Group mb="lg">
-          <Text fw={500}>Instructions</Text>
-          <ActionIcon
-            variant="gradient"
-            size="md"
-            aria-label="Gradient action icon"
-            gradient={{ from: "blue", to: "cyan", deg: 90 }}
-            onClick={() => {
-              const newInstructions = [...recipe.instructions];
-              newInstructions.push({
-                id: crypto.randomUUID(),
-                step_number: newInstructions.length + 1,
-                title: "",
-                description: "",
-              });
-              setRecipe({ ...recipe, instructions: newInstructions });
-            }}
-          >
-            <IconPlus style={{ width: 24, height: 24 }} />
-          </ActionIcon>
-        </Group>
-      </Grid.Col>
+      {/* Recipe Instructions */}
+      <Grid.Col span={{ base: 12, sm: 10 }} mt="md">
+        <Paper shadow="sm" p="md" mb="sm">
+          <Group mb="lg" justify="space-between">
+            <Text fw={500}>Instructions</Text>
 
-      <EditRecipeInstructions recipe={recipe} setRecipe={setRecipe} />
+            <Button
+              variant="gradient"
+              size="xs"
+              radius="md"
+              rightSection={<IconPlus style={{ width: 24, height: 24 }} />}
+              onClick={() => {
+                const newInstructions = [...recipe.instructions];
+                newInstructions.push({
+                  id: crypto.randomUUID(),
+                  step_number: newInstructions.length + 1,
+                  title: "",
+                  description: "",
+                });
+                setRecipe({ ...recipe, instructions: newInstructions });
+              }}
+            >
+              Add New Step
+            </Button>
+          </Group>
+
+          <Divider size="md" />
+
+          <EditRecipeInstructions recipe={recipe} setRecipe={setRecipe} />
+        </Paper>
+      </Grid.Col>
     </Grid>
   );
 }
