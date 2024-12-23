@@ -1,4 +1,13 @@
-import { ActionIcon, Grid, Group, Text, TextInput } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Divider,
+  Grid,
+  Group,
+  Paper,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 
 import EditRecipeIngredients from "./EditRecipeIngredients";
@@ -39,7 +48,8 @@ export default function EditRecipe({
 
   return (
     <Grid>
-      <Grid.Col span={{ base: 12, sm: 7 }}>
+      <Grid.Col span={{ base: 12, sm: 10 }}>
+        {/* Recipe Title */}
         <TextInput
           label="Title"
           placeholder="French Onion Soup"
@@ -51,7 +61,8 @@ export default function EditRecipe({
         />
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 9 }}>
+      {/* Recipe Description */}
+      <Grid.Col span={{ base: 12, sm: 10 }}>
         <RichTextEditor editor={editor}>
           <RichTextEditor.Toolbar sticky stickyOffset={60}>
             <RichTextEditor.ControlsGroup>
@@ -100,32 +111,38 @@ export default function EditRecipe({
         </RichTextEditor>
       </Grid.Col>
 
-      <Grid.Col span={9} mt="md">
-        <Group mb="lg">
-          <Text fw={500}>Ingredients</Text>
-          <ActionIcon
-            variant="gradient"
-            size="md"
-            aria-label="Gradient action icon"
-            gradient={{ from: "blue", to: "cyan", deg: 90 }}
-            onClick={() => {
-              const newIngredients = [...recipe.ingredients];
-              newIngredients.push({
-                id: crypto.randomUUID(),
-                quantity: 0,
-                name: "",
-                unit: "",
-                subtext: "",
-              });
-              setRecipe({ ...recipe, ingredients: newIngredients });
-            }}
-          >
-            <IconPlus style={{ width: 24, height: 24 }} />
-          </ActionIcon>
-        </Group>
-      </Grid.Col>
+      {/* Recipe Ingredients */}
+      <Grid.Col span={{ base: 12, sm: 10 }} mt="md">
+        <Paper shadow="sm" p="md" mb="sm">
+          <Group mb="lg" justify="space-between">
+            <Text fw={500}>Ingredients</Text>
 
-      <EditRecipeIngredients recipe={recipe} setRecipe={setRecipe} />
+            <Button
+              variant="gradient"
+              size="xs"
+              radius="md"
+              rightSection={<IconPlus style={{ width: 24, height: 24 }} />}
+              onClick={() => {
+                const newIngredients = [...recipe.ingredients];
+                newIngredients.push({
+                  id: crypto.randomUUID(),
+                  quantity: 0,
+                  name: "",
+                  unit: "",
+                  subtext: "",
+                });
+                setRecipe({ ...recipe, ingredients: newIngredients });
+              }}
+            >
+              New Ingredient
+            </Button>
+          </Group>
+
+          <Divider />
+
+          <EditRecipeIngredients recipe={recipe} setRecipe={setRecipe} />
+        </Paper>
+      </Grid.Col>
 
       <Grid.Col span={9} mt="md">
         <Group mb="lg">
