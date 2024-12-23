@@ -7,6 +7,7 @@ import Recipe from "@/common/types/Recipe";
 import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
+import parse from "html-react-parser";
 import { useAuth } from "react-oidc-context";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -121,9 +122,7 @@ export default function ViewRecipe() {
               <Grid.Col span={12}>
                 <Divider />
               </Grid.Col>
-              <Grid.Col span={12}>
-                <Text>{recipe.description}</Text>
-              </Grid.Col>
+              <Grid.Col span={12}>{parse(recipe.description)}</Grid.Col>
             </Grid.Col>
             <Grid.Col span={12}>
               <RecipeIngredientCard ingredients={recipe.ingredients} />

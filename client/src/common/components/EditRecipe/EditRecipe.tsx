@@ -1,17 +1,18 @@
-import {
-  ActionIcon,
-  Grid,
-  Group,
-  Text,
-  TextInput,
-  Textarea,
-} from "@mantine/core";
+import { ActionIcon, Grid, Group, Text, TextInput } from "@mantine/core";
+import { Link, RichTextEditor } from "@mantine/tiptap";
 
 import EditRecipeIngredients from "./EditRecipeIngredients";
 import EditRecipeInstructions from "./EditRecipeInstructions";
+import Highlight from "@tiptap/extension-highlight";
 import { IconPlus } from "@tabler/icons-react";
 import React from "react";
 import Recipe from "@/common/types/Recipe";
+import StarterKit from "@tiptap/starter-kit";
+import SubScript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import { useEditor } from "@tiptap/react";
 
 export default function EditRecipe({
   recipe,
@@ -20,6 +21,22 @@ export default function EditRecipe({
   recipe: Recipe;
   setRecipe: (recipe: Recipe) => void;
 }) {
+  const editor = useEditor({
+    extensions: [
+      Underline,
+      Link,
+      Superscript,
+      SubScript,
+      Highlight,
+      StarterKit,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+    ],
+    content: recipe.description,
+    onUpdate({ editor }) {
+      setRecipe({ ...recipe, description: editor.getHTML() });
+    },
+  });
+
   return (
     <Grid>
       <Grid.Col span={{ base: 12, sm: 7 }}>
@@ -35,18 +52,52 @@ export default function EditRecipe({
       </Grid.Col>
 
       <Grid.Col span={{ base: 12, sm: 9 }}>
-        <Textarea
-          label="Description"
-          placeholder="A recipe passed down through the generations..."
-          withAsterisk
-          autosize
-          maxRows={10}
-          minRows={3}
-          value={recipe.description}
-          onChange={(e) =>
-            setRecipe({ ...recipe, description: e.currentTarget.value })
-          }
-        />
+        <RichTextEditor editor={editor}>
+          <RichTextEditor.Toolbar sticky stickyOffset={60}>
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Bold />
+              <RichTextEditor.Italic />
+              <RichTextEditor.Underline />
+              <RichTextEditor.Strikethrough />
+              <RichTextEditor.ClearFormatting />
+              <RichTextEditor.Highlight />
+              <RichTextEditor.Code />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.H3 />
+              <RichTextEditor.H4 />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Blockquote />
+              <RichTextEditor.Hr />
+              <RichTextEditor.BulletList />
+              <RichTextEditor.OrderedList />
+              <RichTextEditor.Subscript />
+              <RichTextEditor.Superscript />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Link />
+              <RichTextEditor.Unlink />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.AlignLeft />
+              <RichTextEditor.AlignCenter />
+              <RichTextEditor.AlignJustify />
+              <RichTextEditor.AlignRight />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Undo />
+              <RichTextEditor.Redo />
+            </RichTextEditor.ControlsGroup>
+          </RichTextEditor.Toolbar>
+
+          <RichTextEditor.Content />
+        </RichTextEditor>
       </Grid.Col>
 
       <Grid.Col span={9} mt="md">
