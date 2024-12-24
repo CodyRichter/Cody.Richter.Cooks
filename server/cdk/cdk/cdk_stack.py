@@ -83,6 +83,7 @@ class ServerlessStack(Stack):
             "CookingUserPoolClient",
             user_pool_client_name="CookingUserPoolClient",
             generate_secret=False,
+            access_token_validity=Duration.hours(12),
             prevent_user_existence_errors=True,
             o_auth=cognito.OAuthSettings(
                 callback_urls=["https://cooking.cody.richter.codes", "http://localhost:3000"],
@@ -96,6 +97,12 @@ class ServerlessStack(Stack):
             ),
         )
 
+        authorizer = apigw.CognitoUserPoolsAuthorizer(
+            self, 'CookingUserPoolAuthorizer',
+            authorizer_name='CookingUserPoolAuthorizer',
+            cognito_user_pools=[user_pool],
+        )
+
         gateway = apigw.LambdaRestApi(
             self, 'CookingEventGateway',
             rest_api_name='CookingEventGateway',
@@ -106,12 +113,6 @@ class ServerlessStack(Stack):
                 "allow_methods": apigw.Cors.ALL_METHODS,
                 "allow_headers": apigw.Cors.DEFAULT_HEADERS,
             }
-        )
-
-        authorizer = apigw.CognitoUserPoolsAuthorizer(
-            self, 'CookingUserPoolAuthorizer',
-            authorizer_name='CookingUserPoolAuthorizer',
-            cognito_user_pools=[user_pool],
         )
 
         recipe = gateway.root.add_resource('recipes')
