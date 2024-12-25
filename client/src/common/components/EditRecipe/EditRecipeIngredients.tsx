@@ -29,7 +29,7 @@ export default function EditRecipeIngredients({
   return recipe.ingredients.map((ingredient: Ingredient, index: number) => (
     <div key={`ingredient-${ingredient.id}`}>
       <Flex
-        mih={65}
+        mih={55}
         gap="md"
         justify="flex-start"
         align="flex-end"
@@ -136,7 +136,7 @@ export default function EditRecipeIngredients({
           </Popover.Dropdown>
         </Popover>
       </Flex>
-      <Divider mt="xl" mb="xl" />
+      <Divider mt="md" mb="xs" />
     </div>
   ));
 }
