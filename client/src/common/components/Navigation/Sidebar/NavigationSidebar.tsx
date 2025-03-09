@@ -1,25 +1,13 @@
+import { Button, Divider, Group, NavLink, Skeleton } from "@mantine/core";
 import {
-  BASE_URL,
   INITIAL_NETWORK_RESULT,
   NetworkResult,
 } from "@/common/network/constants";
-import {
-  Button,
-  Container,
-  Divider,
-  Group,
-  NavLink,
-  Skeleton,
-  Text,
-} from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import React, { useEffect } from "react";
 
 import { listRecipesFromNetwork } from "@/utils/network";
 import { useRouter } from "next/router";
-
-const LOADING_NO_ERROR = { isLoading: true, error: "" };
-const LOADED_NO_ERROR = { isLoading: false, error: "" };
 
 interface RecipeListItem {
   id: string;
