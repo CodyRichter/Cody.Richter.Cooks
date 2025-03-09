@@ -25,7 +25,9 @@
 
    - This command only needs to be run once per AWS account.
 
-6. Deploy to AWS with `cdk deploy` command.
+6. Ensure that Docker is running locally. Docker is required to build the lambda functions.
+
+7. Deploy to AWS with `cdk deploy` command.
 
    - If you run this command after the repository is set up, make sure that your virutal environment is activated first! (`source .venv/bin/activate`)
 
