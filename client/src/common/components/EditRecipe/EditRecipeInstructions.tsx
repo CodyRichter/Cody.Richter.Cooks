@@ -164,7 +164,7 @@ export default function EditRecipeInstructions({
             </Popover>
           )}
         </Flex>
-        <Divider mt="md" size="md" />
+        <Divider mt="md" />
       </div>
     ));
 }

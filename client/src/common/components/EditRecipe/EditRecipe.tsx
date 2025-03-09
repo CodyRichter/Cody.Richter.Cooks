@@ -123,7 +123,13 @@ export default function EditRecipe({
         <Paper shadow="sm" p="md" mb="sm">
           <Group mb="lg" justify="space-between">
             <Text fw={500}>Ingredients</Text>
+          </Group>
 
+          <Divider />
+
+          <EditRecipeIngredients recipe={recipe} setRecipe={setRecipe} />
+
+          <Group justify="flex-end" mt="lg">
             <Button
               variant="gradient"
               size="xs"
@@ -144,10 +150,6 @@ export default function EditRecipe({
               Add New Ingredient
             </Button>
           </Group>
-
-          <Divider />
-
-          <EditRecipeIngredients recipe={recipe} setRecipe={setRecipe} />
         </Paper>
       </Grid.Col>
 
@@ -156,7 +158,13 @@ export default function EditRecipe({
         <Paper shadow="sm" p="md" mb="sm">
           <Group mb="lg" justify="space-between">
             <Text fw={500}>Instructions</Text>
+          </Group>
 
+          <Divider />
+
+          <EditRecipeInstructions recipe={recipe} setRecipe={setRecipe} />
+
+          <Group justify="flex-end" mt="lg">
             <Button
               variant="gradient"
               size="xs"
@@ -176,10 +184,6 @@ export default function EditRecipe({
               Add New Step
             </Button>
           </Group>
-
-          <Divider size="md" />
-
-          <EditRecipeInstructions recipe={recipe} setRecipe={setRecipe} />
         </Paper>
       </Grid.Col>
     </Grid>
