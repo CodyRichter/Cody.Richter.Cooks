@@ -1,10 +1,10 @@
 import os
 from moto import mock_aws  # THIS IMPORT MUST BE ABOVE ALL OTHERS IN ORDER TO MOCK AWS SERVICES
-from app.post_event_handler import handle_event
 import json
 import boto3
 import pytest
 
+from app.post_event_handler import handle_event
 from app.constants import DecimalEncoder
 
 test_recipe_data = {
@@ -29,52 +29,6 @@ test_recipe_data = {
     ]
 }
 
-@pytest.fixture(scope="function")
-def aws_credentials():
-    """Mocked AWS Credentials for moto."""
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-
-
-@pytest.fixture
-def mock_dynamodb_resource(aws_credentials):
-    with mock_aws():
-        yield boto3.resource("dynamodb", region_name="us-east-1")
-
-@pytest.fixture
-def mock_s3_resource(aws_credentials):
-    with mock_aws():
-        yield boto3.resource("s3", region_name="us-east-1")
-
-
-@pytest.fixture
-def aws_client(aws_credentials):
-    with mock_aws():
-        yield boto3.client("dynamodb", region_name="us-east-1")
-
-
-@pytest.fixture
-def mock_recipes_table(mock_dynamodb_resource):
-        mock_dynamodb_resource.create_table(
-            AttributeDefinitions=[{"AttributeName": "id", "AttributeType": "S"}],
-            TableName="RecipeTable",
-            KeySchema=[{"AttributeName": "id", "KeyType": "HASH"}],
-            ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
-        )
-        table = mock_dynamodb_resource.Table("RecipeTable")
-        table.wait_until_exists()
-
-        yield table
-
-@pytest.fixture
-def mock_recipe_bucket(mock_s3_resource):
-    mock_s3_resource.create_bucket(Bucket="cody-richter-cooks-recipes")
-    bucket = mock_s3_resource.Bucket("cody-richter-cooks-recipes")
-    yield bucket
-
 
 def test_put_new_recipe(mock_recipes_table, mock_recipe_bucket):
     test_create_recipe_request = {
@@ -97,6 +51,7 @@ def test_put_invalid_recipe(mock_recipes_table, mock_recipe_bucket):
     }
     response = handle_event(test_create_recipe_request, None)
     assert response['statusCode'] == 400
+
 
 def test_update_recipe(mock_recipes_table, mock_recipe_bucket):
     test_recipe_with_id = {**test_recipe_data, **{'id': '123'}}

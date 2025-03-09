@@ -1,5 +1,8 @@
 from decimal import Decimal
 import json
+
+from app.data.communication.GetRecipeModels import GetRecipeRequest, GetRecipeResponse
+from app.data.communication.ListRecipeModels import ListRecipeRequest, ListRecipeResponse
 from app.data.serde import serialize_recipe
 from app.methods.get_recipe import get_recipe
 from app.methods.put_recipe import put_recipe
@@ -19,24 +22,29 @@ def handle_event(event, context):
             # If a query string ID parameter is provided, return the recipe details
             if is_defined(event, ['queryStringParameters', 'id']):
                 try:
-                    recipe_id = event['queryStringParameters']['id']
-                    recipe = get_recipe(recipe_id)
+                    get_recipe_request = GetRecipeRequest(recipe_id=event['queryStringParameters']['id'])
+                    get_recipe_response: GetRecipeResponse = get_recipe(get_recipe_request)
                 except:
                     print(f"Interal Error: {traceback.format_exc()}")
                     return http_500("Internal Server Error. Please try again later. Code: GR-001")
 
-                if not is_defined(recipe, ['recipe']) or len(recipe['recipe']) == 0:
-                    print(f"Recipe not found with ID: {recipe_id}")
-                    return http_404('Recipe not found')
+                if not get_recipe_response.recipe:
+                    print(f"Recipe not found with ID: {get_recipe_request.recipe_id}")
+                    return http_404(f'Recipe not found with ID: {get_recipe_request.recipe_id}')
 
-                return http_200(recipe)
+                return http_200(get_recipe_response.model_dump())
             
-            # If no query string ID parameter is provided, return a list of recipes
+            # If no query string ID parameter is provided, return a list of recipes.
+            # This will be used to display the recipes on the sidebar, and is able to handle pagination.
             else:
                 try:
-                    recipes = list_recipes()
-                    print(f"Returning {len(recipes)} recipes.")
-                    return http_200(recipes)
+                    list_recipe_request = ListRecipeRequest(
+                        pagination_key=event['queryStringParameters']['pagination_key']
+                            if is_defined(event, ['queryStringParameters', 'pagination_key']) else None
+                    )
+                    list_recipe_response: ListRecipeResponse = list_recipes(list_recipe_request)
+                    print(f"[List Recipe]: Returning {len(list_recipe_response.recipes)} recipes.")
+                    return http_200(list_recipe_response.model_dump())
                 except Exception as e:
                     print(f"Interal Error: {traceback.format_exc(e)}")
                     return http_500("Internal Server Error. Please try again later. Code: LR-001")

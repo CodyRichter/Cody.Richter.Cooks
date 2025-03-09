@@ -1,13 +1,12 @@
-import os
-from moto import mock_aws  # THIS IMPORT MUST BE ABOVE ALL OTHERS IN ORDER TO MOCK AWS SERVICES
-from app.get_event_handler import handle_event
 import json
-import boto3
-import pytest
 from decimal import Decimal
 
+from app.constants import RECIPES_PER_PAGE
+from app.get_event_handler import handle_event
+
+test_recipe_id = '1'
 test_recipe_data = {
-    'id': '1',
+    'id': test_recipe_id,
     'title': 'Test Recipe',
     'description': 'TestS3Key',
     'ingredients': [
@@ -31,55 +30,12 @@ test_recipe_data = {
 
 test_recipe_description = 'This is a test recipe'
 
-@pytest.fixture(scope="session")
-def clear_default_boto3_session(): 
-    boto3.DEFAULT_SESSION = None
 
-
-@pytest.fixture(scope="function")
-def aws_credentials():
-    """Mocked AWS Credentials for moto."""
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-
-
-@pytest.fixture
-def mock_dynamodb_resource(aws_credentials):
-    with mock_aws():
-        yield boto3.resource("dynamodb", region_name="us-east-1")
-
-@pytest.fixture
-def mock_s3_resource(aws_credentials):
-    with mock_aws():
-        yield boto3.resource("s3", region_name="us-east-1")
-
-@pytest.fixture
-def mock_recipe_bucket(mock_s3_resource):
-    mock_s3_resource.create_bucket(Bucket="cody-richter-cooks-recipes")
-    bucket = mock_s3_resource.Bucket("cody-richter-cooks-recipes")
-    yield bucket
-
-
-@pytest.fixture
-def mock_recipes_table(mock_dynamodb_resource):
-        mock_dynamodb_resource.create_table(
-            AttributeDefinitions=[{"AttributeName": "id", "AttributeType": "S"}],
-            TableName="RecipeTable",
-            KeySchema=[{"AttributeName": "id", "KeyType": "HASH"}],
-            ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
-        )
-        table = mock_dynamodb_resource.Table("RecipeTable")
-        table.wait_until_exists()
-        yield table
-
-# When no recipe ID is provided, a list of all recipe names should be returned
-def test_list_all_recipes(mock_recipes_table):
+# When no recipe ID is provided, a list of all recipe name and IDs should be returned
+def test_list_all_recipes_simple(mock_recipes_table):
     mock_recipes_table.put_item(Item=test_recipe_data)
     response = handle_event({'httpMethod': 'GET'}, {})
-    
+
     assert response['statusCode'] == 200
     body = json.loads(response['body'])
     assert 'recipes' in body
@@ -88,13 +44,69 @@ def test_list_all_recipes(mock_recipes_table):
     assert body['recipes'][0]['title'] == 'Test Recipe'
 
 
+def test_list_all_recipes_pagination(mock_recipes_table):
+    for i in range(1, 26):
+        recipe_item = {
+            'id': str(i),
+            'title': f'Test Recipe {i}',
+            'description': f'Placeholder description for recipe {i}',
+            'ingredients': [],
+            'instructions': []
+        }
+        mock_recipes_table.put_item(Item=recipe_item)
+
+    response = handle_event({'httpMethod': 'GET'}, {})
+    assert response['statusCode'] == 200
+
+    body = json.loads(response['body'])
+
+    assert 'recipes' in body
+    assert len(body['recipes']) == RECIPES_PER_PAGE
+    assert 'pagination_key' in body
+
+    pagination_key = body['pagination_key']
+
+    second_page_response = handle_event({
+        'httpMethod': 'GET',
+        'queryStringParameters': {'pagination_key': pagination_key}}, {}
+    )
+
+    assert second_page_response['statusCode'] == 200
+    second_page_body = json.loads(second_page_response['body'])
+    assert 'recipes' in second_page_body
+    assert len(second_page_body['recipes']) == 10
+
+
+def test_list_all_recipes_pagination_bad_key(mock_recipes_table):
+    response = handle_event({
+        'httpMethod': 'GET',
+        'queryStringParameters': {'pagination_key': 'ThisIsNotAValidKey'}}, {}
+    )
+
+    assert response['statusCode'] == 200
+    body = json.loads(response['body'])
+    assert 'recipes' in body
+    assert len(body['recipes']) == 0
+    assert body['pagination_key'] is None
+
+
+def test_list_all_recipes_no_recipes_found(mock_recipes_table):
+    response = handle_event({'httpMethod': 'GET'}, {})
+
+    assert response['statusCode'] == 200
+    body = json.loads(response['body'])
+    assert 'recipes' in body
+    assert len(body['recipes']) == 0
+    assert type(body['recipes']) == list
+
+
 # When a recipe ID is provided, the recipe data should be returned
 def test_get_recipe(mock_recipes_table, mock_recipe_bucket):
     mock_recipes_table.put_item(Item=test_recipe_data)
-    mock_recipe_bucket.put_object(Key='TestS3Key', Body=test_recipe_description)
+    mock_recipe_bucket.put_object(Key=test_recipe_id, Body=test_recipe_description)
 
     response = handle_event({'httpMethod': 'GET', 'queryStringParameters': {'id': '1'}}, {})
-    
+
     assert response['statusCode'] == 200
     body = json.loads(response['body'])
     assert 'recipe' in body
@@ -109,7 +121,7 @@ def test_get_recipe(mock_recipes_table, mock_recipe_bucket):
 def test_get_invalid_recipe(mock_recipes_table):
     mock_recipes_table.put_item(Item=test_recipe_data)
     response = handle_event({'httpMethod': 'GET', 'queryStringParameters': {'id': '2'}}, {})
-    
+
     assert response['statusCode'] == 404
     body = json.loads(response['body'])
-    assert body['detail'] == 'Recipe not found'
+    assert body['detail'] == 'Recipe not found with ID: 2'

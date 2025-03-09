@@ -1,9 +1,9 @@
-from app.constants import table, recipe_bucket
+from app.constants import table as ddb_recipe_table, recipe_bucket
 from app.data.model.Recipe import Recipe
 
 def put_recipe(recipe: Recipe):
     print(f"Creating recipe with ID: {recipe.id}")
-    created_recipe = put_recipe_internal(table, recipe)
+    created_recipe = put_recipe_internal(ddb_recipe_table, recipe)
     return {"recipe": created_recipe}
 
 def put_recipe_internal(table, recipe: Recipe):
