@@ -132,3 +132,10 @@ class ServerlessStack(Stack):
             authorization_type=apigw.AuthorizationType.COGNITO,
             authorizer=authorizer,
         )
+
+        post_method = recipe.add_method(
+            'DELETE',
+            integration=apigw.LambdaIntegration(post_event_lambda),
+            authorization_type=apigw.AuthorizationType.COGNITO,
+            authorizer=authorizer,
+        )

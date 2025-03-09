@@ -14,11 +14,10 @@ import traceback
 # Main handler function for all Recipe interactions
 # This function will handle the lambda-API gateway integration
 def handle_event(event, context):
-    print(f"Received event: {event} with context: {context}")
     try:
         # GET method will be used to retrieve recipe(s)
         # No AuthN/AuthZ is required for this method
-        if (event['httpMethod'] == 'GET'):
+        if event['httpMethod'] == 'GET':
             # If a query string ID parameter is provided, return the recipe details
             if is_defined(event, ['queryStringParameters', 'id']):
                 try:
@@ -51,6 +50,6 @@ def handle_event(event, context):
         
         print(f"Method not allowed: {event['httpMethod']}")
         return http_405() # Method not allowed
-    except Exception as e:
+    except Exception:
         print(f"Interal Error: {traceback.format_exc()}")
         return http_500("An error occurred while processing your request. Please try again later.")
