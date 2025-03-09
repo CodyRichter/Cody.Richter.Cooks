@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
 import { IconChevronLeft } from "@tabler/icons-react";
-import InvalidPermissionAlert from "@/common/components/Permissions/InvalidPermissionAlert";
+import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
 import Recipe from "@/common/types/Recipe";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
 import { notifications } from "@mantine/notifications";

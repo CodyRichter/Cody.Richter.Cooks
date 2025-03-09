@@ -7,6 +7,7 @@ import Recipe from "@/common/types/Recipe";
 import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
+import RecipeNotFound from "@/common/components/ErrorMessages/RecipeNotFound";
 import { getRecipeFromNetwork } from "@/utils/network";
 import parse from "html-react-parser";
 import { useAuth } from "react-oidc-context";
@@ -34,15 +35,18 @@ export default function ViewRecipe() {
   return (
     <>
       {networkStatus.isLoading && <RecipeLoadingSkeleton />}
-      {networkStatus.error && (
-        <Grid>
-          <Grid.Col span={12}>
-            <Text c="red" fw={500}>
-              {networkStatus.error}
-            </Text>
-          </Grid.Col>
-        </Grid>
-      )}
+      {networkStatus.error &&
+        (networkStatus.error === "404" ? (
+          <RecipeNotFound />
+        ) : (
+          <Grid>
+            <Grid.Col span={12}>
+              <Text c="red" fw={500}>
+                {networkStatus.error}
+              </Text>
+            </Grid.Col>
+          </Grid>
+        ))}
       {!networkStatus.isLoading && !networkStatus.error && recipe && (
         <>
           <Grid>

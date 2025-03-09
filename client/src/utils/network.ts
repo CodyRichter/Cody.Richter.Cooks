@@ -52,6 +52,13 @@ export async function getRecipeFromNetwork(
               response: null,
             });
           });
+      } else {
+        console.error("Recipe Load Error", response);
+        setNetworkResult({
+          isLoading: false,
+          error: "404",
+          response: null,
+        });
       }
     })
     .catch((e) => {
