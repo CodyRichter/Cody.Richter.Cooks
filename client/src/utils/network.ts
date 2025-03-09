@@ -72,3 +72,65 @@ export async function getRecipeFromNetwork(
       });
     });
 }
+
+export async function listRecipesFromNetwork(
+  paginationKey: string | undefined,
+  setNetworkResult: (result: NetworkResult) => void
+) {
+  setNetworkResult({
+    isLoading: true,
+    error: "",
+    response: null,
+  });
+
+  const searchParams = new URLSearchParams();
+  if (paginationKey) {
+    searchParams.append("pagination_key", paginationKey);
+  }
+
+  fetch(BASE_URL + `/recipes?${searchParams.toString()}`, {
+    method: "GET",
+  })
+    .then((response) => {
+      if (response.ok) {
+        response
+          .json()
+          .then((data) => {
+            setNetworkResult({
+              isLoading: false,
+              error: "",
+              response: {
+                recipes: data["recipes"],
+                paginationKey: data["pagination_key"] as string,
+              },
+            });
+          })
+          .catch((e) => {
+            console.error("Recipe Load Error", e);
+            setNetworkResult({
+              isLoading: false,
+              error:
+                "An error occurred while fetching recipes. Please try again later.",
+              response: null,
+            });
+          });
+      } else {
+        console.error("Recipe Load Error", response);
+        setNetworkResult({
+          isLoading: false,
+          error:
+            "An error occurred while fetching recipes. Please try again later.",
+          response: null,
+        });
+      }
+    })
+    .catch((e) => {
+      console.error("Recipe Load Error", e);
+      setNetworkResult({
+        isLoading: false,
+        error:
+          "An error occurred while fetching recipes. Please try again later.",
+        response: null,
+      });
+    });
+}

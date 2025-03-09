@@ -8,7 +8,7 @@ export interface NetworkResult {
 }
 
 export const INITIAL_NETWORK_RESULT: NetworkResult = {
-  isLoading: false,
+  isLoading: true,
   error: "",
   response: null,
 };

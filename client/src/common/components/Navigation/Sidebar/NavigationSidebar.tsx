@@ -1,8 +1,21 @@
-import { Container, Divider, NavLink, Skeleton, Text } from "@mantine/core";
+import {
+  BASE_URL,
+  INITIAL_NETWORK_RESULT,
+  NetworkResult,
+} from "@/common/network/constants";
+import {
+  Button,
+  Container,
+  Divider,
+  Group,
+  NavLink,
+  Skeleton,
+  Text,
+} from "@mantine/core";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import React, { useEffect } from "react";
 
-import { BASE_URL } from "@/common/network/constants";
-import { IconChevronRight } from "@tabler/icons-react";
+import { listRecipesFromNetwork } from "@/utils/network";
 import { useRouter } from "next/router";
 
 const LOADING_NO_ERROR = { isLoading: true, error: "" };
@@ -28,44 +41,49 @@ export default function NavigationSidebar({
 }: NavigationSidebarProps) {
   const router = useRouter();
 
-  const [recipeList, setRecipeList] = React.useState<RecipeListItem[]>([]);
-  const [networkStatus, setNetworkStatus] = React.useState({
-    isLoading: true,
-    error: "",
-  });
+  const [networkResult, setNetworkResult] = React.useState<NetworkResult>(
+    INITIAL_NETWORK_RESULT
+  );
+
+  const [paginationKeys, setPaginationKeys] = React.useState<any>([undefined]);
+  const [paginationIndex, setPaginationIndex] = React.useState<number>(0);
 
   useEffect(() => {
-    setNetworkStatus(LOADING_NO_ERROR);
-    fetch(BASE_URL + "/recipes", {
-      method: "GET",
-    })
-      .then((response) => {
-        if (response.ok) {
-          response
-            .json()
-            .then((data) => {
-              setRecipeList(data["recipes"] as RecipeListItem[]);
-              setNetworkStatus(LOADED_NO_ERROR);
-            })
-            .catch((e) => {
-              console.error("Recipe Load Error", e);
-              setNetworkStatus({
-                isLoading: false,
-                error:
-                  "An error occurred while fetching the recipe. Please try again later.",
-              });
-            });
-        }
-      })
-      .catch((e) => {
-        console.error("Recipe Load Error", e);
-        setNetworkStatus({
-          isLoading: false,
-          error:
-            "An error occurred while fetching the recipe. Please try again later.",
-        });
-      });
-  }, []);
+    if (paginationKeys.length > 0) {
+      listRecipesFromNetwork(paginationKeys[paginationIndex], setNetworkResult);
+    } else {
+      listRecipesFromNetwork(undefined, setNetworkResult);
+    }
+  }, [paginationIndex]);
+
+  useEffect(() => {
+    // If there is a pagination key in the response, add it to the list of keys.
+    // This will allow us to paginate through the results. However, we need to
+    // make sure that we don't add the same key multiple times.
+    if (
+      networkResult.response?.paginationKey &&
+      networkResult.response.paginationKey !== undefined
+    ) {
+      if (!paginationKeys.includes(networkResult.response.paginationKey)) {
+        setPaginationKeys([
+          ...paginationKeys,
+          networkResult.response.paginationKey,
+        ]);
+      }
+    }
+  }, [networkResult.response]);
+
+  function handlePaginationBack() {
+    if (paginationIndex > 0) {
+      setPaginationIndex(paginationIndex - 1);
+    }
+  }
+
+  function handlePaginationForward() {
+    if (paginationIndex < paginationKeys.length - 1) {
+      setPaginationIndex(paginationIndex + 1);
+    }
+  }
 
   function handleRecipeClick(recipeId: string) {
     router.push(`/recipes/view/${recipeId}`);
@@ -77,17 +95,32 @@ export default function NavigationSidebar({
 
   return (
     <>
-      {networkStatus.isLoading && <Skeleton h={28} mt="sm" animate={false} />}
-      {networkStatus.error && <Skeleton h={28} mt="sm" animate={false} />}
-      {!networkStatus.error && !networkStatus.isLoading && (
+      {networkResult.isLoading && <Skeleton h={28} mt="sm" animate={false} />}
+      {networkResult.error && <Skeleton h={28} mt="sm" animate={false} />}
+      {!networkResult.error && !networkResult.isLoading && (
         <div className="navigationSidebarContainer">
-          <Text fw={300} ml="md" mb="sm" mt="xs" size="xl">
-            Available Recipes
-          </Text>
+          <Group justify="center" mb="sm" mt="xs">
+            <Button
+              size="compact-md"
+              onClick={handlePaginationBack}
+              disabled={paginationIndex === 0}
+              leftSection={<IconChevronLeft />}
+            >
+              Last Page
+            </Button>
+            <Button
+              size="compact-md"
+              onClick={handlePaginationForward}
+              disabled={paginationIndex >= paginationKeys.length - 1}
+              rightSection={<IconChevronRight />}
+            >
+              Next Page
+            </Button>
+          </Group>
 
           <Divider mb="xs" />
 
-          {recipeList.map((recipe) => (
+          {networkResult.response.recipes.map((recipe: RecipeListItem) => (
             <NavLink
               w="100%"
               key={`sidebar-recipe-${recipe.id}`}
