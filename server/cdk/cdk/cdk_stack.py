@@ -8,6 +8,11 @@ from aws_cdk import (
     aws_cognito as cognito,
     aws_s3 as s3,
 )
+
+# Import Cognito FeaturePlan
+
+
+
 from aws_cdk.aws_lambda_python_alpha import PythonFunction, PythonLayerVersion, BundlingOptions
 from constructs import Construct
 
@@ -78,6 +83,7 @@ class ServerlessStack(Stack):
         user_pool = cognito.UserPool(
             self, "CookingUserPool",
             user_pool_name="CookingUserPool",
+            feature_plan=cognito.FeaturePlan.ESSENTIALS
         )
         user_pool.add_client(
             "CookingUserPoolClient",
