@@ -81,7 +81,7 @@ export default function DeleteRecipeModal({
         </Button>
         <Button
           color="red"
-          disabled={timeUntilDeletionEnabled > 0}
+          disabled={timeUntilDeletionEnabled > 0 || networkStatus.isLoading}
           onClick={handleDeleteRecipe}
         >
           {timeUntilDeletionEnabled > 0 ? (
