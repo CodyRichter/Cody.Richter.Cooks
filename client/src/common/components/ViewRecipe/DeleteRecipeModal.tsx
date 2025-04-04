@@ -1,16 +1,28 @@
 import { Button, Center, Divider, Group, Modal, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 
+import { INITIAL_NETWORK_RESULT } from "@/common/network/constants";
+import { deleteRecipeFromNetwork } from "@/utils/network";
+import { notifications } from "@mantine/notifications";
+import { useAuth } from "react-oidc-context";
+import { useRouter } from "next/router";
+
 export default function DeleteRecipeModal({
   recipeTitle,
+  recipeId,
   opened,
   close,
 }: {
   recipeTitle: string;
+  recipeId: string;
   opened: boolean;
   close: () => void;
 }) {
   const [timeUntilDeletionEnabled, setTimeUntilDeletionEnabled] = useState(0);
+  const auth = useAuth();
+  const router = useRouter();
+
+  const [networkStatus, setNetworkStatus] = useState(INITIAL_NETWORK_RESULT);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -25,9 +37,21 @@ export default function DeleteRecipeModal({
     }
   }, [opened]);
 
-  function handleDeleteRecipe() {
-    // Delete
-    close();
+  useEffect(() => {
+    // If the deletion was successful, show a notification and redirect
+    if (networkStatus.response) {
+      notifications.show({
+        title: "Recipe Deleted",
+        message: `"${recipeTitle}" has been deleted.`,
+        color: "green",
+      });
+
+      router.push("/");
+    }
+  }, [networkStatus.response]);
+
+  async function handleDeleteRecipe() {
+    deleteRecipeFromNetwork(recipeId, setNetworkStatus, auth);
   }
 
   return (
@@ -43,6 +67,13 @@ export default function DeleteRecipeModal({
         Are you sure you want to delete this recipe? This action cannot be
         undone.
       </Text>
+
+      {networkStatus.error && (
+        <Text c="red" fw={500} ta="center" mt="md">
+          {networkStatus.error}
+        </Text>
+      )}
+
       <Divider mb="md" mt="md" />
       <Group justify="space-between">
         <Button variant="outline" onClick={close}>

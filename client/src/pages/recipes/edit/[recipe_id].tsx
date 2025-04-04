@@ -1,75 +1,37 @@
 import { ActionIcon, Alert, Button, Grid, Group, Text } from "@mantine/core";
+import { BASE_URL, INITIAL_NETWORK_RESULT } from "@/common/network/constants";
 import { useEffect, useState } from "react";
 
-import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
 import { IconChevronLeft } from "@tabler/icons-react";
 import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
 import Recipe from "@/common/types/Recipe";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
+import { getRecipeFromNetwork } from "@/utils/network";
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/router";
-
-const LOADING_NO_ERROR = { isLoading: true, error: "" };
-const LOADED_NO_ERROR = { isLoading: false, error: "" };
 
 export default function EditRecipePage() {
   const router = useRouter();
   const auth = useAuth();
   const recipe_id: string = router.query.recipe_id as string;
 
-  const [networkStatus, setNetworkStatus] = useState(LOADING_NO_ERROR);
+  const [networkStatus, setNetworkStatus] = useState(INITIAL_NETWORK_RESULT);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isEditButtonLoading, setIsEditButtonLoading] = useState(false);
 
   // Load the recipe from the server
   useEffect(() => {
-    setNetworkStatus(LOADING_NO_ERROR);
-    if (!recipe_id) {
-      setNetworkStatus({
-        isLoading: false,
-        error: "No recipe ID provided. Please try again later.",
-      });
-      return;
-    }
-    fetch(
-      BASE_URL +
-        `/recipes?` +
-        new URLSearchParams({
-          id: recipe_id!,
-        }),
-      {
-        method: "GET",
-      }
-    )
-      .then((response) => {
-        if (response.ok) {
-          response
-            .json()
-            .then((data) => {
-              setRecipe(data["recipe"] as Recipe);
-              setNetworkStatus(LOADED_NO_ERROR);
-            })
-            .catch((e) => {
-              console.error("Recipe Load Error", e);
-              setNetworkStatus({
-                isLoading: false,
-                error:
-                  "An error occurred while fetching the recipe. Please try again later.",
-              });
-            });
-        }
-      })
-      .catch((e) => {
-        console.error("Recipe Load Error", e);
-        setNetworkStatus({
-          isLoading: false,
-          error:
-            "An error occurred while fetching the recipe. Please try again later.",
-        });
-      });
+    getRecipeFromNetwork(recipe_id, setNetworkStatus);
   }, [recipe_id]);
+
+  // Set the recipe state when the network status changes
+  useEffect(() => {
+    if (networkStatus.response) {
+      setRecipe(networkStatus.response as Recipe);
+    }
+  }, [networkStatus.response]);
 
   function isRecipeValid(): boolean {
     if (!recipe) {

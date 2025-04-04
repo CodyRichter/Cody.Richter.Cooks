@@ -92,6 +92,7 @@ export default function ViewRecipe() {
 
           <DeleteRecipeModal
             recipeTitle={recipe.title}
+            recipeId={recipe.id}
             opened={deleteModalOpened}
             close={close}
           />

@@ -134,3 +134,51 @@ export async function listRecipesFromNetwork(
       });
     });
 }
+
+export async function deleteRecipeFromNetwork(
+  id: string,
+  setNetworkResult: (result: NetworkResult) => void,
+  auth: any
+) {
+  setNetworkResult({
+    isLoading: true,
+    error: "",
+    response: null,
+  });
+
+  const searchParams = new URLSearchParams();
+  searchParams.append("id", id);
+
+  fetch(BASE_URL + `/recipes?${searchParams.toString()}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${auth.user?.id_token}`,
+    },
+  })
+    .then((response) => {
+      if (response.ok) {
+        setNetworkResult({
+          isLoading: false,
+          error: "",
+          response: "Successfully deleted",
+        });
+      } else {
+        console.error("Recipe Deletion Error [1]", response);
+        setNetworkResult({
+          isLoading: false,
+          error:
+            "An error occurred while deleting the recipe. Please try again later.",
+          response: null,
+        });
+      }
+    })
+    .catch((e) => {
+      console.error("Recipe Deletion Error [2]", e);
+      setNetworkResult({
+        isLoading: false,
+        error:
+          "An error occurred while deleting the recipe. Please try again later.",
+        response: null,
+      });
+    });
+}
