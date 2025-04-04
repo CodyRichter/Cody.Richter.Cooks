@@ -2,6 +2,7 @@ import { Checkbox, Group, Stack, Text } from "@mantine/core";
 
 import Ingredient from "@/common/types/Ingredient";
 import React from "react";
+import { convertToFractionalRepresentation } from "@/utils/recipeUtils";
 
 export default function RecipeIngredientCard({
   ingredients,
@@ -16,7 +17,8 @@ export default function RecipeIngredientCard({
         <Group key={`ingredient-${ingredient.id}`} ml="md">
           <Checkbox>{ingredient.name}</Checkbox>
           <Text size="sm">
-            {ingredient.quantity} {ingredient.unit} {ingredient.name}
+            {convertToFractionalRepresentation(ingredient.quantity)}{" "}
+            {ingredient.unit} {ingredient.name}
           </Text>
           {ingredient.subtext && (
             <Text size="sm" c="dimmed" ml="sm">
