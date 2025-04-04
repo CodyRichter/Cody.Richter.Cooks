@@ -66,28 +66,3 @@ def test_update_recipe(mock_recipes_table, mock_recipe_bucket):
     assert 'recipe' in parsed_body
     assert 'id' in parsed_body['recipe']
     assert parsed_body['recipe']['id'] == '123'
-
-
-
-def test_delete_recipe(mock_recipes_table, mock_recipe_bucket):
-    test_recipe_with_id = {**test_recipe_data, **{'id': '123'}}
-
-    mock_recipes_table.put_item(Item=test_recipe_with_id)
-    mock_recipe_bucket.put_object(Key='123', Body='Test Recipe Description')
-
-    # Delete the recipe
-    test_delete_recipe_request = {
-        'httpMethod': 'DELETE',
-        'queryStringParameters': {
-            'id': '123'
-        }
-    }
-
-    response = handle_event(test_delete_recipe_request, None)
-    assert response['statusCode'] == 200
-
-    # Verify the recipe is deleted from DDB and S3
-    response = mock_recipes_table.get_item(Key={'id': '123'})
-    assert 'Item' not in response
-    with pytest.raises(botocore.exceptions.ClientError):
-        mock_recipe_bucket.Object('123').get()

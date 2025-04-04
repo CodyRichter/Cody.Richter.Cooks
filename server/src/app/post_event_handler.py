@@ -29,14 +29,6 @@ def handle_event(event, context):
 
             created_recipe: PutRecipeResponse = put_recipe(recipe)
             return http_201(created_recipe.model_dump())
-        elif event['httpMethod'] == 'DELETE':
-            if not is_defined(event, ['queryStringParameters', 'id']):
-                return http_400("Missing required query parameter: id")
-            delete_request = DeleteRecipeRequest(
-                recipe_id=event['queryStringParameters']['id']
-            )
-            delete_recipe_response = delete_recipe(delete_request)
-            return http_200(delete_recipe_response.model_dump())
 
         print(f"Method not allowed: {event['httpMethod']}")
         return http_405()  # Method not allowed

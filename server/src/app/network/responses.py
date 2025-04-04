@@ -47,7 +47,7 @@ def http_404(error_message: str):
 def http_405():
     return {
         'statusCode': 405,
-        'body': json.dumps({'detail': "Unsupported method. Allowed: [GET, POST]"}),
+        'body': json.dumps({'detail': "Unsupported method."}),
         'headers': cors_headers
     }
 

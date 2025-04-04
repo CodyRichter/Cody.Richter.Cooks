@@ -56,6 +56,20 @@ class ServerlessStack(Stack):
             )
         )
 
+        delete_event_lambda = PythonFunction(
+            self, 'CookingDeleteEventLambda',
+            function_name='CookingDeleteEventLambda',
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            entry='../src',
+            index='app/delete_event_handler.py',
+            handler='handle_event',
+            timeout=Duration.seconds(10),
+            layers=[python_dependency_layer],
+            bundling=BundlingOptions(
+                asset_excludes=[".venv", ".gitignore", '.pytest_cache', 'tests'],
+            )
+        )
+
         recipe_table = ddb.Table(
             self, 'RecipeTable',
             table_name='RecipeTable',
@@ -66,6 +80,7 @@ class ServerlessStack(Stack):
         )
         recipe_table.grant_read_data(get_event_lambda)
         recipe_table.grant_read_write_data(post_event_lambda)
+        recipe_table.grant_read_write_data(delete_event_lambda)
 
         recipe_bucket = s3.Bucket(
             self, 'RecipeBucket',
@@ -78,6 +93,7 @@ class ServerlessStack(Stack):
         )
 
         recipe_bucket.grant_read_write(post_event_lambda)
+        recipe_bucket.grant_read(delete_event_lambda)
         recipe_bucket.grant_read(get_event_lambda)
 
         user_pool = cognito.UserPool(
@@ -139,9 +155,9 @@ class ServerlessStack(Stack):
             authorizer=authorizer,
         )
 
-        post_method = recipe.add_method(
+        delete_method = recipe.add_method(
             'DELETE',
-            integration=apigw.LambdaIntegration(post_event_lambda),
+            integration=apigw.LambdaIntegration(delete_event_lambda),
             authorization_type=apigw.AuthorizationType.COGNITO,
             authorizer=authorizer,
         )
