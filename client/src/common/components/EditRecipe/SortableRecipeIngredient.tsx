@@ -1,7 +1,9 @@
 import {
   ActionIcon,
   Button,
+  Divider,
   Flex,
+  Group,
   NumberInput,
   Popover,
   TextInput,
@@ -36,7 +38,7 @@ export default function SortableRecipeIngredient({
     });
 
   return (
-    <div
+    <Group
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(
@@ -46,6 +48,15 @@ export default function SortableRecipeIngredient({
       }}
       className="sortableItem"
     >
+      <ActionIcon
+        variant="subtle"
+        color="gray"
+        className="sortableMoveIcon"
+        {...attributes}
+        {...listeners}
+      >
+        <IconGripVertical size={24} />
+      </ActionIcon>
       <Flex
         mih={55}
         gap="md"
@@ -53,16 +64,11 @@ export default function SortableRecipeIngredient({
         align="flex-end"
         direction="row"
         wrap="wrap"
+        style={{
+          borderBottom: "1px solid #e0e0e0",
+          paddingBottom: 10,
+        }}
       >
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          className="sortableMoveIcon"
-          {...attributes}
-          {...listeners}
-        >
-          <IconGripVertical size={20} />
-        </ActionIcon>
         <NumberInput
           label="Quantity"
           value={ingredient.quantity}
@@ -163,6 +169,6 @@ export default function SortableRecipeIngredient({
           </Popover.Dropdown>
         </Popover>
       </Flex>
-    </div>
+    </Group>
   );
 }
