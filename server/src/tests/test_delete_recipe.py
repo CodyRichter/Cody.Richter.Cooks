@@ -20,7 +20,6 @@ test_recipe_data = {
     'instructions': [
         {
             'id': '1',
-            'step_number': '0',
             'title': 'Step 1',
             'description': 'This is step 1'
         }
