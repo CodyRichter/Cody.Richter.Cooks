@@ -4,10 +4,8 @@ import {
   Flex,
   Group,
   Popover,
-  Stack,
   TextInput,
   Textarea,
-  em,
 } from "@mantine/core";
 import {
   IconExclamationMark,
@@ -19,7 +17,6 @@ import { CSS } from "@dnd-kit/utilities";
 import InstructionStep from "@/common/types/InstructionStep";
 import React from "react";
 import Recipe from "@/common/types/Recipe";
-import { useMediaQuery } from "@mantine/hooks";
 import { useSortable } from "@dnd-kit/sortable";
 
 export default function SortableRecipeInstruction({
@@ -38,8 +35,6 @@ export default function SortableRecipeInstruction({
       id: instructionStep.id,
     });
 
-  const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
-
   return (
     <Group
       ref={setNodeRef}
@@ -51,17 +46,20 @@ export default function SortableRecipeInstruction({
       }}
       className="sortableItem"
     >
-      <Stack gap="xs">
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          className="sortableMoveIcon"
-          {...attributes}
-          {...listeners}
-        >
-          <IconGripVertical size={30} />
-        </ActionIcon>
-      </Stack>
+      <ActionIcon
+        variant="subtle"
+        color="gray"
+        className="sortableMoveIcon"
+        {...attributes}
+        {...listeners}
+        style={{
+          height: 80,
+          width: 30,
+          borderRadius: 8,
+        }}
+      >
+        <IconGripVertical size={24} />
+      </ActionIcon>
 
       <Flex
         mih={55}
@@ -74,6 +72,7 @@ export default function SortableRecipeInstruction({
           borderBottom: "1px solid #e0e0e0",
           paddingBottom: 20,
           paddingTop: 10,
+          width: "80%",
         }}
       >
         <TextInput
@@ -82,7 +81,7 @@ export default function SortableRecipeInstruction({
           value={instructionStep.title}
           size="sm"
           radius="md"
-          style={{ width: 500 }}
+          style={{ width: "100%" }}
           withAsterisk
           onChange={(e) => {
             const newInstructions = [...recipe.instructions];
@@ -91,38 +90,6 @@ export default function SortableRecipeInstruction({
           }}
         />
 
-        {/* On desktop, the delete button is displayed as an icon with a popover confirmation */}
-        {!isMobile && (
-          <Popover position="right" withArrow trapFocus shadow="md">
-            <Popover.Target>
-              <ActionIcon
-                variant="outline"
-                color="red"
-                aria-label="Gradient action icon"
-              >
-                <IconTrash style={{ width: 20, height: 20 }} />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Button
-                color="red"
-                onClick={() => {
-                  const newInstructions = [...recipe.instructions];
-                  newInstructions.splice(index, 1);
-                  setRecipe({ ...recipe, instructions: newInstructions });
-                }}
-                rightSection={
-                  <IconExclamationMark style={{ width: 20, height: 20 }} />
-                }
-                leftSection={
-                  <IconExclamationMark style={{ width: 20, height: 20 }} />
-                }
-              >
-                Confirm Delete
-              </Button>
-            </Popover.Dropdown>
-          </Popover>
-        )}
         <Textarea
           label="Description"
           placeholder="Using a 10in chef's knife, cut the onions into small pieces..."
@@ -130,8 +97,9 @@ export default function SortableRecipeInstruction({
           autosize
           size="sm"
           radius="md"
-          style={{ width: isMobile ? "100%" : "85%" }}
+          style={{ width: "100%" }}
           maxRows={8}
+          minRows={2}
           value={instructionStep.description}
           onChange={(e) => {
             const newInstructions = [...recipe.instructions];
@@ -139,41 +107,40 @@ export default function SortableRecipeInstruction({
             setRecipe({ ...recipe, instructions: newInstructions });
           }}
         />
-        {/* On mobile, the delete button is displayed at the bottom of the section and in full width */}
-        {isMobile && (
-          <Popover position="bottom" withArrow trapFocus shadow="md">
-            <Popover.Target>
-              <Button
-                fullWidth
-                color="red"
-                variant="outline"
-                size="xs"
-                leftSection={<IconTrash style={{ width: 20, height: 20 }} />}
-              >
-                Delete Step {instructionStep.title}
-              </Button>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Button
-                color="red"
-                onClick={() => {
-                  const newInstructions = [...recipe.instructions];
-                  newInstructions.splice(index, 1);
-                  setRecipe({ ...recipe, instructions: newInstructions });
-                }}
-                rightSection={
-                  <IconExclamationMark style={{ width: 20, height: 20 }} />
-                }
-                leftSection={
-                  <IconExclamationMark style={{ width: 20, height: 20 }} />
-                }
-              >
-                Confirm Delete
-              </Button>
-            </Popover.Dropdown>
-          </Popover>
-        )}
       </Flex>
+      <Popover position="left" withArrow trapFocus shadow="md">
+        <Popover.Target>
+          <ActionIcon
+            variant="outline"
+            color="red"
+            size="md"
+            style={{
+              height: 70, // Full height of the row
+              borderRadius: 8,
+            }}
+          >
+            <IconTrash size={20} />
+          </ActionIcon>
+        </Popover.Target>
+        <Popover.Dropdown>
+          <Button
+            color="red"
+            onClick={() => {
+              const newInstructions = [...recipe.instructions];
+              newInstructions.splice(index, 1);
+              setRecipe({ ...recipe, instructions: newInstructions });
+            }}
+            rightSection={
+              <IconExclamationMark style={{ width: 20, height: 20 }} />
+            }
+            leftSection={
+              <IconExclamationMark style={{ width: 20, height: 20 }} />
+            }
+          >
+            Confirm Delete
+          </Button>
+        </Popover.Dropdown>
+      </Popover>
     </Group>
   );
 }
