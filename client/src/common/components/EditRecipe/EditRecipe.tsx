@@ -174,7 +174,6 @@ export default function EditRecipe({
                 const newInstructions = [...recipe.instructions];
                 newInstructions.push({
                   id: crypto.randomUUID(),
-                  step_number: newInstructions.length + 1,
                   title: "",
                   description: "",
                 });

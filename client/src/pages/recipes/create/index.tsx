@@ -42,10 +42,7 @@ export default function CreateRecipe() {
 
     // Check if all instructions have a step
     const instructionsValid = newRecipe.instructions.every(
-      (instruction) =>
-        !!instruction.step_number &&
-        !!instruction.title &&
-        !!instruction.description
+      (instruction) => !!instruction.title && !!instruction.description
     );
 
     return baseFieldsValid && ingredientsValid && instructionsValid;

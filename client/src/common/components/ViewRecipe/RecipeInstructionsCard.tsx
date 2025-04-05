@@ -24,7 +24,7 @@ export default function RecipeInstructionsCard({
           <Group>
             <Checkbox />
             <Text size="lg" w="80%">
-              Step {instructionStep.step_number}: {instructionStep.title}
+              {instructionStep.title}
             </Text>
           </Group>
           <Text size="sm" mt="sm" w="85%">

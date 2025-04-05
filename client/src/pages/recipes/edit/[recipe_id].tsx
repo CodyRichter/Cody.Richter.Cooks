@@ -56,10 +56,7 @@ export default function EditRecipePage() {
 
     // Check if all instructions have a step
     const instructionsValid = recipe.instructions.every(
-      (instruction) =>
-        !!instruction.step_number &&
-        !!instruction.title &&
-        !!instruction.description
+      (instruction) => !!instruction.title && !!instruction.description
     );
 
     return baseFieldsValid && ingredientsValid && instructionsValid;
