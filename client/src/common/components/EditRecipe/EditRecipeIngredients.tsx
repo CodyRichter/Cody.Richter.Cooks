@@ -1,142 +1,66 @@
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
-  ActionIcon,
-  Button,
-  Divider,
-  Flex,
-  NumberInput,
-  Popover,
-  TextInput,
-} from "@mantine/core";
-import {
-  IconExclamationMark,
-  IconInfoCircle,
-  IconTrash,
-} from "@tabler/icons-react";
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 import Ingredient from "@/common/types/Ingredient";
 import React from "react";
 import Recipe from "@/common/types/Recipe";
+import SortableRecipeIngredient from "./SortableRecipeIngredient";
 
 interface EditRecipeIngredientsProps {
   recipe: Recipe;
   setRecipe: (recipe: Recipe) => void;
 }
 
+/**
+ * The EditRecipeIngredients component is responsible for rendering the list of ingredients
+ * for a recipe. It allows users to drag and drop ingredients to reorder them.
+ * It uses the DnD Kit library for drag and drop functionality.
+ */
 export default function EditRecipeIngredients({
   recipe,
   setRecipe,
 }: EditRecipeIngredientsProps) {
-  return recipe.ingredients.map((ingredient: Ingredient, index: number) => (
-    <div key={`ingredient-${ingredient.id}`}>
-      <Flex
-        mih={55}
-        gap="md"
-        justify="flex-start"
-        align="flex-end"
-        direction="row"
-        wrap="wrap"
+  const reorderIngredients = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!active || !over || !active.id || !over.id) {
+      return;
+    }
+    if (active.id !== over.id) {
+      setRecipe({
+        ...recipe,
+        ingredients: arrayMove(
+          recipe.ingredients,
+          recipe.ingredients.findIndex(
+            (ingredient) => ingredient.id === active.id
+          ),
+          recipe.ingredients.findIndex(
+            (ingredient) => ingredient.id === over.id
+          )
+        ),
+      });
+    }
+  };
+
+  return (
+    <DndContext onDragEnd={reorderIngredients}>
+      <SortableContext
+        items={recipe.ingredients}
+        strategy={verticalListSortingStrategy}
       >
-        <NumberInput
-          label="Quantity"
-          value={ingredient.quantity}
-          withAsterisk
-          allowNegative={false}
-          size="xs"
-          radius="md"
-          rightSection={<></>}
-          style={{ width: 100 }}
-          maxLength={10}
-          minLength={1}
-          onChange={(newValue) => {
-            const newIngredients = [...recipe.ingredients];
-            newIngredients[index].quantity = newValue as number;
-            setRecipe({ ...recipe, ingredients: newIngredients });
-          }}
-        />
-
-        <TextInput
-          label="Units"
-          placeholder="Tbsp..."
-          value={ingredient.unit}
-          size="xs"
-          radius="md"
-          style={{ width: 100 }}
-          withAsterisk
-          onChange={(e) => {
-            const newIngredients = [...recipe.ingredients];
-            newIngredients[index].unit = e.currentTarget.value;
-            setRecipe({ ...recipe, ingredients: newIngredients });
-          }}
-        />
-
-        <TextInput
-          label="Name"
-          placeholder="Onions..."
-          value={ingredient.name}
-          size="xs"
-          radius="md"
-          style={{ width: 200 }}
-          withAsterisk
-          onChange={(e) => {
-            const newIngredients = [...recipe.ingredients];
-            newIngredients[index].name = e.currentTarget.value;
-            setRecipe({ ...recipe, ingredients: newIngredients });
-          }}
-        />
-
-        <Popover width={250} position="right" withArrow trapFocus shadow="md">
-          <Popover.Target>
-            <ActionIcon variant="outline" color="gray">
-              <IconInfoCircle style={{ width: 20, height: 20 }} />
-            </ActionIcon>
-          </Popover.Target>
-          <Popover.Dropdown>
-            <TextInput
-              label="Additional Information"
-              placeholder="[Optional] Can substitute with..."
-              value={ingredient.subtext}
-              size="xs"
-              radius="md"
-              onChange={(e) => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients[index].subtext = e.currentTarget.value;
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
-            />
-          </Popover.Dropdown>
-        </Popover>
-
-        <Popover position="right" withArrow trapFocus shadow="md">
-          <Popover.Target>
-            <ActionIcon
-              variant="outline"
-              color="red"
-              aria-label="Gradient action icon"
-            >
-              <IconTrash style={{ width: 20, height: 20 }} />
-            </ActionIcon>
-          </Popover.Target>
-          <Popover.Dropdown>
-            <Button
-              color="red"
-              onClick={() => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients.splice(index, 1);
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
-              rightSection={
-                <IconExclamationMark style={{ width: 20, height: 20 }} />
-              }
-              leftSection={
-                <IconExclamationMark style={{ width: 20, height: 20 }} />
-              }
-            >
-              Confirm Delete
-            </Button>
-          </Popover.Dropdown>
-        </Popover>
-      </Flex>
-      <Divider mt="md" mb="xs" />
-    </div>
-  ));
+        {recipe.ingredients.map((ingredient: Ingredient, index: number) => (
+          <SortableRecipeIngredient
+            key={ingredient.id}
+            recipe={recipe}
+            ingredient={ingredient}
+            index={index}
+            setRecipe={setRecipe}
+          />
+        ))}
+      </SortableContext>
+    </DndContext>
+  );
 }

@@ -26,3 +26,10 @@ code {
   background-color: #ffffff;
   margin-bottom: 20px;
 }
+
+.sortableMoveIcon:hover {
+  cursor: grab;
+}
+.sortableMoveIcon:active {
+  cursor: grabbing;
+}
