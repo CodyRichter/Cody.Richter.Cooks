@@ -1,4 +1,4 @@
-import { Checkbox, Group, Stack, Text } from "@mantine/core";
+import { Card, Checkbox, Group, Stack, Text, Title } from "@mantine/core";
 
 import Ingredient from "@/common/types/Ingredient";
 import React from "react";
@@ -10,23 +10,24 @@ export default function RecipeIngredientCard({
   ingredients: Ingredient[];
 }) {
   return (
-    <Stack ml="md">
-      <Text size="lg">Ingredients</Text>
-
-      {ingredients.map((ingredient) => (
-        <Group key={`ingredient-${ingredient.id}`} ml="md">
-          <Checkbox>{ingredient.name}</Checkbox>
-          <Text size="sm">
-            {convertToFractionalRepresentation(ingredient.quantity)}{" "}
-            {ingredient.unit} {ingredient.name}
-          </Text>
-          {ingredient.subtext && (
-            <Text size="sm" c="dimmed" ml="sm">
-              ({ingredient.subtext})
-            </Text>
-          )}
-        </Group>
-      ))}
-    </Stack>
+    <Card shadow="sm" radius="md" withBorder pb="lg">
+      <Title order={4}>Ingredients</Title>
+      <Stack mt="sm">
+        {ingredients.map((ingredient) => (
+          <Group key={`ingredient-${ingredient.id}`} ml="md">
+            <Checkbox
+              label={`${convertToFractionalRepresentation(
+                ingredient.quantity
+              )} ${ingredient.unit} ${ingredient.name}`}
+            />
+            {ingredient.subtext && (
+              <Text size="sm" c="dimmed">
+                ({ingredient.subtext})
+              </Text>
+            )}
+          </Group>
+        ))}
+      </Stack>
+    </Card>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import DeleteRecipeModal from "@/common/components/ViewRecipe/DeleteRecipeModal";
 import { INITIAL_NETWORK_RESULT } from "@/common/network/constants";
+import { IconTool } from "@tabler/icons-react";
 import Recipe from "@/common/types/Recipe";
 import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
@@ -54,9 +55,7 @@ export default function ViewRecipe() {
               {auth.isAuthenticated && (
                 <Grid.Col span={12} className="viewRecipeAdminHeader">
                   <Group>
-                    <Text size="md" fw={500} ml="sm">
-                      Actions
-                    </Text>
+                    <IconTool size={24} style={{ marginLeft: "8px" }} />
                     <Divider orientation="vertical" />
                     <Button
                       onClick={() => {

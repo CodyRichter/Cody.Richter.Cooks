@@ -10,8 +10,8 @@ import {
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import React, { useEffect, useState } from "react";
 
-import EditRecipeIngredients from "./EditRecipeIngredients";
-import EditRecipeInstructions from "./EditRecipeInstructions";
+import EditRecipeIngredients from "./Ingredients/EditRecipeIngredients";
+import EditRecipeInstructions from "./Instructions/EditRecipeInstructions";
 import Highlight from "@tiptap/extension-highlight";
 import { IconPlus } from "@tabler/icons-react";
 import Recipe from "@/common/types/Recipe";
