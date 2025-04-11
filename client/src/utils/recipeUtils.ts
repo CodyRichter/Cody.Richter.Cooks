@@ -46,3 +46,17 @@ export function convertToFractionalRepresentation(candidate: number): string {
 
   return prefix === 0 ? fractionString : `${prefix} and ${fractionString}`;
 }
+
+/**
+ * Converts a string to title case.
+ * @param str The string to convert to title case
+ * @returns The title-cased string
+ */
+export function titleize(str: string): string {
+  return str
+    .toLowerCase()
+    .replaceAll(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

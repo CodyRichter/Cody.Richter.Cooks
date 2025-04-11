@@ -1,7 +1,6 @@
 import { Button, Center, Divider, Group, Modal, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 
-import { INITIAL_NETWORK_RESULT } from "@/common/network/constants";
 import { deleteRecipeFromNetwork } from "@/utils/network";
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";
@@ -22,7 +21,11 @@ export default function DeleteRecipeModal({
   const auth = useAuth();
   const router = useRouter();
 
-  const [networkStatus, setNetworkStatus] = useState(INITIAL_NETWORK_RESULT);
+  const [networkStatus, setNetworkStatus] = useState({
+    isLoading: false,
+    error: "",
+    response: null,
+  });
 
   useEffect(() => {
     const intervalId = setInterval(() => {

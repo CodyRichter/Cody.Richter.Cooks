@@ -1,4 +1,4 @@
-import { Button, Divider, Grid, Group, Text } from "@mantine/core";
+import { Badge, Button, Divider, Grid, Group, Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
 import DeleteRecipeModal from "@/common/components/ViewRecipe/DeleteRecipeModal";
@@ -11,6 +11,7 @@ import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingS
 import RecipeNotFound from "@/common/components/ErrorMessages/RecipeNotFound";
 import { getRecipeFromNetwork } from "@/utils/network";
 import parse from "html-react-parser";
+import { titleize } from "@/utils/recipeUtils";
 import { useAuth } from "react-oidc-context";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -24,9 +25,16 @@ export default function ViewRecipe() {
 
   const auth = useAuth();
 
-  // Memoize the recipe data
   const recipe = useMemo(() => {
-    return networkStatus.response as Recipe;
+    const recipe = networkStatus.response as Recipe;
+    if (!recipe) return null;
+
+    recipe.tags = recipe.tags.map((tag) => {
+      // Convert the tag to title case
+      return titleize(tag);
+    });
+
+    return recipe;
   }, [networkStatus.response]);
 
   useEffect(() => {
@@ -75,6 +83,17 @@ export default function ViewRecipe() {
                 <Text fw={700} size="xl">
                   {recipe.title}
                 </Text>
+              </Grid.Col>
+              <Grid.Col span={12}>
+                {recipe.tags.map((tag) => (
+                  <Badge
+                    mr="xs"
+                    key={tag}
+                    classNames={{ label: "recipeTagLabel" }}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
               </Grid.Col>
               <Grid.Col span={12}>
                 <Divider />

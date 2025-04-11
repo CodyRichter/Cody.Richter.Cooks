@@ -38,3 +38,8 @@ code {
 .sortableMoveIcon:active {
   cursor: grabbing;
 }
+
+.recipeTagLabel {
+  text-align: center;
+  text-transform: none;
+}

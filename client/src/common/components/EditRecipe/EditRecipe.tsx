@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 
 import EditRecipeIngredients from "./Ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "./Instructions/EditRecipeInstructions";
+import EditRecipeTags from "./EditRecipeTags";
 import Highlight from "@tiptap/extension-highlight";
 import { IconPlus } from "@tabler/icons-react";
 import Recipe from "@/common/types/Recipe";
@@ -66,6 +67,10 @@ export default function EditRecipe({
             setRecipe({ ...recipe, title: e.currentTarget.value })
           }
         />
+      </Grid.Col>
+
+      <Grid.Col span={{ base: 12, sm: 10 }} mt="md" mb="md">
+        <EditRecipeTags recipe={recipe} setRecipe={setRecipe} />
       </Grid.Col>
 
       {/* Recipe Description */}
