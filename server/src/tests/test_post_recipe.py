@@ -8,6 +8,7 @@ import pytest
 test_recipe_data = {
     'title': 'Test Recipe',
     'description': 'This is a test recipe',
+    'tags': ['test', 'recipe'],
     'ingredients': [
         {
             'id': '1',
@@ -38,6 +39,8 @@ def test_put_new_recipe(mock_recipes_table, mock_recipe_bucket):
     parsed_body = json.loads(response['body'])
     assert 'recipe' in parsed_body
     assert 'id' in parsed_body['recipe']
+    assert 'tags' in parsed_body['recipe']
+    assert parsed_body['recipe']['tags'] == ['test', 'recipe']
 
 
 def test_put_invalid_recipe(mock_recipes_table, mock_recipe_bucket):

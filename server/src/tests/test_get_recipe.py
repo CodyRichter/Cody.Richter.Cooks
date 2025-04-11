@@ -9,6 +9,7 @@ test_recipe_data = {
     'id': test_recipe_id,
     'title': 'Test Recipe',
     'description': 'TestS3Key',
+    'tags': ['test', 'recipe'],
     'ingredients': [
         {
             'id': '1',
@@ -114,6 +115,7 @@ def test_get_recipe(mock_recipes_table, mock_recipe_bucket):
     assert body['recipe']['description'] == test_recipe_description
     assert body['recipe']['ingredients'] == test_recipe_data['ingredients']
     assert body['recipe']['instructions'] == test_recipe_data['instructions']
+    assert body['recipe']['tags'] == test_recipe_data['tags']
 
 
 # When an invalid recipe ID is provided, a 404 response should be returned

@@ -8,5 +8,6 @@ class Recipe(BaseModel):
     id: str
     title: str
     description: str  # Recipe description. The description is stored in S3 and the URL is stored in the database.
+    tags: List[str] = []  # Tags for the recipe, e.g., "vegan", "gluten-free", etc.
     ingredients: List[Ingredient]
     instructions: List[InstructionStep]
