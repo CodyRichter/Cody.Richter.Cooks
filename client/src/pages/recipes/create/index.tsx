@@ -17,6 +17,7 @@ export default function CreateRecipe() {
     id: crypto.randomUUID(),
     title: "",
     description: "",
+    tags: [],
     ingredients: [],
     instructions: [],
   });
