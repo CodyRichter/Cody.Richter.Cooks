@@ -1,4 +1,15 @@
-import { Card, Checkbox, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Card,
+  Checkbox,
+  CopyButton,
+  Group,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { IconClipboardCheck, IconCopy } from "@tabler/icons-react";
 
 import Ingredient from "@/common/types/Ingredient";
 import React from "react";
@@ -9,9 +20,45 @@ export default function RecipeIngredientCard({
 }: {
   ingredients: Ingredient[];
 }) {
+  const formattedIngredientsAsString = ingredients
+    .map((ingredient) => {
+      const quantity = convertToFractionalRepresentation(ingredient.quantity);
+      const unit = ingredient.unit ? `${ingredient.unit} ` : "";
+      const name = ingredient.name;
+      const subtext = ingredient.subtext ? ` (${ingredient.subtext})` : "";
+      return `- ${quantity} ${unit}${name}${subtext}`;
+    })
+    .join("\n");
+
   return (
     <Card shadow="sm" radius="md" withBorder pb="lg">
-      <Title order={4}>Ingredients</Title>
+      <Group gap="xs">
+        <Title order={4}>Ingredients</Title>
+        <CopyButton value={formattedIngredientsAsString} timeout={2000}>
+          {({ copied, copy }) => (
+            <Tooltip
+              label={
+                copied ? "Ingredients Copied to Clipboard!" : "Copy Ingredients"
+              }
+              withArrow
+              position="right"
+            >
+              <ActionIcon
+                color={copied ? "teal" : "gray"}
+                variant="subtle"
+                onClick={copy}
+              >
+                {copied ? (
+                  <IconClipboardCheck size={16} />
+                ) : (
+                  <IconCopy size={16} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </CopyButton>
+      </Group>
+
       <Stack mt="sm">
         {ingredients.map((ingredient) => (
           <Group key={`ingredient-${ingredient.id}`} ml="md">
