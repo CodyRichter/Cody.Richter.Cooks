@@ -26,7 +26,7 @@ export default function RecipeIngredientCard({
       const unit = ingredient.unit ? `${ingredient.unit} ` : "";
       const name = ingredient.name;
       const subtext = ingredient.subtext ? ` (${ingredient.subtext})` : "";
-      return `- ${quantity} ${unit}${name}${subtext}`;
+      return `${quantity} ${unit}${name}${subtext}`;
     })
     .join("\n");
 
