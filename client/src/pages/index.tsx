@@ -83,13 +83,13 @@ export default function Index() {
       <SimpleGrid cols={2} spacing="lg" verticalSpacing="lg">
         {/* Carnitas */}
         <RecipePreviewCard
-          recipe_id="576a870f-cb20-4c62-a1eb-27e244a3b358"
+          recipe_id="0c147f0d-fbc5-4ace-81f3-7e90601dcac4"
           image_url="/recipe_images/Carnitas.jpg"
         />
 
-        {/* Paste and Red Sauce */}
+        {/* Pasta and Red Sauce */}
         <RecipePreviewCard
-          recipe_id="00621749-cc11-4c6b-acfb-5b8c6ed88af9"
+          recipe_id="50f742e0-105d-4f55-b952-42e9da931630"
           image_url="/recipe_images/Pasta.jpeg"
         />
       </SimpleGrid>
