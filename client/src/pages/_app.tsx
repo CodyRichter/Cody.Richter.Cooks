@@ -19,8 +19,8 @@ const primaryFont = "Nunito, sans-serif";
 const theme = createTheme(getCodyRichterCooksTheme(primaryFont));
 
 const cognitoAuthConfig = {
-  authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_g0CKfq7GH",
-  client_id: "7hrbbhv2mj1vmagotgeqej03ec",
+  authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_iWzlwY8et",
+  client_id: "4mpm5q3jhvre834inbke4jcl31",
   // Dynamically update the redirect_uri based on the environment
   redirect_uri: isDevEnvironment
     ? "http://localhost:3000"

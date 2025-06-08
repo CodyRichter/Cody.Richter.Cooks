@@ -76,7 +76,8 @@ class ServerlessStack(Stack):
             partition_key=ddb.Attribute(
                 name='id',
                 type=ddb.AttributeType.STRING
-            )
+            ),
+            removal_policy=RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
         )
         recipe_table.grant_read_data(get_event_lambda)
         recipe_table.grant_read_write_data(post_event_lambda)
@@ -85,7 +86,7 @@ class ServerlessStack(Stack):
         recipe_bucket = s3.Bucket(
             self, 'RecipeBucket',
             bucket_name='cody-richter-cooks-recipes',
-            removal_policy=RemovalPolicy.DESTROY,
+            removal_policy=RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             versioned=False,
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -94,14 +95,52 @@ class ServerlessStack(Stack):
 
         recipe_bucket.grant_read_write(post_event_lambda)
         recipe_bucket.grant_read(delete_event_lambda)
-        recipe_bucket.grant_read(get_event_lambda)
+        recipe_bucket.grant_read(get_event_lambda)        
 
         user_pool = cognito.UserPool(
             self, "CookingUserPool",
             user_pool_name="CookingUserPool",
-            feature_plan=cognito.FeaturePlan.ESSENTIALS
+            feature_plan=cognito.FeaturePlan.ESSENTIALS,
+            self_sign_up_enabled=True,
+            email=cognito.UserPoolEmail.with_cognito(
+                reply_to="no-reply@cooking.cody.richter.codes",
+            ),
+            sign_in_aliases=cognito.SignInAliases(
+                email=True,
+                username=True,
+                phone=False,
+                preferred_username=False,
+            ),
+            user_verification=cognito.UserVerificationConfig(
+                email_subject="Verify your email for Cody Richter Cooks",
+                email_body="Welcome to Cody Richter Cooks,\n\nPlease verify your email by clicking the link below:\n{##Verify Email##}",
+                email_style=cognito.VerificationEmailStyle.LINK,
+            ),
+            password_policy=cognito.PasswordPolicy(
+                min_length=8,
+                require_lowercase=True,
+                require_uppercase=True,
+                require_digits=True,
+                require_symbols=True
+            ),
+            standard_attributes=cognito.StandardAttributes(
+                email=cognito.StandardAttribute(
+                    required=True,
+                    mutable=True,
+                ),
+                given_name=cognito.StandardAttribute(
+                    required=True,
+                    mutable=True,
+                ),
+                family_name=cognito.StandardAttribute(
+                    required=True,
+                    mutable=True,
+                ),
+            ),
+            passkey_user_verification=cognito.PasskeyUserVerification.PREFERRED,
         )
-        user_pool.add_client(
+
+        user_pool_client = user_pool.add_client(
             "CookingUserPoolClient",
             user_pool_client_name="CookingUserPoolClient",
             generate_secret=False,
@@ -112,11 +151,21 @@ class ServerlessStack(Stack):
             )
         )
 
+        # This will apply Cognito managed branding to the user pool instead
+        # of basic HTML branding.
+        cognito.CfnManagedLoginBranding(
+            self, "CookingUserPoolBranding",
+            user_pool_id=user_pool.user_pool_id,
+            client_id=user_pool_client.user_pool_client_id,
+            use_cognito_provided_values=True,
+        )
+
         user_pool.add_domain(
             "CookingUserPoolDomain",
             cognito_domain=cognito.CognitoDomainOptions(
                 domain_prefix="cody-richter-cooks",
             ),
+            managed_login_version=cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN
         )
 
         authorizer = apigw.CognitoUserPoolsAuthorizer(
