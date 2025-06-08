@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
+import Ingredient from "@/common/types/Ingredient";
+import InstructionStep from "@/common/types/InstructionStep";
 import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
 import Recipe from "@/common/types/Recipe";
 import { notifications } from "@mantine/notifications";
@@ -13,7 +15,7 @@ export default function CreateRecipe() {
   const router = useRouter();
   const auth = useAuth();
 
-  const [newRecipe, setNewRecipe] = useState<Recipe>({
+  const [newRecipe, setNewRecipe] = useState<any>({
     id: crypto.randomUUID(),
     title: "",
     description: "",
@@ -37,13 +39,14 @@ export default function CreateRecipe() {
 
     // Check if all ingredients have a name and quantity
     const ingredientsValid = newRecipe.ingredients.every(
-      (ingredient) =>
+      (ingredient: Ingredient) =>
         !!ingredient.name && !!ingredient.quantity && !!ingredient.unit
     );
 
     // Check if all instructions have a step
     const instructionsValid = newRecipe.instructions.every(
-      (instruction) => !!instruction.title && !!instruction.description
+      (instruction: InstructionStep) =>
+        !!instruction.title && !!instruction.description
     );
 
     return baseFieldsValid && ingredientsValid && instructionsValid;

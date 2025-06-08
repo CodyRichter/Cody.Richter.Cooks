@@ -41,6 +41,10 @@ export default function ViewRecipe() {
     getRecipeFromNetwork(recipe_id, setNetworkStatus);
   }, [recipe_id]);
 
+  const user_has_recipe_permission: boolean = useMemo(() => {
+    return recipe?.username === auth.user?.profile?.["cognito:username"];
+  }, [recipe, auth.user]);
+
   return (
     <>
       {networkStatus.isLoading && <RecipeLoadingSkeleton />}
@@ -60,7 +64,7 @@ export default function ViewRecipe() {
         <>
           <Grid>
             <Grid.Col>
-              {auth.isAuthenticated && (
+              {auth.isAuthenticated && user_has_recipe_permission && (
                 <Grid.Col span={12} className="viewRecipeAdminHeader">
                   <Group>
                     <IconTool size={24} style={{ marginLeft: "8px" }} />
@@ -82,6 +86,9 @@ export default function ViewRecipe() {
               <Grid.Col span={12}>
                 <Text fw={700} size="xl">
                   {recipe.title}
+                </Text>
+                <Text c="dimmed" size="sm">
+                  by {recipe.username}
                 </Text>
               </Grid.Col>
               <Grid.Col span={12}>

@@ -8,4 +8,5 @@ export default interface Recipe {
   tags: string[];
   ingredients: Ingredient[];
   instructions: InstructionStep[];
+  username: string;
 }
