@@ -15,14 +15,23 @@ import {
   IconCircleDashedCheck,
 } from "@tabler/icons-react";
 
+import ChangePasswordModal from "@/common/components/Account/ChangePasswordModal";
 import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
+import { cognitoAuthConfig } from "@/utils/auth";
 import { useAuth } from "react-oidc-context";
+import { useDisclosure } from "@mantine/hooks";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
 export default function AccountDetailsPage() {
   const router = useRouter();
   const auth = useAuth();
+
+  // Change Password Dialog State
+  const [
+    isChangePasswordDialogOpen,
+    { toggle: toggleChangePasswordDialog, close: closeChangePasswordDialog },
+  ] = useDisclosure(false);
 
   const username =
     (auth.user?.profile?.["cognito:username"] as string) ||
@@ -33,10 +42,10 @@ export default function AccountDetailsPage() {
   const emailVerified =
     (auth.user?.profile?.email_verified as boolean) || false;
 
-  useEffect(() => {
-    // Print token to console for debugging purposes
-    console.log("ID Token:", auth.user?.id_token);
-  }, [auth.user]);
+  // useEffect(() => {
+  //   // Print token to console for debugging purposes
+  //   console.log("Access Token:", auth.user);
+  // }, [auth.user]);
 
   return !auth.isAuthenticated ? (
     <InvalidPermissionAlert />
@@ -105,14 +114,17 @@ export default function AccountDetailsPage() {
           <Button
             size="compact-sm"
             variant="subtle"
-            onClick={() => {
-              router.push("/auth/account/change-password");
-            }}
+            onClick={toggleChangePasswordDialog}
           >
             Change Password
           </Button>
         </Flex>
       </Card>
+
+      <ChangePasswordModal
+        opened={isChangePasswordDialogOpen}
+        close={closeChangePasswordDialog}
+      />
     </>
   );
 }

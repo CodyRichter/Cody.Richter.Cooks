@@ -16,7 +16,7 @@ import RecipePreviewCard from "@/common/components/RecipePreviewCard/RecipePrevi
 import { useMediaQuery } from "@mantine/hooks";
 
 export default function Index() {
-  const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
+  const isMobile = useMediaQuery("(max-width: 50em)");
   const [searchQuery, setSearchQuery] = React.useState("");
   const minimumSearchLength = 3;
 

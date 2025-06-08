@@ -37,7 +37,7 @@ export default function NavigationHeader({
 }: NavigationHeaderProps) {
   const router = useRouter();
   const auth = useAuth();
-  const isMobile = useMediaQuery(`(max-width: ${em(767)})`);
+  const isMobile = useMediaQuery("(max-width: 50em)");
   const [isMobileActionsMenuOpen, setIsMobileActionsMenuOpen] =
     React.useState(false);
 

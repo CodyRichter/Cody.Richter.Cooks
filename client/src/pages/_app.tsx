@@ -11,23 +11,12 @@ import Head from "next/head";
 import NavigationHeader from "@/common/components/Navigation/Header/NavigationHeader";
 import NavigationSidebar from "@/common/components/Navigation/Sidebar/NavigationSidebar";
 import { Notifications } from "@mantine/notifications";
+import { cognitoAuthConfig } from "@/utils/auth";
 import getCodyRichterCooksTheme from "@/styles/theme";
-import { isDevEnvironment } from "@/utils/development";
 import { useDisclosure } from "@mantine/hooks";
 
 const primaryFont = "Nunito, sans-serif";
 const theme = createTheme(getCodyRichterCooksTheme(primaryFont));
-
-const cognitoAuthConfig = {
-  authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_iWzlwY8et",
-  client_id: "4mpm5q3jhvre834inbke4jcl31",
-  // Dynamically update the redirect_uri based on the environment
-  redirect_uri: isDevEnvironment
-    ? "http://localhost:3000"
-    : "https://cooking.cody.richter.codes",
-  response_type: "code",
-  scope: "aws.cognito.signin.user.admin email openid phone profile",
-};
 
 export default function App({ Component, pageProps }: any) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
