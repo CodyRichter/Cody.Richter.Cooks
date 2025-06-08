@@ -1,4 +1,5 @@
 from app.data.communication.DeleteRecipeModels import DeleteRecipeRequest, DeleteRecipeResponse
+from app.data.communication.Exceptions import UnauthorizedException
 from app.constants import table as ddb_recipe_table, recipe_bucket
 
 def delete_recipe(request: DeleteRecipeRequest) -> DeleteRecipeResponse:
@@ -6,9 +7,22 @@ def delete_recipe(request: DeleteRecipeRequest) -> DeleteRecipeResponse:
     Deletes a recipe from the database. This method will delete the recipe description
     from S3 and the recipe metadata from DynamoDB.
     """
-    return delete_recipe_internal(ddb_recipe_table, request.recipe_id)
+    return delete_recipe_internal(ddb_recipe_table, request)
 
-def delete_recipe_internal(table, recipe_id: str) -> DeleteRecipeResponse:
+def delete_recipe_internal(table, request: DeleteRecipeRequest) -> DeleteRecipeResponse:
+    recipe_id = request.recipe_id
+    username = request.username
+
+    ddb_recipe = table.get_item(Key={'id': recipe_id})
+
+    # Delete is idempotent, so if the recipe does not exist, we return success
+    if 'Item' not in ddb_recipe:
+        return DeleteRecipeResponse(success=True, message="Recipe not found.")
+
+    # Check if the recipe belongs to the user, otherwise return an error
+    if ddb_recipe['Item']['username'] != username:
+        raise UnauthorizedException()
+
     # Step 1: Delete the Recipe Description from S3
     recipe_bucket.delete_objects(
         Delete={

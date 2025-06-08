@@ -3,14 +3,13 @@ from decimal import Decimal
 
 from app.constants import RECIPES_PER_PAGE
 from app.get_event_handler import handle_event
+from app.data.model.Recipe import Recipe
 
-test_recipe_id = '1'
-test_recipe_data = {
-    'id': test_recipe_id,
-    'title': 'Test Recipe',
-    'description': 'TestS3Key',
-    'tags': ['test', 'recipe'],
-    'ingredients': [
+test_recipe = Recipe(
+    id='1',
+    title='Test Recipe',
+    description='TestS3Key',
+    ingredients=[
         {
             'id': '1',
             'name': 'Test Ingredient',
@@ -19,17 +18,18 @@ test_recipe_data = {
             'subtext': 'Optional subtext'
         }
     ],
-    'instructions': [
+    instructions=[
         {
             'id': '1',
             'title': 'Step 1',
             'description': 'This is step 1'
         }
-    ]
-}
-
+    ],
+    tags=['test', 'recipe'],
+    username='test_user',
+)
+test_recipe_data = test_recipe.model_dump()
 test_recipe_description = 'This is a test recipe'
-
 
 # When no recipe ID is provided, a list of all recipe name and IDs should be returned
 def test_list_all_recipes_simple(mock_recipes_table):
@@ -103,7 +103,7 @@ def test_list_all_recipes_no_recipes_found(mock_recipes_table):
 # When a recipe ID is provided, the recipe data should be returned
 def test_get_recipe(mock_recipes_table, mock_recipe_bucket):
     mock_recipes_table.put_item(Item=test_recipe_data)
-    mock_recipe_bucket.put_object(Key=test_recipe_id, Body=test_recipe_description)
+    mock_recipe_bucket.put_object(Key=test_recipe.id, Body=test_recipe_description)
 
     response = handle_event({'httpMethod': 'GET', 'queryStringParameters': {'id': '1'}}, {})
 
@@ -116,6 +116,7 @@ def test_get_recipe(mock_recipes_table, mock_recipe_bucket):
     assert body['recipe']['ingredients'] == test_recipe_data['ingredients']
     assert body['recipe']['instructions'] == test_recipe_data['instructions']
     assert body['recipe']['tags'] == test_recipe_data['tags']
+    assert body['recipe']['username'] == test_recipe_data['username']
 
 
 # When an invalid recipe ID is provided, a 404 response should be returned

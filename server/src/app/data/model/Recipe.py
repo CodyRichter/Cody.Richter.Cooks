@@ -4,6 +4,7 @@ from typing import List
 from app.data.model.Ingredient import Ingredient
 from app.data.model.InstructionStep import InstructionStep
 
+
 class Recipe(BaseModel):
     id: str
     title: str
@@ -11,3 +12,4 @@ class Recipe(BaseModel):
     tags: List[str] = []  # Tags for the recipe, e.g., "vegan", "gluten-free", etc.
     ingredients: List[Ingredient]
     instructions: List[InstructionStep]
+    username: str  # Username of the user who created the recipe
