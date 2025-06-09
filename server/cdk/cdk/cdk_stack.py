@@ -7,11 +7,8 @@ from aws_cdk import (
     aws_apigateway as apigw,
     aws_cognito as cognito,
     aws_s3 as s3,
+    aws_certificatemanager as acm
 )
-
-# Import Cognito FeaturePlan
-
-
 
 from aws_cdk.aws_lambda_python_alpha import PythonFunction, PythonLayerVersion, BundlingOptions
 from constructs import Construct
@@ -147,7 +144,7 @@ class ServerlessStack(Stack):
             access_token_validity=Duration.hours(12),
             prevent_user_existence_errors=True,
             o_auth=cognito.OAuthSettings(
-                callback_urls=["https://cooking.cody.richter.codes", "http://localhost:3000"],
+                callback_urls=["https://cooking.cody.richter.codes", "https://auth.richter.codes", "http://localhost:3000"],
             )
         )
 
@@ -160,10 +157,19 @@ class ServerlessStack(Stack):
             use_cognito_provided_values=True,
         )
 
+        # Certificate ARN for the custom domain
+        # This has to be manually created in the AWS Certificate Manager outside of CDK
+        # and should be in the us-east-1 region for Cognito custom domains.
+        certificate_arn = "arn:aws:acm:us-east-1:043952678440:certificate/e29c580d-5a8f-45ee-b991-7e74c8a00eee"
+
         user_pool.add_domain(
-            "CookingUserPoolDomain",
-            cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix="cody-richter-cooks",
+            "CookingCustomDomain",
+            custom_domain=cognito.CustomDomainOptions(
+                domain_name="auth.richter.codes",
+                certificate=acm.Certificate.from_certificate_arn(
+                    self, "CookingAuthCertificate",
+                    certificate_arn=certificate_arn
+                ),
             ),
             managed_login_version=cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN
         )
