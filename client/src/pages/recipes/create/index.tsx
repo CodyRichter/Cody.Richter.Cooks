@@ -1,15 +1,14 @@
 import { Button, Grid, Group, Text } from "@mantine/core";
-import { useEffect, useState } from "react";
 
 import { BASE_URL } from "@/common/network/constants";
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
 import Ingredient from "@/common/types/Ingredient";
 import InstructionStep from "@/common/types/InstructionStep";
 import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
-import Recipe from "@/common/types/Recipe";
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/router";
+import { useState } from "react";
 
 export default function CreateRecipe() {
   const router = useRouter();

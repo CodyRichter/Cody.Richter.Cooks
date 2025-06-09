@@ -9,9 +9,17 @@ import {
 } from "@mantine/core";
 
 import { IconAlertTriangle } from "@tabler/icons-react";
+import { NetworkResult } from "@/common/network/constants";
+import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
+
+const INITIAL_NETWORK_RESULT: NetworkResult = {
+  isLoading: false,
+  error: "",
+  response: null,
+};
 
 export default function ChangePasswordModal({ opened, close }: any) {
   const isMobile = useMediaQuery("(max-width: 50em)");
@@ -20,20 +28,26 @@ export default function ChangePasswordModal({ opened, close }: any) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [networkResult, setNetworkResult] = useState<NetworkResult>(
+    INITIAL_NETWORK_RESULT
+  );
 
   function resetAndClose() {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setError("");
+    setNetworkResult(INITIAL_NETWORK_RESULT);
     close();
   }
 
   async function handleChangePassword() {
-    setError(""); // Reset error state
+    setNetworkResult({ ...networkResult, isLoading: true, error: "" });
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setNetworkResult({
+        ...networkResult,
+        isLoading: false,
+        error: "New password and confirmation do not match.",
+      });
       return;
     }
     const response = await fetch(
@@ -55,15 +69,24 @@ export default function ChangePasswordModal({ opened, close }: any) {
     );
 
     const data = await response.json();
-    if (!response.ok) {
+    if (response.ok) {
+      notifications.show({
+        title: "Password Changed",
+        message: "Your password has been successfully changed.",
+        color: "green",
+      });
+      resetAndClose();
+    } else {
       let message = data.message || "Failed to change password.";
       if (data.message?.includes("Password did not conform with policy:")) {
         message = message.replace("Password did not conform with policy: ", "");
       }
-      setError(message);
+      setNetworkResult({
+        ...networkResult,
+        isLoading: false,
+        error: message,
+      });
     }
-
-    console.log("Password Changed!", data);
   }
 
   return (
@@ -117,7 +140,7 @@ export default function ChangePasswordModal({ opened, close }: any) {
         required
       />
 
-      {error && (
+      {networkResult.error && (
         <Alert
           variant="light"
           color="red"
@@ -125,7 +148,7 @@ export default function ChangePasswordModal({ opened, close }: any) {
           mt="md"
         >
           <Text c="red" size="sm">
-            {error}
+            {networkResult.error}
           </Text>
         </Alert>
       )}
@@ -141,6 +164,7 @@ export default function ChangePasswordModal({ opened, close }: any) {
             newPassword === "" ||
             confirmPassword === ""
           }
+          loading={networkResult.isLoading}
         >
           Change Password
         </Button>
