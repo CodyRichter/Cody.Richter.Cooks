@@ -7,19 +7,16 @@ import {
   PasswordInput,
   Text,
 } from "@mantine/core";
+import {
+  INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
+  NetworkResult,
+} from "@/common/network/constants";
 
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { NetworkResult } from "@/common/network/constants";
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
-
-const INITIAL_NETWORK_RESULT: NetworkResult = {
-  isLoading: false,
-  error: "",
-  response: null,
-};
 
 export default function ChangePasswordModal({ opened, close }: any) {
   const isMobile = useMediaQuery("(max-width: 50em)");
@@ -29,14 +26,14 @@ export default function ChangePasswordModal({ opened, close }: any) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [networkResult, setNetworkResult] = useState<NetworkResult>(
-    INITIAL_NETWORK_RESULT
+    INITIAL_NETWORK_RESULT_WITHOUT_LOADING
   );
 
   function resetAndClose() {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setNetworkResult(INITIAL_NETWORK_RESULT);
+    setNetworkResult(INITIAL_NETWORK_RESULT_WITHOUT_LOADING);
     close();
   }
 

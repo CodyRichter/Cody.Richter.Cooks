@@ -1,3 +1,5 @@
+import Recipe from "@/common/types/Recipe";
+
 /**
  * Converts a decimal number to a fractional representation and returns it as a string.
  * @param decimal Decimal number to convert to a fraction
@@ -59,4 +61,38 @@ export function titleize(str: string): string {
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+/**
+ * Checks if a recipe is valid.
+ * @param recipe The recipe to check
+ * @returns True if the recipe is valid, false otherwise
+ */
+export function isRecipeValid(recipe: any): boolean {
+  if (!recipe) {
+    return false;
+  }
+
+  const baseFieldsValid =
+    !!recipe &&
+    !!recipe.id &&
+    !!recipe.title &&
+    recipe.title.length > 0 &&
+    !!recipe.description &&
+    recipe.description.length > 0 &&
+    recipe.ingredients.length > 0 &&
+    recipe.instructions.length > 0;
+
+  // Check if all ingredients have a name and quantity
+  const ingredientsValid = recipe.ingredients.every(
+    (ingredient: any) =>
+      !!ingredient.name && !!ingredient.quantity && !!ingredient.unit
+  );
+
+  // Check if all instructions have a step
+  const instructionsValid = recipe.instructions.every(
+    (instruction: any) => !!instruction.title && !!instruction.description
+  );
+
+  return baseFieldsValid && ingredientsValid && instructionsValid;
 }

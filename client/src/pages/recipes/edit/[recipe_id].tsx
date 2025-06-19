@@ -1,5 +1,10 @@
-import { ActionIcon, Alert, Button, Grid, Group, Text } from "@mantine/core";
-import { BASE_URL, INITIAL_NETWORK_RESULT } from "@/common/network/constants";
+import { ActionIcon, Button, Grid, Group, Text } from "@mantine/core";
+import {
+  INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
+  INITIAL_NETWORK_RESULT_WITH_LOADING,
+  NetworkResult,
+} from "@/common/network/constants";
+import { getRecipeFromNetwork, updateRecipeFromNetwork } from "@/utils/network";
 import { useEffect, useState } from "react";
 
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
@@ -7,7 +12,8 @@ import { IconChevronLeft } from "@tabler/icons-react";
 import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
 import Recipe from "@/common/types/Recipe";
 import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
-import { getRecipeFromNetwork } from "@/utils/network";
+import RecipeNotFound from "@/common/components/ErrorMessages/RecipeNotFound";
+import { isRecipeValid } from "@/utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/router";
@@ -17,175 +23,133 @@ export default function EditRecipePage() {
   const auth = useAuth();
   const recipe_id: string = router.query.recipe_id as string;
 
-  const [networkStatus, setNetworkStatus] = useState(INITIAL_NETWORK_RESULT);
+  const [initialDataLoadStatus, setInitialDataLoadStatus] = useState(
+    INITIAL_NETWORK_RESULT_WITH_LOADING
+  );
+  const [updateNetworkResult, setUpdateNetworkResult] = useState<NetworkResult>(
+    INITIAL_NETWORK_RESULT_WITHOUT_LOADING
+  );
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [isEditButtonLoading, setIsEditButtonLoading] = useState(false);
 
   // Load the recipe from the server
   useEffect(() => {
-    getRecipeFromNetwork(recipe_id, setNetworkStatus);
+    getRecipeFromNetwork(recipe_id, setInitialDataLoadStatus);
   }, [recipe_id]);
 
   // Set the recipe state when the network status changes
   useEffect(() => {
-    if (networkStatus.response) {
-      setRecipe(networkStatus.response as Recipe);
+    if (initialDataLoadStatus.response) {
+      setRecipe(initialDataLoadStatus.response as Recipe);
     }
-  }, [networkStatus.response]);
+  }, [initialDataLoadStatus.response]);
 
-  function isRecipeValid(): boolean {
-    if (!recipe) {
-      return false;
+  // Handle update network result changes
+  useEffect(() => {
+    if (
+      !updateNetworkResult.isLoading &&
+      updateNetworkResult.response &&
+      !updateNetworkResult.error
+    ) {
+      // Success case
+      notifications.show({
+        title: "Recipe Updated",
+        message: "The recipe has been updated successfully.",
+        color: "teal",
+      });
+      router.push(`/recipes/view/${recipe?.id}`);
+    } else if (!updateNetworkResult.isLoading && updateNetworkResult.error) {
+      // Error case
+      notifications.show({
+        title: "Error Updating Recipe",
+        message: updateNetworkResult.error,
+        color: "red",
+      });
     }
+  }, [updateNetworkResult, recipe?.id, router]);
 
-    const baseFieldsValid =
-      !!recipe &&
-      !!recipe.id &&
-      !!recipe.title &&
-      recipe.title.length > 0 &&
-      !!recipe.description &&
-      recipe.description.length > 0 &&
-      recipe.ingredients.length > 0 &&
-      recipe.instructions.length > 0;
-
-    // Check if all ingredients have a name and quantity
-    const ingredientsValid = recipe.ingredients.every(
-      (ingredient) =>
-        !!ingredient.name && !!ingredient.quantity && !!ingredient.unit
-    );
-
-    // Check if all instructions have a step
-    const instructionsValid = recipe.instructions.every(
-      (instruction) => !!instruction.title && !!instruction.description
-    );
-
-    return baseFieldsValid && ingredientsValid && instructionsValid;
-  }
-
-  // Disable the create button if the recipe is invalid
-  const disableEditButton: boolean = !isRecipeValid();
+  // Disable the edit button if the recipe is invalid or network is loading
+  const disableEditButton: boolean =
+    !isRecipeValid(recipe) || updateNetworkResult.isLoading;
 
   // Save the recipe to the server
   function editRecipe() {
-    setIsEditButtonLoading(true);
-
-    if (!recipe || !isRecipeValid) {
+    if (!recipe || !isRecipeValid(recipe)) {
       notifications.show({
         title: "Invalid Recipe",
         message:
           "Please ensure all fields are filled out before updating the recipe.",
         color: "red",
       });
-      setIsEditButtonLoading(false);
       return;
     }
 
-    fetch(`${BASE_URL}/recipes`, {
-      method: "POST",
-      body: JSON.stringify(recipe),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${auth.user?.id_token}`,
-      },
-    })
-      .then((response) => {
-        if (response.ok) {
-          response
-            .json()
-            .then((data) => {
-              // Notify of success and redirect to the recipe's page
-              notifications.show({
-                title: "Recipe Updated",
-                message: "The recipe has been updated successfully.",
-                color: "teal",
-              });
-              router.push(`/recipes/view/${recipe.id}`);
-            })
-            .catch((e) => {
-              console.error("Unable to Parse Recipe", e);
-              notifications.show({
-                title: "Error Creating New Recipe",
-                message: `An error has occurred while saving the recipe. Please try again later. Details (parse): [${e}]`,
-                color: "red",
-              });
-            });
-        } else {
-          notifications.show({
-            title: "Error Creating New Recipe",
-            message: `An error has occurred while saving the recipe. Please try again later. Details (response): [${response.status}]`,
-            color: "red",
-          });
-        }
-      })
-      .catch((e) => {
-        console.error("Unable to Create Recipe", e);
-        notifications.show({
-          title: "Error Creating New Recipe",
-          message: `An error has occurred while saving the recipe. Please try again later. Details (load): [${e}]`,
-          color: "red",
-        });
-      })
-      .finally(() => {
-        setIsEditButtonLoading(false);
-      });
+    updateRecipeFromNetwork(recipe, setUpdateNetworkResult, auth);
   }
 
-  return !auth.isAuthenticated ? (
-    <InvalidPermissionAlert />
-  ) : (
+  if (!auth.isAuthenticated) {
+    return <InvalidPermissionAlert />;
+  }
+
+  if (initialDataLoadStatus.isLoading || !recipe) {
+    return <RecipeLoadingSkeleton />;
+  }
+
+  if (initialDataLoadStatus.error) {
+    return (
+      <Grid>
+        <Grid.Col span={12}>
+          <Text c="red" fw={500}>
+            {initialDataLoadStatus.error}
+          </Text>
+        </Grid.Col>
+      </Grid>
+    );
+  }
+
+  if (initialDataLoadStatus.error === "404") {
+    return <RecipeNotFound />;
+  }
+
+  return (
     <>
-      {networkStatus.isLoading && <RecipeLoadingSkeleton />}
-      {networkStatus.error && (
-        <Grid>
+      <Grid>
+        <Grid.Col>
           <Grid.Col span={12}>
-            <Text c="red" fw={500}>
-              {networkStatus.error}
-            </Text>
+            <Group>
+              <ActionIcon
+                onClick={() => {
+                  router.push(`/recipes/view/${recipe.id}`);
+                }}
+                variant="subtle"
+                size="lg"
+                color="black"
+              >
+                <IconChevronLeft />
+              </ActionIcon>
+              <Text fw={700} size="xl">
+                Edit Recipe
+              </Text>
+            </Group>
           </Grid.Col>
-        </Grid>
-      )}
-      {!networkStatus.isLoading && !networkStatus.error && recipe && (
-        <>
-          <Grid>
-            <Grid.Col>
-              <Grid.Col span={12}>
-                <Group>
-                  <ActionIcon
-                    onClick={() => {
-                      router.push(`/recipes/view/${recipe.id}`);
-                    }}
-                    variant="subtle"
-                    size="lg"
-                    color="black"
-                  >
-                    <IconChevronLeft />
-                  </ActionIcon>
-                  <Text fw={700} size="xl">
-                    Edit Recipe
-                  </Text>
-                </Group>
-              </Grid.Col>
 
-              <Grid.Col span={12}>
-                <EditRecipe recipe={recipe} setRecipe={setRecipe} />
-              </Grid.Col>
+          <Grid.Col span={12}>
+            <EditRecipe recipe={recipe} setRecipe={setRecipe} />
+          </Grid.Col>
 
-              <Grid.Col span={12}>
-                <Group justify="flex-end">
-                  <Button
-                    w="200px"
-                    loading={isEditButtonLoading}
-                    disabled={disableEditButton}
-                    onClick={editRecipe}
-                  >
-                    Save Recipe
-                  </Button>
-                </Group>
-              </Grid.Col>
-            </Grid.Col>
-          </Grid>
-        </>
-      )}
+          <Grid.Col span={12}>
+            <Group justify="flex-end">
+              <Button
+                w="200px"
+                loading={updateNetworkResult.isLoading}
+                disabled={disableEditButton}
+                onClick={editRecipe}
+              >
+                Save Recipe
+              </Button>
+            </Group>
+          </Grid.Col>
+        </Grid.Col>
+      </Grid>
     </>
   );
 }

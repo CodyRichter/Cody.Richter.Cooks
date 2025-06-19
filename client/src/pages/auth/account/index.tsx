@@ -17,14 +17,10 @@ import {
 
 import ChangePasswordModal from "@/common/components/Account/ChangePasswordModal";
 import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
-import { cognitoAuthConfig } from "@/utils/auth";
 import { useAuth } from "react-oidc-context";
 import { useDisclosure } from "@mantine/hooks";
-import { useEffect } from "react";
-import { useRouter } from "next/router";
 
 export default function AccountDetailsPage() {
-  const router = useRouter();
   const auth = useAuth();
 
   // Change Password Dialog State
@@ -42,14 +38,11 @@ export default function AccountDetailsPage() {
   const emailVerified =
     (auth.user?.profile?.email_verified as boolean) || false;
 
-  // useEffect(() => {
-  //   // Print token to console for debugging purposes
-  //   console.log("Access Token:", auth.user);
-  // }, [auth.user]);
+  if (!auth.isAuthenticated) {
+    return <InvalidPermissionAlert />;
+  }
 
-  return !auth.isAuthenticated ? (
-    <InvalidPermissionAlert />
-  ) : (
+  return (
     <>
       <Card shadow="sm" radius="md" withBorder pb="lg">
         <Group gap="xs">

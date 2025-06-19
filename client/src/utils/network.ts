@@ -182,3 +182,123 @@ export async function deleteRecipeFromNetwork(
       });
     });
 }
+
+export async function createRecipeFromNetwork(
+  recipe: Recipe,
+  setNetworkResult: (result: NetworkResult) => void,
+  auth: any
+) {
+  setNetworkResult({
+    isLoading: true,
+    error: "",
+    response: null,
+  });
+
+  fetch(`${BASE_URL}/recipes`, {
+    method: "POST",
+    body: JSON.stringify(recipe),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.user?.id_token}`,
+    },
+  })
+    .then((response) => {
+      if (response.ok) {
+        response
+          .json()
+          .then((data) => {
+            setNetworkResult({
+              isLoading: false,
+              error: "",
+              response: data,
+            });
+          })
+          .catch((e) => {
+            console.error("Recipe Creation Error (parse)", e);
+            setNetworkResult({
+              isLoading: false,
+              error:
+                "An error occurred while creating the recipe. Please try again later.",
+              response: null,
+            });
+          });
+      } else {
+        console.error("Recipe Creation Error (response)", response);
+        setNetworkResult({
+          isLoading: false,
+          error:
+            "An error occurred while creating the recipe. Please try again later.",
+          response: null,
+        });
+      }
+    })
+    .catch((e) => {
+      console.error("Recipe Creation Error (network)", e);
+      setNetworkResult({
+        isLoading: false,
+        error:
+          "An error occurred while creating the recipe. Please try again later.",
+        response: null,
+      });
+    });
+}
+
+export async function updateRecipeFromNetwork(
+  recipe: Recipe,
+  setNetworkResult: (result: NetworkResult) => void,
+  auth: any
+) {
+  setNetworkResult({
+    isLoading: true,
+    error: "",
+    response: null,
+  });
+
+  fetch(`${BASE_URL}/recipes`, {
+    method: "POST",
+    body: JSON.stringify(recipe),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.user?.id_token}`,
+    },
+  })
+    .then((response) => {
+      if (response.ok) {
+        response
+          .json()
+          .then((data) => {
+            setNetworkResult({
+              isLoading: false,
+              error: "",
+              response: data,
+            });
+          })
+          .catch((e) => {
+            console.error("Recipe Update Error (parse)", e);
+            setNetworkResult({
+              isLoading: false,
+              error:
+                "An error occurred while updating the recipe. Please try again later.",
+              response: null,
+            });
+          });
+      } else {
+        console.error("Recipe Update Error (response)", response);
+        setNetworkResult({
+          isLoading: false,
+          error:
+            "An error occurred while updating the recipe. Please try again later.",
+          response: null,
+        });
+      }
+    })
+    .catch((e) => {
+      console.error("Recipe Update Error (network)", e);
+      setNetworkResult({
+        isLoading: false,
+        error:
+          "An error occurred while updating the recipe. Please try again later.",
+        response: null,
+      });
+    });
+}

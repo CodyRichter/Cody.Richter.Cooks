@@ -1,6 +1,6 @@
 import { Button, Divider, Group, NavLink, Skeleton } from "@mantine/core";
 import {
-  INITIAL_NETWORK_RESULT,
+  INITIAL_NETWORK_RESULT_WITH_LOADING,
   NetworkResult,
 } from "@/common/network/constants";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
@@ -30,7 +30,7 @@ export default function NavigationSidebar({
   const router = useRouter();
 
   const [networkResult, setNetworkResult] = React.useState<NetworkResult>(
-    INITIAL_NETWORK_RESULT
+    INITIAL_NETWORK_RESULT_WITH_LOADING
   );
 
   const [paginationKeys, setPaginationKeys] = React.useState<any>([undefined]);
