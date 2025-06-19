@@ -22,6 +22,7 @@ import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import { useEditor } from "@tiptap/react";
+import { useMediaQuery } from "@mantine/hooks";
 
 export default function EditRecipe({
   recipe,
@@ -30,6 +31,8 @@ export default function EditRecipe({
   recipe: Recipe;
   setRecipe: (recipe: Recipe) => void;
 }) {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   // Due to how the TipTap RichTextEditor works, we need to use a separate state for the description
   // and update the recipe object when the description changes.
   const [description, setDescription] = useState(recipe.description);
@@ -139,6 +142,7 @@ export default function EditRecipe({
               variant="gradient"
               size="xs"
               radius="md"
+              w={isMobile ? "100%" : "auto"}
               rightSection={<IconPlus style={{ width: 24, height: 24 }} />}
               onClick={() => {
                 const newIngredients = [...recipe.ingredients];
@@ -174,6 +178,7 @@ export default function EditRecipe({
               variant="gradient"
               size="xs"
               radius="md"
+              w={isMobile ? "100%" : "auto"}
               rightSection={<IconPlus style={{ width: 24, height: 24 }} />}
               onClick={() => {
                 const newInstructions = [...recipe.instructions];
