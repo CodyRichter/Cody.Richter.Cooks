@@ -57,6 +57,10 @@ export default function MobileSortableRecipeInstruction({
         className="sortableMoveIcon"
         {...attributes}
         {...listeners}
+        style={{
+          zIndex: 10,
+          touchAction: "none",
+        }}
       >
         <IconGripVertical size={24} />
       </ActionIcon>
