@@ -7,14 +7,15 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Link, RichTextEditor } from "@mantine/tiptap";
 import React, { useEffect, useState } from "react";
 
+import EditRecipeDescriptionTextEditor from "./EditRecipeDescriptionTextEditor";
 import EditRecipeIngredients from "./Ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "./Instructions/EditRecipeInstructions";
 import EditRecipeTags from "./EditRecipeTags";
 import Highlight from "@tiptap/extension-highlight";
 import { IconPlus } from "@tabler/icons-react";
+import { Link } from "@mantine/tiptap";
 import Recipe from "@/common/types/Recipe";
 import StarterKit from "@tiptap/starter-kit";
 import SubScript from "@tiptap/extension-subscript";
@@ -62,7 +63,9 @@ export default function EditRecipe({
       <Grid.Col span={{ base: 12, sm: 10 }}>
         {/* Recipe Title */}
         <TextInput
-          label="Title"
+          label="Recipe Title"
+          size={isMobile ? "lg" : "md"}
+          mt="md"
           placeholder="French Onion Soup"
           value={recipe.title}
           withAsterisk
@@ -72,65 +75,26 @@ export default function EditRecipe({
         />
       </Grid.Col>
 
+      {/* Recipe Tags */}
       <Grid.Col span={{ base: 12, sm: 10 }} mt="md" mb="md">
         <EditRecipeTags recipe={recipe} setRecipe={setRecipe} />
       </Grid.Col>
 
       {/* Recipe Description */}
       <Grid.Col span={{ base: 12, sm: 10 }}>
-        <RichTextEditor editor={editor}>
-          <RichTextEditor.Toolbar sticky stickyOffset={60}>
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Bold />
-              <RichTextEditor.Italic />
-              <RichTextEditor.Underline />
-              <RichTextEditor.Strikethrough />
-              <RichTextEditor.ClearFormatting />
-              <RichTextEditor.Highlight />
-              <RichTextEditor.Code />
-            </RichTextEditor.ControlsGroup>
-
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.H3 />
-              <RichTextEditor.H4 />
-            </RichTextEditor.ControlsGroup>
-
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Blockquote />
-              <RichTextEditor.Hr />
-              <RichTextEditor.BulletList />
-              <RichTextEditor.OrderedList />
-              <RichTextEditor.Subscript />
-              <RichTextEditor.Superscript />
-            </RichTextEditor.ControlsGroup>
-
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Link />
-              <RichTextEditor.Unlink />
-            </RichTextEditor.ControlsGroup>
-
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.AlignLeft />
-              <RichTextEditor.AlignCenter />
-              <RichTextEditor.AlignJustify />
-              <RichTextEditor.AlignRight />
-            </RichTextEditor.ControlsGroup>
-
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Undo />
-              <RichTextEditor.Redo />
-            </RichTextEditor.ControlsGroup>
-          </RichTextEditor.Toolbar>
-
-          <RichTextEditor.Content />
-        </RichTextEditor>
+        <Text size={isMobile ? "lg" : "md"} fw={500} mb="sm" mt="sm">
+          Recipe Description
+        </Text>
+        {editor && <EditRecipeDescriptionTextEditor editor={editor} />}
       </Grid.Col>
 
       {/* Recipe Ingredients */}
       <Grid.Col span={{ base: 12, sm: 10 }} mt="md">
         <Paper shadow="sm" p="md" mb="sm">
           <Group mb="lg" justify="space-between">
-            <Text fw={500}>Ingredients</Text>
+            <Text fw={500} size={isMobile ? "xl" : "md"}>
+              Ingredients
+            </Text>
           </Group>
 
           <Divider />
@@ -166,7 +130,9 @@ export default function EditRecipe({
       <Grid.Col span={{ base: 12, sm: 10 }} mt="md">
         <Paper shadow="sm" p="md" mb="sm">
           <Group mb="lg" justify="space-between">
-            <Text fw={500}>Instructions</Text>
+            <Text fw={500} size={isMobile ? "xl" : "md"}>
+              Instructions
+            </Text>
           </Group>
 
           <Divider />

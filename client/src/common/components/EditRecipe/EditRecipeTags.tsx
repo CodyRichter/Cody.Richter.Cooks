@@ -1,8 +1,20 @@
-import { Button, Chip, Group, Input } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Divider,
+  Flex,
+  Group,
+  Paper,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import { IconPlus, IconX } from "@tabler/icons-react";
 
-import { IconX } from "@tabler/icons-react";
 import Recipe from "@/common/types/Recipe";
 import { titleize } from "@/utils/recipeUtils";
+import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 
 interface EditRecipeTagsProps {
@@ -14,60 +26,156 @@ export default function EditRecipeTags({
   recipe,
   setRecipe,
 }: EditRecipeTagsProps) {
-  // This function is used to handle the change in tags.
-  // It takes the new tags as an argument and updates the recipe object.
-  // It also ensures that the tags are unique by using a Set.
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // The value of the new tag input field
+  const [newTagValue, setNewTagValue] = useState("");
+
+  // Whether the "Add Tag" input field is shown
+  const [isAddingTag, setIsAddingTag] = useState(false);
+
+  // Handles the change in tags in the recipe object
   const handleTagChange = (newTags: string[]) => {
     setRecipe({ ...recipe, tags: Array.from(new Set(newTags)) });
   };
 
-  // State to manage the new tag value
-  const [newTagValue, setNewTagValue] = useState("");
+  // Attempts to add a tag to the recipe
+  const addTag = () => {
+    const cleanValue = newTagValue
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s]/g, "")
+      .replace(/\s+/g, "-");
+
+    if (cleanValue && !recipe.tags.includes(cleanValue)) {
+      handleTagChange([...recipe.tags, cleanValue]);
+      setNewTagValue("");
+    }
+    setIsAddingTag(false);
+  };
+
+  // Removes a tag from the recipe
+  const removeTag = (tagToRemove: string) => {
+    handleTagChange(recipe.tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  // Quality of life keyboard shortcuts for the "Add Tag" input field
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    } else if (e.key === "Escape") {
+      setIsAddingTag(false);
+      setNewTagValue("");
+    }
+  };
 
   return (
-    <>
-      <Group mb="md">
-        <Input
-          placeholder="Add New Tag"
-          value={newTagValue}
-          onChange={(e) => {
-            // This regex replaces all non-alphanumeric characters with an empty string
-            // and converts the string to lowercase.
-            const value = e.currentTarget.value
-              .toLowerCase()
-              .replace(/[^a-z0-9]/g, "");
-            setNewTagValue(value);
-          }}
-          w="30%"
-        />
-        <Button
-          variant="primary"
-          onClick={() => {
-            if (newTagValue.trim() !== "") {
-              handleTagChange([...recipe.tags, newTagValue]);
-              setNewTagValue("");
-            }
-          }}
-        >
-          Add Tag
-        </Button>
-      </Group>
+    <Paper shadow="xs" p="md" radius="md">
+      <Stack gap="md">
+        {/* Header & Add Tag Section */}
+        <Flex gap="sm" align="flex-end" wrap="wrap">
+          {isAddingTag ? (
+            <Flex gap="xs" wrap="wrap" style={{ width: "100%" }}>
+              <TextInput
+                placeholder="Enter tag name..."
+                value={newTagValue}
+                onChange={(e) => setNewTagValue(e.currentTarget.value)}
+                onKeyDown={handleKeyPress}
+                autoFocus
+                size={isMobile ? "md" : "sm"}
+                style={{ flex: 1, minWidth: isMobile ? "100%" : "200px" }}
+              />
+              <Group gap="xs" style={isMobile ? { width: "100%" } : {}}>
+                <Button
+                  variant="outline"
+                  color="gray"
+                  size="xs"
+                  radius="md"
+                  onClick={() => {
+                    setIsAddingTag(false);
+                    setNewTagValue("");
+                  }}
+                  style={{
+                    width: isMobile ? "40%" : "auto",
+                    flex: isMobile ? 1 : "auto",
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="gradient"
+                  size="xs"
+                  radius="md"
+                  onClick={addTag}
+                  disabled={!newTagValue.trim()}
+                  style={{
+                    width: isMobile ? "40%" : "auto",
+                    flex: isMobile ? 1 : "auto",
+                  }}
+                >
+                  Add
+                </Button>
+              </Group>
+            </Flex>
+          ) : (
+            <Group justify="space-between" style={{ width: "100%" }}>
+              <Text fw={500} size={isMobile ? "xl" : "md"}>
+                Recipe Tags
+              </Text>
+              <Button
+                variant="gradient"
+                size="xs"
+                radius="md"
+                w={isMobile ? "100%" : "auto"}
+                rightSection={<IconPlus style={{ width: 16, height: 16 }} />}
+                onClick={() => setIsAddingTag(true)}
+              >
+                Add Tag
+              </Button>
+            </Group>
+          )}
+        </Flex>
 
-      <Group>
-        {recipe.tags.map((tag, index) => (
-          <Chip
-            key={`tag-${index}`}
-            variant="filled"
-            icon={<IconX size={16} />}
-            defaultChecked
-            onClick={() => {
-              handleTagChange(recipe.tags.filter((t) => t !== tag));
-            }}
-          >
-            {titleize(tag)}
-          </Chip>
-        ))}
-      </Group>
-    </>
+        <Divider />
+
+        {/* Tags Display */}
+        {recipe.tags.length > 0 ? (
+          <Flex gap="xs" wrap="wrap">
+            {recipe.tags.map((tag, index) => (
+              <Badge
+                key={`tag-${index}`}
+                variant="gradient"
+                gradient={{ from: "orange", to: "yellow", deg: 195 }}
+                radius="md"
+                size={isMobile ? "xl" : "lg"}
+                rightSection={
+                  <ActionIcon
+                    size="xs"
+                    variant="transparent"
+                    color="white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeTag(tag);
+                    }}
+                    ml="xs"
+                  >
+                    <IconX size={12} />
+                  </ActionIcon>
+                }
+                onClick={() => removeTag(tag)}
+                style={{ cursor: "pointer" }}
+              >
+                {titleize(tag)}
+              </Badge>
+            ))}
+          </Flex>
+        ) : (
+          <Text c="dimmed" size="sm" ta="center" py="md">
+            No tags added yet. Click "Add Tag" to get started.
+          </Text>
+        )}
+      </Stack>
+    </Paper>
   );
 }

@@ -96,9 +96,15 @@ export default function ViewRecipe() {
                   <Badge
                     mr="xs"
                     key={tag}
-                    classNames={{ label: "recipeTagLabel" }}
+                    variant="gradient"
+                    gradient={{ from: "orange", to: "yellow", deg: 195 }}
+                    radius="md"
+                    size="lg"
+                    style={{
+                      textTransform: "none",
+                    }}
                   >
-                    {tag}
+                    {titleize(tag)}
                   </Badge>
                 ))}
               </Grid.Col>
