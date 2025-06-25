@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 
-import EditRecipeDescriptionTextEditor from "./EditRecipeDescriptionTextEditor";
+import EditRecipeDescriptionTextEditor from "./Description/EditRecipeDescriptionTextEditor";
 import EditRecipeIngredients from "./Ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "./Instructions/EditRecipeInstructions";
 import EditRecipeTags from "./EditRecipeTags";
@@ -21,6 +21,7 @@ import StarterKit from "@tiptap/starter-kit";
 import SubScript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
+import { TextEditorImageExtension } from "./Description/TextEditorTiptapExtension";
 import Underline from "@tiptap/extension-underline";
 import { useEditor } from "@tiptap/react";
 import { useMediaQuery } from "@mantine/hooks";
@@ -50,6 +51,7 @@ export default function EditRecipe({
       Highlight,
       StarterKit,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextEditorImageExtension,
     ],
     immediatelyRender: false,
     content: description,

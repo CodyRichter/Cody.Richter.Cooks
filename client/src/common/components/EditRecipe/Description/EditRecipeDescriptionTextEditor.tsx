@@ -1,5 +1,6 @@
 import { Editor } from "@tiptap/react";
 import { RichTextEditor } from "@mantine/tiptap";
+import TextEditorImageUploader from "./TextEditorImageUploader";
 import { useMediaQuery } from "@mantine/hooks";
 
 export default function EditRecipeDescriptionTextEditor({
@@ -28,6 +29,7 @@ export default function EditRecipeDescriptionTextEditor({
           padding: isMobile ? "16px" : "12px",
         },
       }}
+      variant="subtle"
     >
       <RichTextEditor.Toolbar
         sticky
@@ -67,6 +69,10 @@ export default function EditRecipeDescriptionTextEditor({
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.Link />
           <RichTextEditor.Unlink />
+        </RichTextEditor.ControlsGroup>
+
+        <RichTextEditor.ControlsGroup>
+          <TextEditorImageUploader editor={editor} />
         </RichTextEditor.ControlsGroup>
       </RichTextEditor.Toolbar>
 
