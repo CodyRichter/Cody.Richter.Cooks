@@ -1,11 +1,17 @@
-import { Button, Divider, Group, NavLink, Skeleton } from "@mantine/core";
+import { Button, Divider, Group, NavLink, Stack } from "@mantine/core";
 import {
   INITIAL_NETWORK_RESULT_WITH_LOADING,
   NetworkResult,
 } from "@/common/network/constants";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconArrowNarrowRight,
+  IconChefHatFilled,
+  IconChevronLeft,
+  IconChevronRight,
+} from "@tabler/icons-react";
 import React, { useEffect } from "react";
 
+import NavigationSkeleton from "./NavigationSkeleton";
 import { listRecipesFromNetwork } from "@/utils/network";
 import { useRouter } from "next/router";
 
@@ -81,45 +87,78 @@ export default function NavigationSidebar({
     }
   }
 
+  // Check if a recipe is currently active based on URL
+  const isRecipeActive = (recipeId: string) => {
+    return router.asPath === `/recipes/view/${recipeId}`;
+  };
+
+  if (networkResult.isLoading) {
+    return <NavigationSkeleton />;
+  }
+
+  if (networkResult.error) {
+    return <NavigationSkeleton />;
+  }
+
   return (
-    <>
-      {networkResult.isLoading && <Skeleton h={28} mt="sm" animate={false} />}
-      {networkResult.error && <Skeleton h={28} mt="sm" animate={false} />}
-      {!networkResult.error && !networkResult.isLoading && (
-        <div className="navigationSidebarContainer">
-          <Group justify="center" mb="sm" mt="xs">
-            <Button
-              size="compact-md"
-              onClick={handlePaginationBack}
-              disabled={paginationIndex === 0}
-              leftSection={<IconChevronLeft />}
-            >
-              Last Page
-            </Button>
-            <Button
-              size="compact-md"
-              onClick={handlePaginationForward}
-              disabled={paginationIndex >= paginationKeys.length - 1}
-              rightSection={<IconChevronRight />}
-            >
-              Next Page
-            </Button>
-          </Group>
-
-          <Divider mb="xs" />
-
-          {networkResult.response.recipes.map((recipe: RecipeListItem) => (
+    <Stack justify="space-between" h="100%">
+      <Stack gap={0} p="xs" mah="85%">
+        {networkResult.response.recipes.map((recipe: RecipeListItem) => (
+          <>
             <NavLink
               w="100%"
+              miw="44px"
               key={`sidebar-recipe-${recipe.id}`}
               onClick={() => handleRecipeClick(recipe.id)}
               label={recipe.title}
-              rightSection={<IconChevronRight />}
-              color="orange"
+              rightSection={
+                isRecipeActive(recipe.id) ? (
+                  <IconChefHatFilled size={20} color="#e2a478" />
+                ) : (
+                  <IconArrowNarrowRight size={20} color="gray" />
+                )
+              }
+              active={isRecipeActive(recipe.id)}
+              variant={isRecipeActive(recipe.id) ? "filled" : "subtle"}
+              className={
+                isRecipeActive(recipe.id)
+                  ? "activeSidebarRecipe"
+                  : "sidebarRecipe"
+              }
             />
-          ))}
-        </div>
-      )}
-    </>
+            <Divider color="#eee" />
+          </>
+        ))}
+      </Stack>
+      <div>
+        <Divider mb="md" color="#eee" />
+        <Group justify="space-between" mb="xl" mt="xs">
+          <Button
+            size="compact-md"
+            variant="light"
+            onClick={handlePaginationBack}
+            disabled={paginationIndex === 0}
+            leftSection={<IconChevronLeft size={16} />}
+            ml="sm"
+            w="40%"
+            radius="md"
+          >
+            Previous
+          </Button>
+          <Button
+            size="compact-md"
+            variant="light"
+            onClick={handlePaginationForward}
+            disabled={paginationIndex >= paginationKeys.length - 1}
+            rightSection={<IconChevronRight size={16} />}
+            mr="sm"
+            w="40%"
+            radius="md"
+          >
+            Next
+          </Button>
+        </Group>
+      </div>
+    </Stack>
   );
 }

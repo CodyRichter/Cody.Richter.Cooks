@@ -48,7 +48,7 @@ export default function App({ Component, pageProps }: any) {
               {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }}
             />
           </AppShell.Header>
-          <AppShell.Navbar>
+          <AppShell.Navbar className="navigationSidebarContainer">
             <NavigationSidebar
               {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }}
             />
