@@ -3,15 +3,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #fcfafa;
+  cursor: default;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
-}
-
-.navigationHeader {
-  /* background-color: rgb(213, 160, 60); */
 }
 
 .navigationSidebarContainer {
@@ -50,12 +47,13 @@ code {
   border-radius: 0px;
 }
 
+/* TipTap Editor specific image styles */
+
 .tiptap-editor-button:hover {
   background-color: #f1f3f5 !important;
   color: #000000 !important;
 }
 
-/* Responsive Image Styles */
 img {
   max-width: 100%;
   height: auto;
@@ -66,7 +64,6 @@ img {
   box-sizing: border-box;
 }
 
-/* TipTap Editor specific image styles */
 .ProseMirror img {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
