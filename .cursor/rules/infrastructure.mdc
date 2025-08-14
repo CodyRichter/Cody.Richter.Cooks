@@ -1,8 +1,7 @@
-# Infrastructure Overview
-
-This project uses AWS CDK (Python) to provision all backend infrastructure for the React frontend.
-
-## Main Components
+---
+description: For infrastructure updates, AWS changes, or any new
+alwaysApply: false
+---
 
 - The app is hosted on AWS in the free tier, and extreme effort should be made not to violate this and incur a cost
 - The app is designed to be serverless
