@@ -3,7 +3,7 @@ import {
   INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
   INITIAL_NETWORK_RESULT_WITH_LOADING,
   NetworkResult,
-} from "@/common/network/constants";
+} from "@/common/types/constants";
 import { getRecipeFromNetwork, updateRecipeFromNetwork } from "@/utils/network";
 import { useEffect, useState } from "react";
 

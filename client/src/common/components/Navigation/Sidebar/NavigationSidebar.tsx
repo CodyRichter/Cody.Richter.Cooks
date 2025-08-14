@@ -2,7 +2,7 @@ import { Button, Divider, Group, NavLink, Stack } from "@mantine/core";
 import {
   INITIAL_NETWORK_RESULT_WITH_LOADING,
   NetworkResult,
-} from "@/common/network/constants";
+} from "@/common/types/constants";
 import {
   IconArrowNarrowRight,
   IconChefHatFilled,

@@ -2,7 +2,7 @@ import { Button, Grid, Group, Text } from "@mantine/core";
 import {
   INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
   NetworkResult,
-} from "@/common/network/constants";
+} from "@/common/types/constants";
 import React, { useState } from "react";
 
 import EditRecipe from "@/common/components/EditRecipe/EditRecipe";

@@ -10,7 +10,7 @@ import {
 import {
   INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
   NetworkResult,
-} from "@/common/network/constants";
+} from "@/common/types/constants";
 
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";

@@ -1,4 +1,4 @@
-import { BASE_URL, NetworkResult } from "@/common/network/constants";
+import { BASE_URL, NetworkResult } from "@/common/types/constants";
 
 import Recipe from "@/common/types/Recipe";
 

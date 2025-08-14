@@ -2,7 +2,7 @@ import { Badge, Button, Divider, Grid, Group, Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
 import DeleteRecipeModal from "@/common/components/ViewRecipe/DeleteRecipeModal";
-import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/common/network/constants";
+import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/common/types/constants";
 import { IconTool } from "@tabler/icons-react";
 import Recipe from "@/common/types/Recipe";
 import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";

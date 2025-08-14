@@ -1,7 +1,7 @@
 import { Card, Image, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 
-import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/common/network/constants";
+import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/common/types/constants";
 import RecipePreviewCardLoadingSkeleton from "./RecipePreviewCardLoadingSkeleton";
 import { getRecipeFromNetwork } from "@/utils/network";
 import parse from "html-react-parser";
