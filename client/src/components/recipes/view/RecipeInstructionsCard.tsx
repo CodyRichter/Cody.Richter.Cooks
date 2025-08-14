@@ -1,4 +1,4 @@
-import { Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Group, Stack, Text, Title } from "@mantine/core";
 
 import InstructionStep from "@/types/InstructionStep";
 import React from "react";
@@ -9,13 +9,7 @@ export default function RecipeInstructionsCard({
   instructions: InstructionStep[];
 }) {
   return (
-    <Card
-      shadow="sm"
-      radius="md"
-      withBorder
-      pb="lg"
-      style={{ borderLeft: "6px solid #e2a478" }}
-    >
+    <>
       <Title order={4}>Instructions</Title>
       <Stack mt="sm">
         {instructions.map((instructionStep, stepIndex) => (
@@ -47,6 +41,6 @@ export default function RecipeInstructionsCard({
           </div>
         ))}
       </Stack>
-    </Card>
+    </>
   );
 }

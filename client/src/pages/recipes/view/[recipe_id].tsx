@@ -1,9 +1,9 @@
-import { Badge, Grid, Group, Paper, Text } from "@mantine/core";
-import { Button, Stack } from "@mantine/core";
+import { Badge, Divider, Grid, Group, Paper, Text, Title } from "@mantine/core";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@mantine/core";
 import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
 import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/types/constants";
 import Recipe from "@/types/Recipe";
@@ -72,21 +72,20 @@ export default function ViewRecipe() {
   return (
     <>
       <Grid>
-        <Grid.Col span={12}>
-          <Paper
-            shadow="lg"
-            p="lg"
-            radius="md"
-            withBorder
-            mb="md"
-            style={{ borderLeft: "6px solid #e2a478" }}
-          >
+        <Paper
+          shadow="lg"
+          p="lg"
+          radius="md"
+          withBorder
+          mb="md"
+          style={{ borderLeft: "6px solid #e2a478" }}
+          w="100%"
+        >
+          <Grid.Col span={12}>
             <Group justify="space-between" align="flex-start">
               <div>
                 <Group gap="sm" align="center" mb={16}>
-                  <Text fw={700} size="xl">
-                    {recipe.title}
-                  </Text>
+                  <Title order={2}>{recipe.title}</Title>
                   <Text c="dimmed" size="sm">
                     by {recipe.username}
                   </Text>
@@ -94,7 +93,7 @@ export default function ViewRecipe() {
 
                 {recipe.tags.length > 0 && (
                   <div>
-                    <Group gap="xs" align="center">
+                    <Group gap="xs" align="center" mt="sm">
                       <Text size="sm" c="dimmed" fw={400}>
                         Tags:
                       </Text>
@@ -119,15 +118,11 @@ export default function ViewRecipe() {
               </div>
 
               {auth.isAuthenticated && user_has_recipe_permission && (
-                <Stack
-                  gap="xs"
-                  align={isMobile ? "center" : "flex-end"}
-                  w={isMobile ? "100%" : "auto"}
-                >
+                <Group w={isMobile ? "100%" : "auto"}>
                   <Button
-                    variant={isMobile ? "outline" : "subtle"}
+                    variant="outline"
                     color="blue"
-                    size="xs"
+                    size="sm"
                     radius="sm"
                     w={isMobile ? "100%" : "auto"}
                     leftSection={<IconEdit size={24} />}
@@ -141,9 +136,9 @@ export default function ViewRecipe() {
                     Edit
                   </Button>
                   <Button
-                    variant={isMobile ? "outline" : "subtle"}
+                    variant="outline"
                     color="red"
-                    size="xs"
+                    size="sm"
                     radius="sm"
                     w={isMobile ? "100%" : "auto"}
                     leftSection={<IconTrash size={24} />}
@@ -154,46 +149,36 @@ export default function ViewRecipe() {
                   >
                     Delete
                   </Button>
-                </Stack>
+                </Group>
               )}
             </Group>
-          </Paper>
-        </Grid.Col>
-
-        {recipe.description && (
-          <Grid.Col span={12}>
-            <Paper
-              shadow="sm"
-              p="md"
-              radius="md"
-              withBorder
-              style={{
-                marginBottom: "24px",
-                borderLeft: "6px solid #e2a478",
-              }}
-            >
-              <Text size="sm" c="dimmed" fw={500} mb={12}>
-                Description
-              </Text>
-              <div
-                dangerouslySetInnerHTML={{ __html: recipe.description }}
-                style={{
-                  lineHeight: 1.6,
-                  fontSize: "16px",
-                  fontFamily: "inherit",
-                  fontWeight: 400,
-                }}
-              />
-            </Paper>
           </Grid.Col>
-        )}
 
-        <Grid.Col span={12}>
-          <RecipeIngredientCard ingredients={recipe.ingredients} />
-        </Grid.Col>
-        <Grid.Col span={12}>
-          <RecipeInstructionsCard instructions={recipe.instructions} />
-        </Grid.Col>
+          <Grid.Col span={12}>
+            <Divider />
+          </Grid.Col>
+
+          <Grid.Col span={12}>
+            <Title order={4}>Description</Title>
+            <div
+              dangerouslySetInnerHTML={{ __html: recipe.description }}
+              style={{
+                lineHeight: 1.6,
+                fontSize: "16px",
+                fontFamily: "inherit",
+                fontWeight: 400,
+              }}
+            />
+          </Grid.Col>
+
+          <Grid.Col span={12} mb="lg">
+            <RecipeIngredientCard ingredients={recipe.ingredients} />
+          </Grid.Col>
+
+          <Grid.Col span={12}>
+            <RecipeInstructionsCard instructions={recipe.instructions} />
+          </Grid.Col>
+        </Paper>
       </Grid>
 
       <DeleteRecipeModal

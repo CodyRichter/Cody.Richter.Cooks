@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Card,
   Checkbox,
   CopyButton,
   Divider,
@@ -114,14 +113,7 @@ export default function RecipeIngredientCard({
     .join("\n");
 
   return (
-    <Card
-      shadow="sm"
-      radius="md"
-      withBorder
-      pb="lg"
-      pt="sm"
-      style={{ borderLeft: "6px solid #e2a478" }}
-    >
+    <>
       <Group gap="xs" mb="md">
         <Title order={4}>Ingredients</Title>
         {isEditingScaleFactor ? (
@@ -140,13 +132,6 @@ export default function RecipeIngredientCard({
           )
         ) : (
           <Group gap="xs">
-            <ActionIcon
-              onClick={() => setIsEditingScaleFactor(true)}
-              variant="subtle"
-              color="gray"
-            >
-              {scaleFactor}x
-            </ActionIcon>
             <CopyButton value={formattedIngredientsAsString} timeout={2000}>
               {({ copied, copy }) => (
                 <Tooltip
@@ -172,11 +157,18 @@ export default function RecipeIngredientCard({
                 </Tooltip>
               )}
             </CopyButton>
+            <ActionIcon
+              onClick={() => setIsEditingScaleFactor(true)}
+              variant="subtle"
+              color="gray"
+            >
+              {scaleFactor}x
+            </ActionIcon>
           </Group>
         )}
       </Group>
 
-      <Stack mt="sm">
+      <Stack mt="sm" gap="lg">
         {ingredients.map((ingredient) => (
           <Group key={`ingredient-${ingredient.id}`} ml="md">
             <Checkbox
@@ -192,6 +184,6 @@ export default function RecipeIngredientCard({
           </Group>
         ))}
       </Stack>
-    </Card>
+    </>
   );
 }
