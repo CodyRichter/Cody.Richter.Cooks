@@ -1,8 +1,8 @@
 from typing import Optional
-from app.data.model.Ingredient import Ingredient
-from app.data.model.Recipe import Recipe
-from app.data.model.InstructionStep import InstructionStep
-from app.utilities.core_utils import generate_id
+from src.data.model.Ingredient import Ingredient
+from src.data.model.Recipe import Recipe
+from src.data.model.InstructionStep import InstructionStep
+from src.utilities.core_utils import generate_id
 
 
 # Serialize a JSON/Dictionary Recipe object to Pydantic object

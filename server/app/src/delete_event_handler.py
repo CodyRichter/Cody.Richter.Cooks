@@ -1,10 +1,10 @@
 import traceback
 
-from app.data.communication.DeleteRecipeModels import DeleteRecipeRequest
-from app.data.communication.Exceptions import UnauthorizedException
-from app.methods.delete_recipe import delete_recipe
-from app.network.responses import http_400, http_405, http_500, http_200
-from app.utilities.core_utils import is_defined
+from src.data.communication.DeleteRecipeModels import DeleteRecipeRequest
+from src.data.communication.Exceptions import UnauthorizedException
+from src.methods.delete_recipe import delete_recipe
+from src.network.responses import http_400, http_405, http_500, http_200
+from src.utilities.core_utils import is_defined
 
 
 # Main handler function for all Recipe interactions

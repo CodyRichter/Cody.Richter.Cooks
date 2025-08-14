@@ -3,12 +3,12 @@ import os
 
 import aws_cdk as cdk
 
-from cdk.cdk_stack import ServerlessStack
+from cdk_stack import CodyRichterCooksStack
 
 
 app = cdk.App()
 
-ServerlessStack(
+CodyRichterCooksStack(
     app, 
     "CookingStack",
     env=cdk.Environment(account=os.getenv('AWS_ACCOUNT_ID'), region='us-east-1'),

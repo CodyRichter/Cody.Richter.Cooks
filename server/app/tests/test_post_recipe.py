@@ -1,7 +1,7 @@
 import json
 
-from app.constants import DecimalEncoder
-from app.post_event_handler import handle_event
+from src.utilities.constants import DecimalEncoder
+from src.post_event_handler import handle_event
 
 test_recipe_data = {
     'title': 'Test Recipe',

@@ -1,5 +1,5 @@
-from app.data.model.Recipe import Recipe
-from app.delete_event_handler import handle_event
+from src.data.model.Recipe import Recipe
+from src.delete_event_handler import handle_event
 import botocore
 import pytest
 

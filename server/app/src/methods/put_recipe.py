@@ -1,7 +1,7 @@
-from app.constants import table as ddb_recipe_table, recipe_bucket
-from app.data.communication.PutRecipeModels import PutRecipeResponse
-from app.data.communication.Exceptions import UnauthorizedException
-from app.data.model.Recipe import Recipe
+from src.utilities.constants import table as ddb_recipe_table, recipe_bucket
+from src.data.communication.PutRecipeModels import PutRecipeResponse
+from src.data.communication.Exceptions import UnauthorizedException
+from src.data.model.Recipe import Recipe
 
 
 def put_recipe(recipe: Recipe, username: str) -> PutRecipeResponse:

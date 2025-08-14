@@ -1,7 +1,7 @@
-from app.constants import table as ddb_recipe_table, recipe_bucket_name, s3
+from src.utilities.constants import table as ddb_recipe_table, recipe_bucket_name, s3
 from botocore.exceptions import ClientError
 
-from app.data.communication.GetRecipeModels import GetRecipeRequest, GetRecipeResponse
+from src.data.communication.GetRecipeModels import GetRecipeRequest, GetRecipeResponse
 
 
 def get_recipe(request: GetRecipeRequest) -> GetRecipeResponse:

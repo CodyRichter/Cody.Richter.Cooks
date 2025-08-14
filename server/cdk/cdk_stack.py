@@ -13,14 +13,14 @@ from aws_cdk import (
 from aws_cdk.aws_lambda_python_alpha import PythonFunction, PythonLayerVersion, BundlingOptions
 from constructs import Construct
 
-class ServerlessStack(Stack):
+class CodyRichterCooksStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         python_dependency_layer = PythonLayerVersion(
             self, 'CookingEventLayer',
-            entry='../src',
+            entry='../app',
             layer_version_name='CookingEventLayer',
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_9],
         )
@@ -29,8 +29,8 @@ class ServerlessStack(Stack):
             self, 'CookingGetEventLambda',
             function_name='CookingGetEventLambda',
             runtime=_lambda.Runtime.PYTHON_3_9,
-            entry='../src',
-            index='app/get_event_handler.py',
+            entry='../app',
+            index='src/get_event_handler.py',
             handler='handle_event',
             timeout=Duration.seconds(10),
             layers=[python_dependency_layer],
@@ -43,8 +43,8 @@ class ServerlessStack(Stack):
             self, 'CookingPostEventLambda',
             function_name='CookingPostEventLambda',
             runtime=_lambda.Runtime.PYTHON_3_9,
-            entry='../src',
-            index='app/post_event_handler.py',
+            entry='../app',
+            index='src/post_event_handler.py',
             handler='handle_event',
             timeout=Duration.seconds(10),
             layers=[python_dependency_layer],
@@ -57,8 +57,8 @@ class ServerlessStack(Stack):
             self, 'CookingDeleteEventLambda',
             function_name='CookingDeleteEventLambda',
             runtime=_lambda.Runtime.PYTHON_3_9,
-            entry='../src',
-            index='app/delete_event_handler.py',
+            entry='../app',
+            index='src/delete_event_handler.py',
             handler='handle_event',
             timeout=Duration.seconds(10),
             layers=[python_dependency_layer],

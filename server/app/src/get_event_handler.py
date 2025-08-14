@@ -1,14 +1,14 @@
 from decimal import Decimal
 import json
 
-from app.data.communication.GetRecipeModels import GetRecipeRequest, GetRecipeResponse
-from app.data.communication.ListRecipeModels import ListRecipeRequest, ListRecipeResponse
-from app.data.serde import serialize_recipe
-from app.methods.get_recipe import get_recipe
-from app.methods.put_recipe import put_recipe
-from app.methods.list_recipes import list_recipes
-from app.network.responses import http_200, http_201, http_400, http_404, http_405, http_500
-from app.utilities.core_utils import is_defined
+from src.data.communication.GetRecipeModels import GetRecipeRequest, GetRecipeResponse
+from src.data.communication.ListRecipeModels import ListRecipeRequest, ListRecipeResponse
+from src.data.serde import serialize_recipe
+from src.methods.get_recipe import get_recipe
+from src.methods.put_recipe import put_recipe
+from src.methods.list_recipes import list_recipes
+from src.network.responses import http_200, http_201, http_400, http_404, http_405, http_500
+from src.utilities.core_utils import is_defined
 import traceback
 
 # Main handler function for all Recipe interactions

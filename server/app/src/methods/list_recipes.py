@@ -1,7 +1,7 @@
 from typing import Optional
-from app.constants import table as ddb_recipe_table, RECIPES_PER_PAGE
-from app.data.communication.ListRecipeModels import ListRecipeResponse, ListRecipeRequest
-from app.utilities.core_utils import is_defined
+from src.utilities.constants import table as ddb_recipe_table, RECIPES_PER_PAGE
+from src.data.communication.ListRecipeModels import ListRecipeResponse, ListRecipeRequest
+from src.utilities.core_utils import is_defined
 
 
 def list_recipes(request: ListRecipeRequest) -> ListRecipeResponse:

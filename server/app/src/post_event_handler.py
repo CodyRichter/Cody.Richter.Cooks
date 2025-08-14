@@ -2,11 +2,11 @@ import json
 import traceback
 from decimal import Decimal
 
-from app.data.communication.Exceptions import UnauthorizedException
-from app.data.communication.PutRecipeModels import PutRecipeResponse
-from app.data.serde import serialize_recipe
-from app.methods.put_recipe import put_recipe
-from app.network.responses import http_201, http_400, http_405, http_500
+from src.data.communication.Exceptions import UnauthorizedException
+from src.data.communication.PutRecipeModels import PutRecipeResponse
+from src.data.serde import serialize_recipe
+from src.methods.put_recipe import put_recipe
+from src.network.responses import http_201, http_400, http_405, http_500
 
 
 # Main handler function for all Recipe interactions

@@ -1,6 +1,6 @@
-from app.data.communication.DeleteRecipeModels import DeleteRecipeRequest, DeleteRecipeResponse
-from app.data.communication.Exceptions import UnauthorizedException
-from app.constants import table as ddb_recipe_table, recipe_bucket
+from src.data.communication.DeleteRecipeModels import DeleteRecipeRequest, DeleteRecipeResponse
+from src.data.communication.Exceptions import UnauthorizedException
+from src.utilities.constants import table as ddb_recipe_table, recipe_bucket
 
 def delete_recipe(request: DeleteRecipeRequest) -> DeleteRecipeResponse:
     """

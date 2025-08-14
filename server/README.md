@@ -33,10 +33,14 @@
 
 ## Running Test Cases
 
-From the `src/` directory, run the following command to run Python Tests: `python3 -m pytest`
+From the `app/` directory, run tests with:
 
-## Future Work
+```
+./run_tests.sh
+```
 
-1. Create Congito authorizer for API
+Alternatively:
 
-2. Implement full lambda functionality
+```
+PYTHONPATH=src python3 -m pytest
+```

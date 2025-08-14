@@ -1,7 +1,7 @@
 import json
 from typing import Optional
 
-from app.constants import DecimalEncoder
+from src.utilities.constants import DecimalEncoder
 
 cors_headers = {
     'Content-Type': 'application/json',

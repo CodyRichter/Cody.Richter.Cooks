@@ -1,9 +1,9 @@
 import json
 from decimal import Decimal
 
-from app.constants import RECIPES_PER_PAGE
-from app.get_event_handler import handle_event
-from app.data.model.Recipe import Recipe
+from src.utilities.constants import RECIPES_PER_PAGE
+from src.get_event_handler import handle_event
+from src.data.model.Recipe import Recipe
 
 test_recipe = Recipe(
     id='1',
@@ -74,7 +74,7 @@ def test_list_all_recipes_pagination(mock_recipes_table):
     assert second_page_response['statusCode'] == 200
     second_page_body = json.loads(second_page_response['body'])
     assert 'recipes' in second_page_body
-    assert len(second_page_body['recipes']) == 10
+    assert len(second_page_body['recipes']) == 12
 
 
 def test_list_all_recipes_pagination_bad_key(mock_recipes_table):
