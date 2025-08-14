@@ -1,16 +1,15 @@
-import { Badge, Button, Divider, Grid, Group, Text } from "@mantine/core";
+import { Badge, Grid, Group, Paper, Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
-import DeleteRecipeModal from "@/components/recipes/view/DeleteRecipeModal";
+import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
 import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/types/constants";
-import { IconTool } from "@tabler/icons-react";
 import Recipe from "@/types/Recipe";
 import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
 import RecipeNotFound from "@/components/error-handling/RecipeNotFound";
+import ViewRecipeActionBar from "@/components/recipes/view/action-bar/ViewRecipeActionBar";
 import { getRecipeFromNetwork } from "@/utils/network";
-import parse from "html-react-parser";
 import { titleize } from "@/utils/recipeUtils";
 import { useAuth } from "react-oidc-context";
 import { useDisclosure } from "@mantine/hooks";
@@ -70,56 +69,80 @@ export default function ViewRecipe() {
   return (
     <>
       <Grid>
-        <Grid.Col>
-          {auth.isAuthenticated && user_has_recipe_permission && (
-            <Grid.Col span={12} className="viewRecipeAdminHeader">
-              <Group>
-                <IconTool size={24} style={{ marginLeft: "8px" }} />
-                <Divider orientation="vertical" />
-                <Button
-                  onClick={() => {
-                    router.push(`/recipes/edit/${recipe.id}`);
-                  }}
-                >
-                  Edit
-                </Button>
-                <Button color="red" onClick={open}>
-                  Delete
-                </Button>
-              </Group>
-            </Grid.Col>
-          )}
+        <Grid.Col span={12}>
+          <Group justify="space-between" align="flex-start">
+            <div>
+              <Text fw={700} size="xl" mb={4}>
+                {recipe.title}
+              </Text>
+              <Text c="dimmed" size="sm" mb={16}>
+                by {recipe.username}
+              </Text>
+            </div>
 
-          <Grid.Col span={12}>
-            <Text fw={700} size="xl">
-              {recipe.title}
-            </Text>
-            <Text c="dimmed" size="sm">
-              by {recipe.username}
-            </Text>
-          </Grid.Col>
-          <Grid.Col span={12}>
-            {recipe.tags.map((tag) => (
-              <Badge
-                mr="xs"
-                key={tag}
-                variant="gradient"
-                gradient={{ from: "orange", to: "yellow", deg: 195 }}
-                radius="md"
-                size="lg"
-                style={{
-                  textTransform: "none",
-                }}
-              >
-                {titleize(tag)}
-              </Badge>
-            ))}
-          </Grid.Col>
-          <Grid.Col span={12}>
-            <Divider />
-          </Grid.Col>
-          <Grid.Col span={12}>{parse(recipe.description)}</Grid.Col>
+            {auth.isAuthenticated && user_has_recipe_permission && (
+              <ViewRecipeActionBar
+                recipeId={recipe.id}
+                openDeleteModal={open}
+              />
+            )}
+          </Group>
         </Grid.Col>
+
+        {recipe.tags.length > 0 && (
+          <Grid.Col span={12}>
+            <Paper
+              shadow="sm"
+              p="md"
+              radius="md"
+              withBorder
+              style={{
+                marginBottom: "24px",
+              }}
+            >
+              <Text size="sm" c="dimmed" fw={500} mb={8}>
+                Tags
+              </Text>
+              <Group gap="xs">
+                {recipe.tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="gradient"
+                    gradient={{ from: "orange", to: "yellow", deg: 195 }}
+                    radius="md"
+                    size="md"
+                    style={{
+                      textTransform: "none",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {titleize(tag)}
+                  </Badge>
+                ))}
+              </Group>
+            </Paper>
+          </Grid.Col>
+        )}
+
+        {recipe.description && (
+          <Grid.Col span={12}>
+            <Paper shadow="sm" p="md" radius="md" withBorder mb="sm">
+              <Text size="sm" c="dimmed" fw={500} mb={12}>
+                Description
+              </Text>
+              <div
+                dangerouslySetInnerHTML={{ __html: recipe.description }}
+                style={{
+                  lineHeight: 1.6,
+                  fontSize: "16px",
+                  fontFamily: "inherit",
+                  fontWeight: 400,
+                }}
+              />
+            </Paper>
+          </Grid.Col>
+        )}
+
         <Grid.Col span={12}>
           <RecipeIngredientCard ingredients={recipe.ingredients} />
         </Grid.Col>
