@@ -114,7 +114,14 @@ export default function RecipeIngredientCard({
     .join("\n");
 
   return (
-    <Card shadow="sm" radius="md" withBorder pb="lg" pt="sm">
+    <Card
+      shadow="sm"
+      radius="md"
+      withBorder
+      pb="lg"
+      pt="sm"
+      style={{ borderLeft: "6px solid #e2a478" }}
+    >
       <Group gap="xs" mb="md">
         <Title order={4}>Ingredients</Title>
         {isEditingScaleFactor ? (

@@ -1,4 +1,7 @@
 import { Badge, Grid, Group, Paper, Text } from "@mantine/core";
+import { Button, Stack } from "@mantine/core";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useEffect, useMemo, useState } from "react";
 
 import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
@@ -8,16 +11,16 @@ import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard
 import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
 import RecipeNotFound from "@/components/error-handling/RecipeNotFound";
-import ViewRecipeActionBar from "@/components/recipes/view/action-bar/ViewRecipeActionBar";
 import { getRecipeFromNetwork } from "@/utils/network";
 import { titleize } from "@/utils/recipeUtils";
 import { useAuth } from "react-oidc-context";
-import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
 
 export default function ViewRecipe() {
   const router = useRouter();
   const recipe_id: string = router.query.recipe_id as string;
+
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [networkStatus, setNetworkStatus] = useState(
     INITIAL_NETWORK_RESULT_WITH_LOADING
@@ -70,26 +73,94 @@ export default function ViewRecipe() {
     <>
       <Grid>
         <Grid.Col span={12}>
-          <Group justify="space-between" align="flex-start">
-            <div>
-              <Text fw={700} size="xl" mb={4}>
-                {recipe.title}
-              </Text>
-              <Text c="dimmed" size="sm" mb={16}>
-                by {recipe.username}
-              </Text>
-            </div>
+          <Paper
+            shadow="lg"
+            p="lg"
+            radius="md"
+            withBorder
+            mb="md"
+            style={{ borderLeft: "6px solid #e2a478" }}
+          >
+            <Group justify="space-between" align="flex-start">
+              <div>
+                <Group gap="sm" align="center" mb={16}>
+                  <Text fw={700} size="xl">
+                    {recipe.title}
+                  </Text>
+                  <Text c="dimmed" size="sm">
+                    by {recipe.username}
+                  </Text>
+                </Group>
 
-            {auth.isAuthenticated && user_has_recipe_permission && (
-              <ViewRecipeActionBar
-                recipeId={recipe.id}
-                openDeleteModal={open}
-              />
-            )}
-          </Group>
+                {recipe.tags.length > 0 && (
+                  <div>
+                    <Group gap="xs" align="center">
+                      <Text size="sm" c="dimmed" fw={400}>
+                        Tags:
+                      </Text>
+                      {recipe.tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="light"
+                          color="orange"
+                          radius="md"
+                          size="lg"
+                          style={{
+                            textTransform: "none",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {titleize(tag)}
+                        </Badge>
+                      ))}
+                    </Group>
+                  </div>
+                )}
+              </div>
+
+              {auth.isAuthenticated && user_has_recipe_permission && (
+                <Stack
+                  gap="xs"
+                  align={isMobile ? "center" : "flex-end"}
+                  w={isMobile ? "100%" : "auto"}
+                >
+                  <Button
+                    variant={isMobile ? "outline" : "subtle"}
+                    color="blue"
+                    size="xs"
+                    radius="sm"
+                    w={isMobile ? "100%" : "auto"}
+                    leftSection={<IconEdit size={24} />}
+                    onClick={() => {
+                      router.push(`/recipes/edit/${recipe.id}`);
+                    }}
+                    style={{
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant={isMobile ? "outline" : "subtle"}
+                    color="red"
+                    size="xs"
+                    radius="sm"
+                    w={isMobile ? "100%" : "auto"}
+                    leftSection={<IconTrash size={24} />}
+                    onClick={open}
+                    style={{
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </Stack>
+              )}
+            </Group>
+          </Paper>
         </Grid.Col>
 
-        {recipe.tags.length > 0 && (
+        {recipe.description && (
           <Grid.Col span={12}>
             <Paper
               shadow="sm"
@@ -98,35 +169,9 @@ export default function ViewRecipe() {
               withBorder
               style={{
                 marginBottom: "24px",
+                borderLeft: "6px solid #e2a478",
               }}
             >
-              <Text size="sm" c="dimmed" fw={500} mb={8}>
-                Tags
-              </Text>
-              <Group gap="xs">
-                {recipe.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="gradient"
-                    gradient={{ from: "orange", to: "yellow", deg: 195 }}
-                    radius="md"
-                    size="md"
-                    style={{
-                      textTransform: "none",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {titleize(tag)}
-                  </Badge>
-                ))}
-              </Group>
-            </Paper>
-          </Grid.Col>
-        )}
-
-        {recipe.description && (
-          <Grid.Col span={12}>
-            <Paper shadow="sm" p="md" radius="md" withBorder mb="sm">
               <Text size="sm" c="dimmed" fw={500} mb={12}>
                 Description
               </Text>

@@ -9,7 +9,13 @@ export default function RecipeInstructionsCard({
   instructions: InstructionStep[];
 }) {
   return (
-    <Card shadow="sm" radius="md" withBorder pb="lg">
+    <Card
+      shadow="sm"
+      radius="md"
+      withBorder
+      pb="lg"
+      style={{ borderLeft: "6px solid #e2a478" }}
+    >
       <Title order={4}>Instructions</Title>
       <Stack mt="sm">
         {instructions.map((instructionStep, stepIndex) => (
