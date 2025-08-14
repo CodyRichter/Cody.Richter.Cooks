@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconX } from "@tabler/icons-react";
 
-import Recipe from "@/common/types/Recipe";
+import Recipe from "@/types/Recipe";
 import { titleize } from "@/utils/recipeUtils";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";

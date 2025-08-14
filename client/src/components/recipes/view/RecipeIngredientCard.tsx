@@ -14,7 +14,7 @@ import {
 import { IconCheck, IconClipboardCheck, IconCopy } from "@tabler/icons-react";
 import React, { useState } from "react";
 
-import Ingredient from "@/common/types/Ingredient";
+import Ingredient from "@/types/Ingredient";
 import { convertToFractionalRepresentation } from "@/utils/recipeUtils";
 import { useMediaQuery } from "@mantine/hooks";
 

@@ -8,8 +8,8 @@ import { AppShell, MantineProvider, createTheme } from "@mantine/core";
 
 import { AuthProvider } from "react-oidc-context";
 import Head from "next/head";
-import NavigationHeader from "@/common/components/Navigation/Header/NavigationHeader";
-import NavigationSidebar from "@/common/components/Navigation/Sidebar/NavigationSidebar";
+import NavigationHeader from "@/components/navigation/header/NavigationHeader";
+import NavigationSidebar from "@/components/navigation/sidebar/NavigationSidebar";
 import { Notifications } from "@mantine/notifications";
 import { cognitoAuthConfig } from "@/utils/auth";
 import getCodyRichterCooksTheme from "@/styles/theme";

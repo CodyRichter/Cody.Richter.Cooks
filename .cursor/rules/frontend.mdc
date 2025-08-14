@@ -4,11 +4,11 @@ alwaysApply: false
 ---
 
 - Use functional components with hooks
-- `client/src/utils` folder contains shared utility functions.
-- `client/src/styles` contains all CSS and styles for the frontend.
-- `client/src/common/components` has shared components across pages (such as NavBar)
-- The frontend data models are in `client/src/common/types`. The backend data models in `server/app/src/data` must also be kept in sync when changes are made.
-- `client/src/pages` contains the different pages for the site.
+- Utility functions are organized in a dedicated utils directory
+- CSS and styles are centralized in a styles directory
+- Shared components are organized by feature/domain in the components directory
+- Data models are centralized in a types directory and must be kept in sync with backend models
+- Pages are organized in a pages directory following Next.js conventions
 - Use useState for local component state
 - Implement useReducer for complex state logic
 - Use Context API for shared state

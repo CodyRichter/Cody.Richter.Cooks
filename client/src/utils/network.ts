@@ -1,6 +1,6 @@
-import { BASE_URL, NetworkResult } from "@/common/types/constants";
+import { BASE_URL, NetworkResult } from "@/types/constants";
 
-import Recipe from "@/common/types/Recipe";
+import Recipe from "@/types/Recipe";
 
 export async function getRecipeFromNetwork(
   recipe_id: string | undefined,

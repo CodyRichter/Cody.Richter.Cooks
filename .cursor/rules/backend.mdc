@@ -1,9 +1,3 @@
----
-description:
-globs:
-alwaysApply: false
----
-
 - Follow Black code formatting
 - Use isort for import sorting
 - Follow PEP 8 naming conventions:
@@ -22,9 +16,10 @@ alwaysApply: false
 - Return proper error responses
 - Handle edge cases properly
 - Use proper error messages
-- All unit tests are written in `server/app/tests`
-- The handlers for each function are defined in the directory of `server/app/src`
-- The handlers should only handle parsing and routing of requests. All specific logic should be handled in `server/app/src/methods`
-- `server/app/src/utilities` contains helper functions that are shared across methods
-- All data models in the backend live in `server/app/src/data`. The frontend data models in `client/src/common/types` must also be kept in sync when changes are made.
-- `server/app/src/network` contains HTTP responses that must be used by the handlers when responding
+- All unit tests are written in the tests directory
+- The handlers for each function are defined in the src directory
+- The handlers should only handle parsing and routing of requests. All specific logic should be handled in the methods directory
+- The utilities directory contains helper functions that are shared across methods
+- All data models in the backend live in the data directory and must be kept in sync with frontend data models
+- The network directory contains HTTP responses that must be used by the handlers when responding
+- No unit tests are needed for infrastructure code changes in the CDK

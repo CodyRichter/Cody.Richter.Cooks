@@ -20,8 +20,8 @@ import {
 import React, { useState } from "react";
 
 import { CSS } from "@dnd-kit/utilities";
-import Ingredient from "@/common/types/Ingredient";
-import Recipe from "@/common/types/Recipe";
+import Ingredient from "@/types/Ingredient";
+import Recipe from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 
 export default function MobileSortableRecipeIngredient({

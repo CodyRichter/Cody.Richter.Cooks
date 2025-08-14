@@ -5,9 +5,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import Ingredient from "@/common/types/Ingredient";
+import Ingredient from "@/types/Ingredient";
 import React from "react";
-import Recipe from "@/common/types/Recipe";
+import Recipe from "@/types/Recipe";
 import SortableRecipeIngredient from "./SortableRecipeIngredient";
 
 interface EditRecipeIngredientsProps {

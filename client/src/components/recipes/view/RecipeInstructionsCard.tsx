@@ -1,6 +1,6 @@
 import { Card, Group, Stack, Text, Title } from "@mantine/core";
 
-import InstructionStep from "@/common/types/InstructionStep";
+import InstructionStep from "@/types/InstructionStep";
 import React from "react";
 
 export default function RecipeInstructionsCard({

@@ -12,7 +12,7 @@ import {
 
 import { IconSearch } from "@tabler/icons-react";
 import React from "react";
-import RecipePreviewCard from "@/common/components/RecipePreviewCard/RecipePreviewCard";
+import RecipePreviewCard from "@/components/recipes/preview/RecipePreviewCard";
 import { useMediaQuery } from "@mantine/hooks";
 
 export default function Index() {

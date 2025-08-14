@@ -15,9 +15,9 @@ import {
 } from "@tabler/icons-react";
 
 import { CSS } from "@dnd-kit/utilities";
-import Ingredient from "@/common/types/Ingredient";
+import Ingredient from "@/types/Ingredient";
 import React from "react";
-import Recipe from "@/common/types/Recipe";
+import Recipe from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 
 export default function DesktopSortableRecipeIngredient({

@@ -9,19 +9,19 @@ import {
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 
-import EditRecipeDescriptionTextEditor from "./Description/EditRecipeDescriptionTextEditor";
-import EditRecipeIngredients from "./Ingredients/EditRecipeIngredients";
-import EditRecipeInstructions from "./Instructions/EditRecipeInstructions";
-import EditRecipeTags from "./EditRecipeTags";
+import EditRecipeDescriptionTextEditor from "./description/EditRecipeDescriptionTextEditor";
+import EditRecipeIngredients from "./ingredients/EditRecipeIngredients";
+import EditRecipeInstructions from "./instructions/EditRecipeInstructions";
+import EditRecipeTags from "./tags/EditRecipeTags";
 import Highlight from "@tiptap/extension-highlight";
 import { IconPlus } from "@tabler/icons-react";
 import { Link } from "@mantine/tiptap";
-import Recipe from "@/common/types/Recipe";
+import Recipe from "@/types/Recipe";
 import StarterKit from "@tiptap/starter-kit";
 import SubScript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextEditorImageExtension } from "./Description/TextEditorTiptapExtension";
+import { TextEditorImageExtension } from "./description/TextEditorTiptapExtension";
 import Underline from "@tiptap/extension-underline";
 import { useEditor } from "@tiptap/react";
 import { useMediaQuery } from "@mantine/hooks";

@@ -1,4 +1,4 @@
-import Recipe from "@/common/types/Recipe";
+import Recipe from "@/types/Recipe";
 
 /**
  * Converts a decimal number to a fractional representation and returns it as a string.

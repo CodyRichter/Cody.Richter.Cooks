@@ -2,11 +2,11 @@ import { Button, Grid, Group, Text } from "@mantine/core";
 import {
   INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
   NetworkResult,
-} from "@/common/types/constants";
+} from "@/types/constants";
 import React, { useState } from "react";
 
-import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
-import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
+import EditRecipe from "@/components/recipes/edit/EditRecipe";
+import InvalidPermissionAlert from "@/components/error-handling/InvalidPermissionAlert";
 import { createRecipeFromNetwork } from "@/utils/network";
 import { isRecipeValid } from "@/utils/recipeUtils";
 import { notifications } from "@mantine/notifications";

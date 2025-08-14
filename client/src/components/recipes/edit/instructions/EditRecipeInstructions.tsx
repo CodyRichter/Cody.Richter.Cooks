@@ -5,9 +5,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import InstructionStep from "@/common/types/InstructionStep";
+import InstructionStep from "@/types/InstructionStep";
 import React from "react";
-import Recipe from "@/common/types/Recipe";
+import Recipe from "@/types/Recipe";
 import SortableRecipeInstruction from "./SortableRecipeInstruction";
 
 interface EditRecipeInstructionsProps {

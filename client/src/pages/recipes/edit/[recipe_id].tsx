@@ -3,16 +3,16 @@ import {
   INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
   INITIAL_NETWORK_RESULT_WITH_LOADING,
   NetworkResult,
-} from "@/common/types/constants";
+} from "@/types/constants";
 import { getRecipeFromNetwork, updateRecipeFromNetwork } from "@/utils/network";
 import { useEffect, useState } from "react";
 
-import EditRecipe from "@/common/components/EditRecipe/EditRecipe";
+import EditRecipe from "@/components/recipes/edit/EditRecipe";
 import { IconChevronLeft } from "@tabler/icons-react";
-import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
-import Recipe from "@/common/types/Recipe";
-import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
-import RecipeNotFound from "@/common/components/ErrorMessages/RecipeNotFound";
+import InvalidPermissionAlert from "@/components/error-handling/InvalidPermissionAlert";
+import Recipe from "@/types/Recipe";
+import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
+import RecipeNotFound from "@/components/error-handling/RecipeNotFound";
 import { isRecipeValid } from "@/utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "react-oidc-context";

@@ -1,14 +1,14 @@
 import { Badge, Button, Divider, Grid, Group, Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
-import DeleteRecipeModal from "@/common/components/ViewRecipe/DeleteRecipeModal";
-import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/common/types/constants";
+import DeleteRecipeModal from "@/components/recipes/view/DeleteRecipeModal";
+import { INITIAL_NETWORK_RESULT_WITH_LOADING } from "@/types/constants";
 import { IconTool } from "@tabler/icons-react";
-import Recipe from "@/common/types/Recipe";
-import RecipeIngredientCard from "@/common/components/ViewRecipe/RecipeIngredientCard";
-import RecipeInstructionsCard from "@/common/components/ViewRecipe/RecipeInstructionsCard";
-import RecipeLoadingSkeleton from "@/common/components/ViewRecipe/RecipeLoadingSkeleton";
-import RecipeNotFound from "@/common/components/ErrorMessages/RecipeNotFound";
+import Recipe from "@/types/Recipe";
+import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard";
+import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
+import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
+import RecipeNotFound from "@/components/error-handling/RecipeNotFound";
 import { getRecipeFromNetwork } from "@/utils/network";
 import parse from "html-react-parser";
 import { titleize } from "@/utils/recipeUtils";

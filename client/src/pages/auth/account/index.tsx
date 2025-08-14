@@ -15,8 +15,8 @@ import {
   IconCircleDashedCheck,
 } from "@tabler/icons-react";
 
-import ChangePasswordModal from "@/common/components/Account/ChangePasswordModal";
-import InvalidPermissionAlert from "@/common/components/ErrorMessages/InvalidPermissionAlert";
+import ChangePasswordModal from "@/components/account/ChangePasswordModal";
+import InvalidPermissionAlert from "@/components/error-handling/InvalidPermissionAlert";
 import { useAuth } from "react-oidc-context";
 import { useDisclosure } from "@mantine/hooks";
 
