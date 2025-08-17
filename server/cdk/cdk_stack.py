@@ -22,13 +22,13 @@ class CodyRichterCooksStack(Stack):
             self, 'CookingEventLayer',
             entry='../app',
             layer_version_name='CookingEventLayer',
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_9],
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_13],
         )
 
         get_event_lambda = PythonFunction(
             self, 'CookingGetEventLambda',
             function_name='CookingGetEventLambda',
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_13,
             entry='../app',
             index='src/get_event_handler.py',
             handler='handle_event',
@@ -42,7 +42,7 @@ class CodyRichterCooksStack(Stack):
         post_event_lambda = PythonFunction(
             self, 'CookingPostEventLambda',
             function_name='CookingPostEventLambda',
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_13,
             entry='../app',
             index='src/post_event_handler.py',
             handler='handle_event',
@@ -56,7 +56,7 @@ class CodyRichterCooksStack(Stack):
         delete_event_lambda = PythonFunction(
             self, 'CookingDeleteEventLambda',
             function_name='CookingDeleteEventLambda',
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_13,
             entry='../app',
             index='src/delete_event_handler.py',
             handler='handle_event',
