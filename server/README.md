@@ -8,26 +8,26 @@
 
 3. Configure AWS CDK
 
-4. Navigate to the `cdk` directory
+4. Navigate to the `server` directory
 
    - One-time local setup steps:
-     1. Create the venv: `python -m venv .venv`
-     2. Activate the venv: `source .venv/bin/activate`
+     1. Create the venv: `python -m venv .server-env`
+     2. Activate the venv: `source .server-env/bin/activate`
      3. Install requirements:
      ```
      pip install \
-      -r ../src/requirements.txt \
-      -r ../src/requirements-dev.txt \
-      -r requirements.txt
+      -r cdk/requirements.txt \
+      -r app/requirements-dev.txt \
+      -r app/requirements.txt
      ```
 
-5. If this AWS account has not been used with CDK before, run `cdk bootstrap`
+5. Navigate to the `cdk` directory. If this AWS account has not been used with CDK before, run `cdk bootstrap`
 
    - This command only needs to be run once per AWS account.
 
 6. Ensure that Docker is running locally. Docker is required to build the lambda functions.
 
-7. Deploy to AWS with `cdk deploy` command.
+7. (From the `cdk` directory) Deploy to AWS with `cdk deploy` command.
 
    - If you run this command after the repository is set up, make sure that your virutal environment is activated first! (`source .venv/bin/activate`)
 
