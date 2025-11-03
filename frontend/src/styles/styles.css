@@ -1,0 +1,179 @@
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #fcfafa;
+  cursor: default;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.navigationSidebarContainer {
+  background: #fcfcfc;
+  border-right: 1.5px solid #eee;
+  margin-right: 5px;
+  box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.03);
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.sortableMoveIcon {
+  border-right: 2px solid #e0e0e0;
+  user-select: none;
+}
+
+.sortableMoveIcon:hover {
+  cursor: grab;
+}
+.sortableMoveIcon:active {
+  cursor: grabbing;
+}
+
+.recipeTagLabel {
+  text-align: center;
+  text-transform: none;
+}
+
+.verifyEmailButton {
+  margin-left: 10px;
+  border-left: 2px solid #e0e0e0;
+  border-radius: 0px;
+}
+
+.sidebarRecipe,
+.activeSidebarRecipe {
+  padding-top: 0.5rem;
+  padding-bottom: 0.65rem;
+  letter-spacing: 0.01em;
+  font-size: 1.08rem;
+  will-change: transform, background-color, border-left-color;
+  backface-visibility: hidden;
+}
+
+.sidebarRecipe {
+  border-left: 6px solid transparent;
+  font-weight: 500;
+  background: transparent;
+  transition: all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sidebarRecipe:hover,
+.sidebarRecipe:focus-visible {
+  background: #f5ede6;
+  cursor: pointer;
+  transform: translateX(1px);
+}
+
+.activeSidebarRecipe,
+.activeSidebarRecipe[data-active="true"],
+.activeSidebarRecipe:focus,
+.activeSidebarRecipe:active {
+  background: #f7ede6;
+  color: #222;
+  border-left: 6px solid #e2a478;
+  font-weight: 700;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  transform: translateX(2px);
+}
+
+.sidebarRecipe + .mantine-Divider-root,
+.activeSidebarRecipe + .mantine-Divider-root {
+  margin-left: 8px;
+}
+
+.sidebarRecipe .tabler-icon-arrow-narrow-right,
+.activeSidebarRecipe .tabler-icon-arrow-narrow-right {
+  transition: transform 0.02s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity 0.02s;
+  opacity: 0.7;
+}
+.sidebarRecipe:hover .tabler-icon-arrow-narrow-right,
+.sidebarRecipe:focus-visible .tabler-icon-arrow-narrow-right {
+  transform: translateX(4px);
+  opacity: 1;
+}
+
+/* TipTap Editor specific image styles */
+
+.tiptap-editor-button:hover {
+  background-color: #f1f3f5 !important;
+  color: #000000 !important;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  margin: 0.75rem auto;
+  display: block;
+  box-sizing: border-box;
+}
+
+.ProseMirror img {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 1rem auto;
+}
+
+.ProseMirror img:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.2s ease;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  img {
+    max-width: calc(100% - 1rem);
+    margin: 0.5rem auto;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .ProseMirror img {
+    max-width: calc(100% - 2rem);
+    margin: 0.75rem auto;
+    border-radius: 6px;
+  }
+
+  .ProseMirror {
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  img {
+    max-width: calc(100% - 0.5rem);
+    margin: 0.25rem auto;
+    border-radius: 3px;
+  }
+
+  .ProseMirror img {
+    max-width: calc(100% - 1rem);
+    margin: 0.5rem auto;
+    border-radius: 4px;
+  }
+}
+
+/* Content container styles */
+.ProseMirror {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ProseMirror figure {
+  text-align: center;
+  margin: 1rem 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ProseMirror figure img {
+  margin: 0 auto;
+}
