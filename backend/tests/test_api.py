@@ -284,8 +284,10 @@ class TestRecipeAPI(APITestBase):
         response = client.get("/api/v1/recipes/my-recipes", headers=auth_headers)
         
         data = self.assert_success_response(response)
-        assert isinstance(data, list)
-        assert len(data) >= 1
+        assert isinstance(data, dict)
+        assert "items" in data
+        assert isinstance(data["items"], list)
+        assert len(data["items"]) >= 1
         
         # Test without authentication
         response = client.get("/api/v1/recipes/my-recipes")

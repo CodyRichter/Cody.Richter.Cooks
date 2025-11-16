@@ -13,9 +13,9 @@ from app.models.user import User
 from app.schemas.recipe import (
     RecipeCreate, RecipeDetail, RecipeListItem, RecipeList
 )
-from app.schemas.recipe_permission import RecipePermissionDetail, RecipePermissionList
+from app.schemas.recipe_permission import RecipePermissionDetail, GrantPermissionRequest
 from app.utils.auth import get_current_active_user
-from app.utils.helpers import enforce_recipe_permissions
+from app.utils.helpers import enforce_recipe_permissions, get_user_recipe_permission
 
 
 def create_recipe_internal(
@@ -248,4 +248,72 @@ def list_recipe_permissions_internal(
         response.user_email = permission.user.email
         responses.append(response.model_dump())
 
-    return RecipePermissionList(permissions=responses)
+    return responses
+
+
+def grant_recipe_permission_internal(
+        recipe_id: str,
+        target_username: str,
+        target_role: PermissionRole,
+        current_user: User,
+        db: Session
+):
+    enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
+
+    target_user: User = db.query(User).filter(User.username == target_username).first()
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    existing_permission = get_user_recipe_permission(db, target_user.id, recipe_id)
+    if existing_permission and existing_permission.role == target_role:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User already has permission for this recipe"
+        )
+
+    new_permission = RecipePermission(
+        user_id=target_user.id,
+        recipe_id=recipe_id,
+        role=target_role
+    )
+
+    db.add(new_permission)
+    db.commit()
+    db.refresh(new_permission)
+
+    return RecipePermissionDetail.model_validate(new_permission)
+
+def revoke_recipe_permission_internal(
+    recipe_id: str,
+    target_user_id: str,
+    current_user: User,
+    db: Session
+):
+    enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
+
+    if target_user_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You can not revoke your own permissions."
+        )
+
+    target_user: User = db.query(User).filter(User.id == target_user_id).first()
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    permission = get_user_recipe_permission(db, target_user.id, recipe_id)
+    if not permission:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Permission not found"
+        )
+
+    # Delete the permission
+    db.delete(permission)
+    db.commit()

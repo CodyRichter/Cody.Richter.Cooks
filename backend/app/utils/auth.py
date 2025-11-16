@@ -162,7 +162,7 @@ def get_current_user(
             
     except JWTError:
         raise credentials_exception
-    
+
     from app.models.user import User
     user = db.query(User).filter(User.username == username).first()
     if user is None:
@@ -190,7 +190,7 @@ def refresh_access_token(refresh_token: str, db: Session) -> Optional[str]:
     if username is None:
         return None
     
-    # Verify user still exists
+
     from app.models.user import User
     user = db.query(User).filter(User.username == username).first()
     if user is None:

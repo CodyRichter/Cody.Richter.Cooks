@@ -1,12 +1,12 @@
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.recipe_permission import RecipePermission, PermissionRole
-from app.models.user import User
-
+if TYPE_CHECKING:
+    from app.models.user import User
 
 def get_user_recipe_permission(db: Session, user_id: str, recipe_id: str) -> Optional[RecipePermission]:
     """
@@ -28,7 +28,7 @@ def get_user_recipe_permission(db: Session, user_id: str, recipe_id: str) -> Opt
     ).first()
 
 
-def enforce_recipe_permissions(db: Session, user: User, recipe_id: str,
+def enforce_recipe_permissions(db: Session, user: "User", recipe_id: str,
                                required_roles: List[PermissionRole]) -> RecipePermission:
     """
     Check if user has required permission for a recipe.
@@ -60,3 +60,4 @@ def enforce_recipe_permissions(db: Session, user: User, recipe_id: str,
         )
 
     return permission
+

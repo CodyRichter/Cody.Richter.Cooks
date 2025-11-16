@@ -5,14 +5,15 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.handlers.recipes.impl_v1 import create_recipe_internal, get_recipe_internal, list_recipes_internal, \
-    update_recipe_internal, delete_recipe_internal, list_recipe_permissions_internal
+    update_recipe_internal, delete_recipe_internal, list_recipe_permissions_internal, grant_recipe_permission_internal, \
+    revoke_recipe_permission_internal
 from app.models.recipe_permission import RecipePermission, PermissionRole
 from app.models.user import User
 from app.schemas.recipe import (
     RecipeCreate, RecipeDetail, RecipeListItem, RecipeList
 )
 from app.schemas.recipe_permission import (
-    RecipePermissionDetail, RecipePermissionList, GrantPermissionRequest
+    RecipePermissionDetail, GrantPermissionRequest
 )
 from app.utils.auth import get_current_active_user
 from app.utils.helpers import enforce_recipe_permissions, get_user_recipe_permission
@@ -38,6 +39,33 @@ async def create_recipe(
         Created recipe information
     """
     return create_recipe_internal(recipe_data, current_user, db)
+
+
+@router.get("/my-recipes", response_model=RecipeList)
+async def get_my_recipes(
+        current_user: User = Depends(get_current_active_user),
+        page: int = Query(1, ge=1, description="Page number for pagination"),
+        limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
+        db: Session = Depends(get_db)
+):
+    """
+    Get recipes for the authenticated user. Shows all recipes the user has permission to view.
+
+    Args:
+        current_user: Current authenticated user
+        page: Page number for pagination
+        limit: Number of items per page
+        db: Database session
+
+    Returns:
+        List of recipe summaries for the current user
+    """
+    return list_recipes_internal(
+        db=db,
+        page=page,
+        limit=limit,
+        user_id_filter=current_user.id,
+    )
 
 
 @router.get("/{recipe_id}", response_model=RecipeDetail)
@@ -161,32 +189,6 @@ async def list_recipes_for_user(
     )
 
 
-@router.get("/my-recipes", response_model=List[RecipeListItem])
-async def get_my_recipes(
-        current_user: User = Depends(get_current_active_user),
-        page: int = Query(1, ge=1, description="Page number for pagination"),
-        limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
-        db: Session = Depends(get_db)
-):
-    """
-    Get recipes for the authenticated user. Shows all recipes the user has permission to view.
-
-    Args:
-        current_user: Current authenticated user
-        page: Page number for pagination
-        limit: Number of items per page
-        db: Database session
-
-    Returns:
-        List of recipe summaries for the current user
-    """
-    return list_recipes_internal(
-        db=db,
-        page=page,
-        limit=limit,
-        user_id_filter=current_user.id,
-    )
-
 
 @router.post("/{recipe_id}/permissions", response_model=RecipePermissionDetail, status_code=status.HTTP_201_CREATED)
 async def grant_recipe_permission(
@@ -210,37 +212,13 @@ async def grant_recipe_permission(
     Raises:
         HTTPException: If recipe not found, user is not owner, or target user not found
     """
-    # Check if current user is the owner of this recipe
-    enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
-
-    # Find the target user by username
-    target_user = db.query(User).filter(User.username == permission_data.username).first()
-    if not target_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-
-    # Check if permission already exists
-    existing_permission = get_user_recipe_permission(db, target_user.id, recipe_id)
-    if existing_permission:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User already has permission for this recipe"
-        )
-
-    # Create the permission
-    new_permission = RecipePermission(
-        user_id=target_user.id,
+    return grant_recipe_permission_internal(
         recipe_id=recipe_id,
-        role=permission_data.role
+        target_username=permission_data.username,
+        target_role=permission_data.role,
+        current_user=current_user,
+        db=db
     )
-
-    db.add(new_permission)
-    db.commit()
-    db.refresh(new_permission)
-
-    return RecipePermissionDetail.model_validate(new_permission)
 
 
 @router.delete("/{recipe_id}/permissions/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -256,44 +234,22 @@ async def revoke_recipe_permission(
     
     Args:
         recipe_id: Recipe ID
-        user_id: User ID to revoke permission from
+        user_id: User ID of user that will have permission revoked
         current_user: Current authenticated user
         db: Database session
         
     Raises:
         HTTPException: If recipe not found, user is not owner, or permission not found
     """
-    # Check if current user is the owner of this recipe
-    enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
-
-    # Prevent owner from revoking their own permission
-    if user_id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot revoke your own owner permission"
-        )
-
-    # Find the permission to revoke
-    permission = get_user_recipe_permission(db, user_id, recipe_id)
-    if not permission:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Permission not found"
-        )
-
-    # Prevent revoking owner permission from another owner
-    if permission.role == PermissionRole.OWNER:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot revoke owner permission"
-        )
-
-    # Delete the permission
-    db.delete(permission)
-    db.commit()
+    return revoke_recipe_permission_internal(
+        recipe_id=recipe_id,
+        target_user_id=user_id,
+        current_user=current_user,
+        db=db
+    )
 
 
-@router.get("/{recipe_id}/permissions", response_model=RecipePermissionList)
+@router.get("/{recipe_id}/permissions", response_model=List[RecipePermissionDetail])
 async def list_recipe_permissions(
     recipe_id: str,
     current_user: User = Depends(get_current_active_user),
