@@ -20,7 +20,7 @@ import React, { useEffect } from "react";
 import Typist from "react-typist-component";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMediaQuery } from "@mantine/hooks";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 interface NavigationHeaderProps {
   mobileOpened: boolean;

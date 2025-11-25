@@ -1,3 +1,5 @@
+'use client';
+
 import {
   ActionIcon,
   Button,
@@ -21,7 +23,8 @@ import { useRecipeSearch, useRecipes } from "../hooks/useRecipes";
 import { RecipeListSkeleton } from "../components/loading";
 import { useCallback, useMemo } from "react";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-export default function Index() {
+
+export default function Home() {
   const isMobile = useMediaQuery("(max-width: 50em)");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchMode, setIsSearchMode] = useState(false);

@@ -1,24 +1,26 @@
+'use client';
+
 import { ActionIcon, Button, Group, Text, Container, Stack } from "@mantine/core";
 import { useState, useMemo } from "react";
 
-import EditRecipe from "../../../components/recipes/edit/EditRecipe";
+import EditRecipe from "../../../../components/recipes/edit/EditRecipe";
 import { IconChevronLeft } from "@tabler/icons-react";
-import { ApiErrorAlert } from "../../../components/error-handling";
-import { RecipeDetail, RecipeUpdate } from "../../../types/Recipe";
-import RecipeLoadingSkeleton from "../../../components/recipes/view/RecipeLoadingSkeleton";
-import { isRecipeValid } from "../../../utils/recipeUtils";
+import { ApiErrorAlert } from "../../../../components/error-handling";
+import { RecipeDetail, RecipeUpdate } from "../../../../types/Recipe";
+import RecipeLoadingSkeleton from "../../../../components/recipes/view/RecipeLoadingSkeleton";
+import { isRecipeValid } from "../../../../utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
-import { useAuth } from "../../../contexts/AuthContext";
-import { useRouter } from "next/router";
-import { useAppNavigation } from "../../../hooks/useAppNavigation";
-import { useRecipe, useUpdateRecipe } from "../../../hooks/useRecipes";
-import { useUserRecipePermissions } from "../../../hooks/useRecipePermissions";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useParams } from "next/navigation";
+import { useAppNavigation } from "../../../../hooks/useAppNavigation";
+import { useRecipe, useUpdateRecipe } from "../../../../hooks/useRecipes";
+import { useUserRecipePermissions } from "../../../../hooks/useRecipePermissions";
 
 export default function EditRecipePage() {
-  const router = useRouter();
+  const params = useParams();
   const { navigateToRecipe } = useAppNavigation();
   const auth = useAuth();
-  const recipe_id: string = router.query.recipe_id as string;
+  const recipe_id = params?.recipe_id as string;
 
   // Load the recipe data
   const { data: originalRecipe, isLoading, error, refetch } = useRecipe(recipe_id);

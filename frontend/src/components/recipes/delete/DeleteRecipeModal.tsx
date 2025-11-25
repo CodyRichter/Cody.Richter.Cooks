@@ -2,7 +2,7 @@ import { Button, Center, Divider, Group, Modal, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useDeleteRecipe } from "../../../hooks/useRecipes";
 
 export default function DeleteRecipeModal({

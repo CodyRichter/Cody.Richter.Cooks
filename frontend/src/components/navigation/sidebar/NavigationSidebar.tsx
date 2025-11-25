@@ -20,7 +20,7 @@ import NavigationSkeleton from "./NavigationSkeleton";
 import { getOperatingSystem } from "@/utils/deviceUtils";
 import { recipeApi } from "@/services/apiServices";
 import { useFocusWithin } from "@mantine/hooks";
-import { useRouter } from "next/router";
+import { useRouter, usePathname } from "next/navigation";
 import { RecipeListItem } from "@/types/Recipe";
 
 
@@ -55,6 +55,7 @@ export default function NavigationSidebar({
   toggleMobile,
 }: NavigationSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const os = getOperatingSystem();
 
   const searchbarRef = useRef<HTMLInputElement>(null);
@@ -136,7 +137,7 @@ export default function NavigationSidebar({
 
   // Check if a recipe is currently active based on URL
   const isRecipeActive = (recipeId: string) => {
-    return router.asPath === `/recipes/view/${recipeId}`;
+    return pathname === `/recipes/view/${recipeId}`;
   };
 
   if (isLoading) {

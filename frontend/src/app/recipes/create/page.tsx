@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, Group, Text, Container, Stack } from "@mantine/core";
 import React, { useState } from "react";
 
@@ -5,7 +7,7 @@ import EditRecipe from "../../../components/recipes/edit/EditRecipe";
 import ProtectedRoute from "../../../components/auth/ProtectedRoute";
 import { isRecipeValid } from "../../../utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useCreateRecipe } from "../../../hooks/useRecipes";
 import { RecipeCreate, RecipeDetail } from "../../../types/Recipe";
 

@@ -1,25 +1,27 @@
+'use client';
+
 import { Badge, Divider, Group, Paper, Text, Title, Container, Stack } from "@mantine/core";
 import { IconEdit, IconTrash, IconClock, IconUsers } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 
 import { Button } from "@mantine/core";
-import DeleteRecipeModal from "../../../components/recipes/delete/DeleteRecipeModal";
-import RecipeIngredientCard from "../../../components/recipes/view/RecipeIngredientCard";
-import RecipeInstructionsCard from "../../../components/recipes/view/RecipeInstructionsCard";
-import RecipeLoadingSkeleton from "../../../components/recipes/view/RecipeLoadingSkeleton";
-import { ApiErrorAlert } from "../../../components/error-handling";
-import { titleize } from "../../../utils/recipeUtils";
-import { useAuth } from "../../../contexts/AuthContext";
-import { useRouter } from "next/router";
-import { useAppNavigation } from "../../../hooks/useAppNavigation";
-import { useRecipe } from "../../../hooks/useRecipes";
-import { useUserRecipePermissions } from "../../../hooks/useRecipePermissions";
+import DeleteRecipeModal from "../../../../components/recipes/delete/DeleteRecipeModal";
+import RecipeIngredientCard from "../../../../components/recipes/view/RecipeIngredientCard";
+import RecipeInstructionsCard from "../../../../components/recipes/view/RecipeInstructionsCard";
+import RecipeLoadingSkeleton from "../../../../components/recipes/view/RecipeLoadingSkeleton";
+import { ApiErrorAlert } from "../../../../components/error-handling";
+import { titleize } from "../../../../utils/recipeUtils";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useParams } from "next/navigation";
+import { useAppNavigation } from "../../../../hooks/useAppNavigation";
+import { useRecipe } from "../../../../hooks/useRecipes";
+import { useUserRecipePermissions } from "../../../../hooks/useRecipePermissions";
 
 export default function ViewRecipe() {
   const auth = useAuth();
-  const router = useRouter();
-  const recipe_id: string = router.query.recipe_id as string;
+  const params = useParams();
+  const recipe_id = params?.recipe_id as string;
 
   const { navigateToRecipeEdit } = useAppNavigation();
   const [deleteModalOpened, { open, close }] = useDisclosure(false);

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { Container, Title, Text, Button, Stack, Alert } from '@mantine/core'
 import { IconAlertTriangle, IconRefresh } from '@tabler/icons-react'
