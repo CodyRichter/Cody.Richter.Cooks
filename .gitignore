@@ -62,7 +62,8 @@ htmlcov/
 coverage.xml
 *.cover
 .hypothesis/
-*test.db*
+test.db
+
 
 # Node.js
 node_modules/
