@@ -13,6 +13,8 @@ from app.models.instruction import Instruction
 from app.utils.password_security import PasswordSecurity
 
 
+@pytest.mark.unit
+@pytest.mark.database
 class TestModelValidation:
     """Test model validation and constraints."""
     
@@ -94,6 +96,8 @@ class TestModelValidation:
         assert recipe.serving_size == 4
 
 
+@pytest.mark.unit
+@pytest.mark.database
 class TestModelRelationships:
     """Test model relationships and cascading behavior."""
     
@@ -231,6 +235,8 @@ class TestModelRelationships:
         assert remaining_user is not None
 
 
+@pytest.mark.unit
+@pytest.mark.database
 class TestModelConstraints:
     """Test model constraints and validation."""
     
@@ -288,6 +294,7 @@ class TestModelConstraints:
         assert permission.role == role
 
 
+@pytest.mark.unit
 class TestModelRepresentations:
     """Test model string representations."""
     

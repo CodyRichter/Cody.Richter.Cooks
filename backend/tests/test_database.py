@@ -12,6 +12,8 @@ from app.models.recipe_permission import RecipePermission, PermissionRole
 from app.utils.password_security import PasswordSecurity
 
 
+@pytest.mark.database
+@pytest.mark.integration
 class TestDatabaseConnection:
     """Test database connection and basic operations."""
     
@@ -35,6 +37,8 @@ class TestDatabaseConnection:
         assert recipe_count >= 0
 
 
+@pytest.mark.database
+@pytest.mark.integration
 class TestDatabaseTransactions:
     """Test database transaction behavior."""
     
@@ -108,6 +112,8 @@ class TestDatabaseTransactions:
         assert rolled_back_user is None
 
 
+@pytest.mark.database
+@pytest.mark.integration
 class TestDatabaseRelationships:
     """Test database relationships and foreign key constraints."""
     
@@ -183,6 +189,8 @@ class TestDatabaseRelationships:
         assert permission.recipe_id == recipe.id
 
 
+@pytest.mark.database
+@pytest.mark.integration
 class TestDatabaseConstraints:
     """Test database constraints and validation."""
     
@@ -243,6 +251,8 @@ class TestDatabaseConstraints:
             db_session.commit()
 
 
+@pytest.mark.database
+@pytest.mark.performance
 class TestDatabasePerformance:
     """Test database performance and indexing."""
     
@@ -315,6 +325,8 @@ class TestDatabasePerformance:
         assert bulk_query_time < 1.0  # 1 second max for bulk query
 
 
+@pytest.mark.database
+@pytest.mark.integration
 class TestDatabaseMigrations:
     """Test database schema and migration compatibility."""
     

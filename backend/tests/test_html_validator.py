@@ -5,6 +5,7 @@ import pytest
 from app.utils.html_validator import HTMLValidator, validate_recipe_description, validate_instruction_description
 
 
+@pytest.mark.unit
 class TestHTMLValidator:
     """Test cases for HTMLValidator class."""
     
@@ -68,6 +69,7 @@ class TestHTMLValidator:
         assert result == content
 
 
+@pytest.mark.unit
 class TestConvenienceFunctions:
     """Test cases for convenience validation functions."""
     
@@ -110,6 +112,7 @@ class TestConvenienceFunctions:
             validate_instruction_description(content)
 
 
+@pytest.mark.unit
 class TestEdgeCases:
     """Test edge cases and error conditions."""
     

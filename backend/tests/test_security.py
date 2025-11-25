@@ -14,6 +14,8 @@ from app.utils.audit_logger import SecurityAuditLogger, get_audit_logger
 from app.utils.password_security import PasswordSecurity
 
 
+@pytest.mark.security
+@pytest.mark.unit
 class TestPasswordSecurity:
     """Test password security functionality."""
     
@@ -78,6 +80,8 @@ class TestPasswordSecurity:
         assert abs(avg_correct - avg_wrong) < 0.1  # 100ms tolerance
 
 
+@pytest.mark.security
+@pytest.mark.unit
 class TestPasswordStrengthValidation:
     """Test password strength validation."""
     
@@ -103,6 +107,8 @@ class TestPasswordStrengthValidation:
             assert len(result.errors) > 0
 
 
+@pytest.mark.security
+@pytest.mark.integration
 class TestSecurityAuditLogging:
     """Test security audit logging functionality."""
     
@@ -157,6 +163,8 @@ class TestSecurityAuditLogging:
         assert risk_level == expected_risk
 
 
+@pytest.mark.security
+@pytest.mark.integration
 class TestSecurityAuditLogger:
     """Test SecurityAuditLogger service."""
     

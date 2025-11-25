@@ -10,6 +10,7 @@ from app.schemas.recipe_permission import RecipePermissionDetail, GrantPermissio
 from app.schemas.user import UserSchema
 
 
+@pytest.mark.unit
 class TestConsolidatedUserSchema:
     """Test the consolidated UserSchema for different use cases."""
     
@@ -59,6 +60,7 @@ class TestConsolidatedUserSchema:
             UserSchema(username="testuser", password="short")
 
 
+@pytest.mark.unit
 class TestConsolidatedRecipeSchema:
     """Test the consolidated RecipeSchema for different use cases."""
     
@@ -142,6 +144,7 @@ class TestConsolidatedRecipeSchema:
             )
 
 
+@pytest.mark.unit
 class TestConsolidatedIngredientSchema:
     """Test the consolidated IngredientSchema for different use cases."""
     
@@ -196,6 +199,7 @@ class TestConsolidatedIngredientSchema:
             )
 
 
+@pytest.mark.unit
 class TestConsolidatedInstructionSchema:
     """Test the consolidated InstructionSchema for different use cases."""
     
@@ -247,6 +251,7 @@ class TestConsolidatedInstructionSchema:
             )
 
 
+@pytest.mark.unit
 class TestConsolidatedRecipePermissionSchema:
     """Test the consolidated RecipePermissionSchema for different use cases."""
     
@@ -292,6 +297,7 @@ class TestConsolidatedRecipePermissionSchema:
         assert permission.user_email == "test@example.com"
 
 
+@pytest.mark.unit
 class TestGrantPermissionRequest:
     """Test the GrantPermissionRequest schema."""
 

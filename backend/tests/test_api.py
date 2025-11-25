@@ -27,6 +27,8 @@ class APITestBase:
         return response.json()
 
 
+@pytest.mark.api
+@pytest.mark.integration
 class TestUserAPI(APITestBase):
     """Test user-related API endpoints."""
     
@@ -184,6 +186,8 @@ class TestUserAPI(APITestBase):
         self.assert_error_response(response, 403, "Not authenticated")
 
 
+@pytest.mark.api
+@pytest.mark.integration
 class TestRecipeAPI(APITestBase):
     """Test recipe-related API endpoints."""
     
@@ -390,6 +394,8 @@ class TestRecipeAPI(APITestBase):
         self.assert_error_response(response, expected_status)
 
 
+@pytest.mark.api
+@pytest.mark.integration
 class TestSystemAPI(APITestBase):
     """Test system-related API endpoints."""
     

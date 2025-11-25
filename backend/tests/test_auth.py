@@ -20,6 +20,8 @@ from app.core.config import settings
 from app.models.user import User
 
 
+@pytest.mark.auth
+@pytest.mark.unit
 class TestPasswordSecurity:
     """Test password hashing and verification."""
     
@@ -69,6 +71,8 @@ class TestPasswordSecurity:
         assert PasswordSecurity.verify_password(password, hashed) is False
 
 
+@pytest.mark.auth
+@pytest.mark.unit
 class TestJWTTokenManagement:
     """Test JWT token creation and verification."""
     
@@ -175,6 +179,8 @@ class TestJWTTokenManagement:
         assert verify_refresh_token(access_token) is None
 
 
+@pytest.mark.auth
+@pytest.mark.integration
 class TestTokenRefreshFlow:
     """Test token refresh functionality."""
     
@@ -215,6 +221,8 @@ class TestTokenRefreshFlow:
         assert result is None
 
 
+@pytest.mark.auth
+@pytest.mark.integration
 class TestUserAuthentication:
     """Test user authentication functions."""
     
@@ -256,6 +264,9 @@ class TestUserAuthentication:
         assert "Could not validate credentials" in str(exc_info.value.detail)
 
 
+@pytest.mark.auth
+@pytest.mark.security
+@pytest.mark.unit
 class TestSecurityMeasures:
     """Test security-related functionality."""
     
