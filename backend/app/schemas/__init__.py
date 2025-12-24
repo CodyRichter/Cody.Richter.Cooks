@@ -3,7 +3,7 @@ Pydantic schemas package for API serialization.
 """
 # Import consolidated schemas
 from app.schemas.user import (
-    UserSchema, UserCreateSchema, UserResponseSchema, UserCreate, UserUpdate, UserResponse, UserProfile,
+    UserSchema, UserCreateSchema, UserResponseSchema,
     UserLogin, TokenResponse, TokenRefreshRequest, TokenRefreshResponse
 )
 from app.schemas.recipe import (
@@ -25,7 +25,7 @@ from app.schemas.instruction import (
 
 __all__ = [
     # User schemas
-    "UserSchema", "UserCreateSchema", "UserResponseSchema", "UserCreate", "UserUpdate", "UserResponse", "UserProfile",
+    "UserSchema", "UserCreateSchema", "UserResponseSchema",
     "UserLogin", "TokenResponse", "TokenRefreshRequest", "TokenRefreshResponse",
     
     # Recipe schemas

@@ -7,73 +7,58 @@ import {
   PasswordInput,
   Text,
 } from "@mantine/core";
-import {
-  INITIAL_NETWORK_RESULT_WITHOUT_LOADING,
-  NetworkResult,
-} from "@/types/constants";
-
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useAuth } from "@/contexts/AuthContext";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
+import { useChangePassword } from "@/hooks/useAuthMutations";
+import { getErrorMessage } from "@/utils/errorUtils";
 
-export default function ChangePasswordModal({ opened, close }: any) {
+interface ChangePasswordModalProps {
+  opened: boolean;
+  close: () => void;
+}
+
+export default function ChangePasswordModal({ opened, close }: ChangePasswordModalProps) {
   const isMobile = useMediaQuery("(max-width: 50em)");
-  const auth = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [networkResult, setNetworkResult] = useState<NetworkResult>(
-    INITIAL_NETWORK_RESULT_WITHOUT_LOADING
-  );
+  const [validationError, setValidationError] = useState("");
+
+  const changePasswordMutation = useChangePassword();
 
   function resetAndClose() {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setNetworkResult(INITIAL_NETWORK_RESULT_WITHOUT_LOADING);
+    setValidationError("");
+    changePasswordMutation.reset();
     close();
   }
 
   async function handleChangePassword() {
-    setNetworkResult({ ...networkResult, isLoading: true, error: "" });
+    setValidationError("");
+
     if (newPassword !== confirmPassword) {
-      setNetworkResult({
-        ...networkResult,
-        isLoading: false,
-        error: "New password and confirmation do not match.",
-      });
+      setValidationError("New password and confirmation do not match.");
       return;
     }
 
-    try {
-      // Use the new JWT-based API service
-      const { authApi } = await import("@/services/apiServices");
-      await authApi.changePassword(currentPassword, newPassword);
-
-      notifications.show({
-        title: "Password Changed",
-        message: "Your password has been successfully changed.",
-        color: "green",
-      });
-      resetAndClose();
-    } catch (error: any) {
-      let message = error?.message || error?.details?.detail || "Failed to change password.";
-
-      // Handle validation errors
-      if (error?.details?.errors) {
-        const validationErrors = Object.values(error.details.errors).flat();
-        message = validationErrors.join(", ");
+    changePasswordMutation.mutate(
+      { currentPassword, newPassword },
+      {
+        onSuccess: () => {
+          notifications.show({
+            title: "Password Changed",
+            message: "Your password has been successfully changed.",
+            color: "green",
+          });
+          resetAndClose();
+        }
       }
-
-      setNetworkResult({
-        ...networkResult,
-        isLoading: false,
-        error: message,
-      });
-    }
+    );
   }
 
   return (
@@ -127,7 +112,7 @@ export default function ChangePasswordModal({ opened, close }: any) {
         required
       />
 
-      {networkResult.error && (
+      {(validationError || changePasswordMutation.error) && (
         <Alert
           variant="light"
           color="red"
@@ -135,7 +120,7 @@ export default function ChangePasswordModal({ opened, close }: any) {
           mt="md"
         >
           <Text c="red" size="sm">
-            {networkResult.error}
+            {validationError || getErrorMessage(changePasswordMutation.error)}
           </Text>
         </Alert>
       )}
@@ -151,7 +136,7 @@ export default function ChangePasswordModal({ opened, close }: any) {
             newPassword === "" ||
             confirmPassword === ""
           }
-          loading={networkResult.isLoading}
+          loading={changePasswordMutation.isPending}
         >
           Change Password
         </Button>

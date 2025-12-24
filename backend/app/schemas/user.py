@@ -27,6 +27,10 @@ class UserCreateSchema(BaseModel):
     email: str = Field(..., description="User email address")
     password: str = Field(..., min_length=8, max_length=128, description="User password")
 
+class UserUpdateSchema(UserCreateSchema):
+    """Schema for updating user information."""
+    pass
+
 
 class UserResponseSchema(BaseModel):
     """Schema for user API responses (excludes sensitive data)."""
@@ -62,10 +66,3 @@ class TokenRefreshResponse(BaseModel):
     """Schema for token refresh responses."""
     access_token: str = Field(..., description="New JWT access token")
     token_type: str = Field(default="bearer", description="Token type")
-
-
-# Convenience type aliases for clarity
-UserCreate = UserCreateSchema
-UserUpdate = UserSchema
-UserResponse = UserResponseSchema
-UserProfile = UserResponseSchema
