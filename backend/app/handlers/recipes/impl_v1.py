@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.config import settings
 from app.models.ingredient import Ingredient
 from app.models.instruction import Instruction
 from app.models.recipe import Recipe
@@ -191,6 +192,7 @@ def list_recipes_internal(
     limit: int = 10,
 ) -> RecipeList:
     query = db.query(Recipe)
+    limit = min(limit, settings.max_recipes_per_page)
 
     if user_id_filter:
         query = query.join(RecipePermission, Recipe.id == RecipePermission.recipe_id)

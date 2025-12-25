@@ -41,7 +41,7 @@ export default function AccountDetailsPage() {
     <ProtectedRoute>
       <Card shadow="sm" radius="md" withBorder pb="lg">
         <Group gap="xs">
-          <Title order={4}>Your Account</Title>
+          <Title order={4}>Account</Title>
         </Group>
         <Text mt="md" size="sm" color="dimmed">
           From this page, you can view your account details and manage your

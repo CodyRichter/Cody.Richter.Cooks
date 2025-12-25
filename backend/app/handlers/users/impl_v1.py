@@ -12,6 +12,7 @@ from app.schemas.user import (
     UserLogin,
     UserResponseSchema,
     UserUpdateSchema,
+    UserChangePassword,
 )
 from app.utils.audit_logger import get_audit_logger
 from app.utils.auth import (
@@ -21,6 +22,8 @@ from app.utils.auth import (
     refresh_access_token,
 )
 from app.utils.password_security import PasswordSecurity
+from jose import jwt, JWTError
+from app.core.config import settings
 
 
 def register_user_internal(
@@ -211,24 +214,6 @@ def update_user_profile_internal(
         changes["email"] = {"old": current_user.email, "new": profile_data.email}
         current_user.email = profile_data.email
 
-    # Update password if provided
-    if profile_data.password:
-        # Validate password strength
-        PasswordSecurity.validate_password_strength_strict(profile_data.password)
-        current_user.password_hash = PasswordSecurity.hash_password(
-            profile_data.password
-        )
-        changes["password"] = "changed"
-
-        # Log password change event
-        audit_logger.log_event(
-            event_type=SecurityEventType.PASSWORD_CHANGED,
-            request=request,
-            user=current_user,
-            success=True,
-            details={"changed_via": "profile_update"},
-        )
-
     try:
         db.commit()
         db.refresh(current_user)
@@ -253,6 +238,54 @@ def update_user_profile_internal(
         )
 
 
+def change_password_internal(
+    change_password_data: UserChangePassword,
+    request: Request,
+    current_user: User,
+    db: Session,
+) -> UserResponseSchema:
+    audit_logger = get_audit_logger(db)
+
+    # Validate current password
+    if not PasswordSecurity.verify_password(
+        change_password_data.current_password, current_user.password_hash
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password provided is incorrect",
+        )
+
+    # Validate new password strength
+    PasswordSecurity.validate_password_strength_strict(
+        change_password_data.new_password
+    )
+    current_user.password_hash = PasswordSecurity.hash_password(
+        change_password_data.new_password
+    )
+
+    try:
+        db.commit()
+        db.refresh(current_user)
+
+        # Log password change event
+        audit_logger.log_event(
+            event_type=SecurityEventType.PASSWORD_CHANGED,
+            request=request,
+            user=current_user,
+            success=True,
+            details={"changed_via": "profile_update"},
+        )
+
+        return UserResponseSchema.model_validate(current_user)
+
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to change password. Internal error.",
+        )
+
+
 def refresh_token_internal(
     refresh_data: TokenRefreshRequest, request: Request, db: Session
 ) -> TokenRefreshResponse:
@@ -260,9 +293,6 @@ def refresh_token_internal(
 
     # Try to refresh the token and get user info
     try:
-        from jose import jwt, JWTError
-        from app.core.config import settings
-
         # Decode the refresh token to get user info for logging
         payload = jwt.decode(
             refresh_data.refresh_token,

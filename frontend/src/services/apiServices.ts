@@ -1,6 +1,6 @@
 import { apiClient } from '../utils/apiClient'
 import { createApiService } from '../utils/createApiService'
-import { User, UserRegistration, TokenResponse, LoginRequest } from '../types/User'
+import { User, UserRegistration, TokenResponse, LoginRequest, UserUpdate, TokenRefreshResponse } from '../types/User'
 import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipeSearchParams } from '../types/Recipe'
 
 // Auth API - specialized due to different patterns
@@ -11,13 +11,13 @@ export const authApi = {
   register: (userData: UserRegistration): Promise<TokenResponse> =>
     apiClient.post('/api/v1/users/register', userData, true),
 
-  refreshToken: (refreshToken: string): Promise<TokenResponse> =>
+  refreshToken: (refreshToken: string): Promise<TokenRefreshResponse> =>
     apiClient.post('/api/v1/users/refresh', { refresh_token: refreshToken }, true),
 
   getProfile: (): Promise<User> =>
     apiClient.get('/api/v1/users/profile'),
 
-  updateProfile: (userData: Partial<User>): Promise<User> =>
+  updateProfile: (userData: UserUpdate): Promise<User> =>
     apiClient.put('/api/v1/users/profile', userData),
 
   changePassword: (currentPassword: string, newPassword: string): Promise<void> =>

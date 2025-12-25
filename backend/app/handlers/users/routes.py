@@ -12,6 +12,7 @@ from app.handlers.users.impl_v1 import (
     refresh_token_internal,
     register_user_internal,
     update_user_profile_internal,
+    change_password_internal,
 )
 from app.models.user import User
 from app.schemas.user import (
@@ -22,6 +23,7 @@ from app.schemas.user import (
     UserLogin,
     UserResponseSchema,
     UserSchema,
+    UserChangePassword,
 )
 from app.utils.auth import get_current_active_user
 
@@ -109,6 +111,31 @@ async def update_user_profile(
         HTTPException: If username or email already exists for another user
     """
     return update_user_profile_internal(profile_data, request, current_user, db)
+
+
+@router.post("/change-password", response_model=UserResponseSchema)
+async def change_password(
+    change_password_data: UserChangePassword,
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Change current user's password.
+
+    Args:
+        change_password_data: Password change data
+        request: FastAPI request object for audit logging
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Updated user profile information
+
+    Raises:
+        HTTPException: If current password is incorrect
+    """
+    return change_password_internal(change_password_data, request, current_user, db)
 
 
 @router.post("/refresh", response_model=TokenRefreshResponse)

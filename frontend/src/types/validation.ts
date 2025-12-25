@@ -78,10 +78,6 @@ export const UserValidationSchemas = {
     email: {
       pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
-    password: {
-      minLength: 8,
-      maxLength: 128,
-    },
   } as ValidationSchema,
 };
 

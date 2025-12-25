@@ -129,7 +129,7 @@ export default function RecipeIngredientCard({
 
   return (
     <>
-      <Group gap="xs" mb="md">
+      <Group gap="xs" mb="sm">
         <Title order={4}>Ingredients</Title>
         {isEditingScaleFactor && setScaleFactor ? (
           isMobile ? (
@@ -185,7 +185,7 @@ export default function RecipeIngredientCard({
         )}
       </Group>
 
-      <Stack mt="sm" gap="lg">
+      <Stack gap="xs">
         {ingredients.map((ingredient) => (
           <Group key={`ingredient-${ingredient.id}`} ml="md">
             <Checkbox

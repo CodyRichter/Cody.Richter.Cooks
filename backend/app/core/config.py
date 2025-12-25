@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     password_require_digits: bool = True
     password_require_special: bool = True
 
+    max_recipes_per_page: int = 20
+
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 

@@ -64,6 +64,15 @@ class UserLogin(BaseModel):
     password: str = Field(..., description="User password")
 
 
+class UserChangePassword(BaseModel):
+    """Schema for password change requests."""
+
+    current_password: str = Field(..., description="Current user password")
+    new_password: str = Field(
+        ..., min_length=8, max_length=128, description="New user password"
+    )
+
+
 class TokenResponse(BaseModel):
     """Schema for authentication token responses."""
 

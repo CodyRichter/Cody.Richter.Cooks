@@ -24,10 +24,12 @@ class TokenManager {
     return localStorage.getItem(refreshTokenStorageKey)
   }
 
-  setTokens(accessToken: string, refreshToken: string): void {
+  setTokens(accessToken: string, refreshToken?: string): void {
     if (typeof window === 'undefined') return
     localStorage.setItem(tokenStorageKey, accessToken)
-    localStorage.setItem(refreshTokenStorageKey, refreshToken)
+    if (refreshToken) {
+      localStorage.setItem(refreshTokenStorageKey, refreshToken)
+    }
   }
 
   clearTokens(): void {
