@@ -67,7 +67,7 @@ interface AuthState {
   error: string | null
 }
 
-type AuthAction = 
+type AuthAction =
   | { type: 'AUTH_START' }
   | { type: 'AUTH_SUCCESS'; payload: { user: User } }
   | { type: 'AUTH_ERROR'; payload: { error: string } }
@@ -165,22 +165,22 @@ const useMyRecipes = () => {
 ```typescript
 const useCreateRecipe = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (recipe: RecipeCreate) => apiClient.recipes.create(recipe),
     onMutate: async (newRecipe) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries(['my-recipes'])
-      
+
       // Snapshot previous value
       const previousRecipes = queryClient.getQueryData(['my-recipes'])
-      
+
       // Optimistically update
       queryClient.setQueryData(['my-recipes'], (old: RecipeListItem[]) => [
         { ...newRecipe, id: 'temp-id', created_at: new Date().toISOString() },
         ...old
       ])
-      
+
       return { previousRecipes }
     },
     onError: (err, newRecipe, context) => {
@@ -200,31 +200,31 @@ const useCreateRecipe = () => {
 class ApiClient {
   private cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
   private pendingRequests = new Map<string, Promise<any>>()
-  
+
   async request<T>(
     endpoint: string,
     options: RequestInit = {},
     cacheOptions?: { ttl?: number; key?: string }
   ): Promise<T> {
     const cacheKey = cacheOptions?.key || `${options.method || 'GET'}:${endpoint}`
-    
+
     // Check cache first
     if (this.isCacheValid(cacheKey)) {
       return this.cache.get(cacheKey)!.data
     }
-    
+
     // Deduplicate requests
     if (this.pendingRequests.has(cacheKey)) {
       return this.pendingRequests.get(cacheKey)!
     }
-    
+
     // Make request with automatic token attachment
     const request = this.makeRequest<T>(endpoint, options)
     this.pendingRequests.set(cacheKey, request)
-    
+
     try {
       const result = await request
-      
+
       // Cache successful responses
       if (cacheOptions?.ttl) {
         this.cache.set(cacheKey, {
@@ -233,13 +233,13 @@ class ApiClient {
           ttl: cacheOptions.ttl
         })
       }
-      
+
       return result
     } finally {
       this.pendingRequests.delete(cacheKey)
     }
   }
-  
+
   // Invalidate cache entries
   invalidateCache(pattern: string) {
     for (const key of this.cache.keys()) {
@@ -385,7 +385,7 @@ const RecipeErrorBoundary: React.FC = ({ children }) => {
 const useErrorRecovery = () => {
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
-  
+
   const handleError = useCallback(async (error: ApiError, retryFn: () => Promise<any>) => {
     if (error.status >= 500 && retryCount < maxRetries) {
       // Exponential backoff for server errors
@@ -394,7 +394,7 @@ const useErrorRecovery = () => {
       setRetryCount(prev => prev + 1)
       return retryFn()
     }
-    
+
     if (error.status === 401) {
       // Handle authentication errors
       const { refreshToken } = useAuth()
@@ -406,14 +406,14 @@ const useErrorRecovery = () => {
         window.location.href = '/login'
       }
     }
-    
+
     // Show user-friendly error
     showNotification({
       type: 'error',
       message: getErrorMessage(error)
     })
   }, [retryCount])
-  
+
   return { handleError, retryCount, canRetry: retryCount < maxRetries }
 }
 ```
@@ -430,19 +430,19 @@ interface LoadingState {
 
 const useLoadingState = () => {
   const [loadingStates, setLoadingStates] = useState<Record<string, LoadingState>>({})
-  
+
   const setLoading = useCallback((key: string, state: Partial<LoadingState>) => {
     setLoadingStates(prev => ({
       ...prev,
       [key]: { ...prev[key], ...state }
     }))
   }, [])
-  
-  const isAnyLoading = useMemo(() => 
+
+  const isAnyLoading = useMemo(() =>
     Object.values(loadingStates).some(state => state.isLoading),
     [loadingStates]
   )
-  
+
   return { loadingStates, setLoading, isAnyLoading }
 }
 ```
@@ -461,11 +461,11 @@ const RecipeCardSkeleton: React.FC = () => (
 // Progressive loading for lists
 const RecipeList: React.FC = () => {
   const { data: recipes, isLoading, hasNextPage, fetchNextPage } = useInfiniteRecipes()
-  
+
   return (
     <div>
       {recipes?.map(recipe => <RecipeCard key={recipe.id} recipe={recipe} />)}
-      
+
       {isLoading && (
         <div>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -473,7 +473,7 @@ const RecipeList: React.FC = () => {
           ))}
         </div>
       )}
-      
+
       {hasNextPage && (
         <IntersectionObserver onIntersect={fetchNextPage}>
           <div>Loading more...</div>
@@ -491,17 +491,17 @@ const RecipeList: React.FC = () => {
 // Custom navigation hook with state preservation
 const useAppNavigation = () => {
   const router = useRouter()
-  
+
   const navigateToRecipe = useCallback((recipeId: string, recipe?: Recipe) => {
     // Prefetch data if not already cached
     if (recipe) {
       queryClient.setQueryData(['recipe', recipeId], recipe)
     }
-    
+
     // Navigate without full page reload
     router.push(`/recipes/view/${recipeId}`)
   }, [router])
-  
+
   const navigateWithState = useCallback((path: string, state?: any) => {
     // Preserve scroll position and form state
     const currentState = {
@@ -509,11 +509,11 @@ const useAppNavigation = () => {
       formData: getCurrentFormData(),
       ...state
     }
-    
+
     sessionStorage.setItem('navigationState', JSON.stringify(currentState))
     router.push(path)
   }, [router])
-  
+
   return { navigateToRecipe, navigateWithState }
 }
 ```
@@ -524,15 +524,15 @@ const useAppNavigation = () => {
 const RecipeCard: React.FC<{ recipe: RecipeListItem }> = ({ recipe }) => {
   const { navigateToRecipe } = useAppNavigation()
   const { prefetch } = useRecipe(recipe.id)
-  
+
   const handleClick = () => {
     // Start navigation immediately
     navigateToRecipe(recipe.id, recipe)
-    
+
     // Prefetch full recipe data in background
     prefetch()
   }
-  
+
   return (
     <Card onClick={handleClick} style={{ cursor: 'pointer' }}>
       {/* Recipe card content */}

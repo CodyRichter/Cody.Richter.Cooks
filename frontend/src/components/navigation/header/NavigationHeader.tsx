@@ -6,7 +6,6 @@ import {
   Group,
   Menu,
   Text,
-  em,
 } from "@mantine/core";
 import {
   IconDotsVertical,
@@ -15,7 +14,7 @@ import {
   IconPencilPlus,
   IconUserCircle,
 } from "@tabler/icons-react";
-import React, { useEffect } from "react";
+import React from "react";
 
 import Typist from "react-typist-component";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,15 +38,7 @@ export default function NavigationHeader({
   const auth = useAuth();
 
   const isMobile = useMediaQuery("(max-width: 50em)");
-  const [isMobileActionsMenuOpen, setIsMobileActionsMenuOpen] =
-    React.useState(false);
 
-  // Close the mobile actions menu when/if the screen size changes to improve UX
-  useEffect(() => {
-    if (!isMobile) {
-      setIsMobileActionsMenuOpen(false);
-    }
-  }, [isMobile]);
 
   return (
     <>
@@ -128,7 +119,6 @@ export default function NavigationHeader({
                   size="lg"
                   hiddenFrom="sm"
                   radius={"xl"}
-                  onClick={() => setIsMobileActionsMenuOpen((prev) => !prev)}
                 >
                   <IconDotsVertical />
                 </ActionIcon>

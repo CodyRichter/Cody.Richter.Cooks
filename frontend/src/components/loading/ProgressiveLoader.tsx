@@ -22,6 +22,7 @@ export const ProgressiveLoader: React.FC<ProgressiveLoaderProps> = ({
 
   useEffect(() => {
     if (!isLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSimulatedProgress(0)
       return
     }
@@ -52,7 +53,7 @@ export const ProgressiveLoader: React.FC<ProgressiveLoaderProps> = ({
         <Text size="sm" c="dimmed">
           {message}
         </Text>
-        
+
         {showProgress && (
           <Progress
             value={simulatedProgress}
@@ -62,7 +63,7 @@ export const ProgressiveLoader: React.FC<ProgressiveLoaderProps> = ({
             animated
           />
         )}
-        
+
         {children}
       </Stack>
     </Center>

@@ -30,6 +30,7 @@ export default function DeleteRecipeModal({
 
   useEffect(() => {
     if (opened) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeUntilDeletionEnabled(3);
     }
   }, [opened]);

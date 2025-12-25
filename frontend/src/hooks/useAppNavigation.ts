@@ -10,24 +10,24 @@ export const useAppNavigation = () => {
 
   // Navigate to recipe with data prefetching for performance
   const navigateToRecipe = useCallback((
-    recipeId: string, 
+    recipeId: string,
     recipe?: RecipeListItem | RecipeDetail
   ) => {
     const recipePath = `/recipes/view/${recipeId}`
-    
+
     // Cache complete recipe data if available
     const isCompleteRecipe = recipe && 'ingredients' in recipe && 'instructions' in recipe
     if (isCompleteRecipe) {
       queryClient.setQueryData(['recipe', recipeId], recipe)
     }
-    
+
     // Prefetch recipe data for better UX
     queryClient.prefetchQuery({
       queryKey: ['recipe', recipeId],
       queryFn: () => recipeApi.getRecipe(recipeId),
       staleTime: 2 * 60 * 1000
     })
-    
+
     router.push(recipePath)
   }, [router, queryClient])
 
@@ -37,7 +37,7 @@ export const useAppNavigation = () => {
     recipe?: RecipeDetail
   ) => {
     const editPath = `/recipes/edit/${recipeId}`
-    
+
     // Prefetch recipe data if not already available
     if (!recipe) {
       queryClient.prefetchQuery({
@@ -46,7 +46,7 @@ export const useAppNavigation = () => {
         staleTime: 2 * 60 * 1000
       })
     }
-    
+
     router.push(editPath)
   }, [router, queryClient])
 

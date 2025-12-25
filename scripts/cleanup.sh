@@ -105,7 +105,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml down 2>/dev/null 
 # Clean up containers
 if [ "$CONTAINERS" = true ]; then
     echo "🗑️  Removing stopped containers..."
-    
+
     STOPPED_CONTAINERS=$(docker ps -aq --filter "status=exited")
     if [ -n "$STOPPED_CONTAINERS" ]; then
         docker rm $STOPPED_CONTAINERS
@@ -113,7 +113,7 @@ if [ "$CONTAINERS" = true ]; then
     else
         echo "   ℹ️  No stopped containers to remove"
     fi
-    
+
     # Remove recipe-specific containers
     RECIPE_CONTAINERS=$(docker ps -aq --filter "name=recipe-")
     if [ -n "$RECIPE_CONTAINERS" ]; then
@@ -125,7 +125,7 @@ fi
 # Clean up images
 if [ "$IMAGES" = true ]; then
     echo "🖼️  Removing unused images..."
-    
+
     # Remove dangling images
     DANGLING_IMAGES=$(docker images -f "dangling=true" -q)
     if [ -n "$DANGLING_IMAGES" ]; then
@@ -134,7 +134,7 @@ if [ "$IMAGES" = true ]; then
     else
         echo "   ℹ️  No dangling images to remove"
     fi
-    
+
     # Remove unused images
     docker image prune -f
     echo "   ✅ Removed unused images"
@@ -143,14 +143,14 @@ fi
 # Clean up volumes
 if [ "$VOLUMES" = true ]; then
     echo "💾 Removing unused volumes..."
-    
+
     # Remove recipe-specific volumes
     RECIPE_VOLUMES=$(docker volume ls -q --filter "name=recipe" 2>/dev/null || true)
     if [ -n "$RECIPE_VOLUMES" ]; then
         docker volume rm $RECIPE_VOLUMES 2>/dev/null || true
         echo "   ✅ Removed Cody Richter Cooks application volumes"
     fi
-    
+
     # Remove unused volumes
     docker volume prune -f
     echo "   ✅ Removed unused volumes"
@@ -159,10 +159,10 @@ fi
 # Clean up networks
 if [ "$NETWORKS" = true ]; then
     echo "🌐 Removing unused networks..."
-    
+
     # Remove recipe-specific network
     docker network rm recipe-network 2>/dev/null || true
-    
+
     # Remove unused networks
     docker network prune -f
     echo "   ✅ Removed unused networks"

@@ -13,18 +13,18 @@ graph TB
     subgraph "Frontend Layer"
         UI[NextJS Frontend]
     end
-    
+
     subgraph "Backend Layer"
         API[FastAPI Backend]
         DB[(PostgreSQL Database)]
     end
-    
+
     subgraph "Infrastructure Layer"
         DOCKER[Docker Containers]
         COMPOSE[Docker Compose]
         SCRIPTS[Shell Scripts]
     end
-    
+
     UI --> API
     API --> DB
     DOCKER --> UI
@@ -157,11 +157,11 @@ class User(Base):
     password_hash: str (Not Null)
     created_at: datetime
     updated_at: datetime
-    
+
     # Relationships
     recipe_permissions: List[RecipePermission] (One-to-Many)
     uploaded_images: List[RecipeImage] (One-to-Many)
-    
+
     # Database Indices
     __table_args__ = (
         Index('idx_user_username', 'username'),
@@ -180,13 +180,13 @@ class Recipe(Base):
     serving_size: int
     created_at: datetime (Index)
     updated_at: datetime
-    
+
     # Relationships
     user_permissions: List[RecipePermission] (One-to-Many)
     ingredients: List[Ingredient] (One-to-Many)
     instructions: List[Instruction] (One-to-Many)
     images: List[RecipeImage] (One-to-Many)
-    
+
     # Database Indices
     __table_args__ = (
         Index('idx_recipe_title_search', 'title'),
@@ -205,12 +205,12 @@ class RecipePermission(Base):
     role: str (Enum: 'owner', 'editor')
     granted_at: datetime
     granted_by: int (Foreign Key to User, optional)
-    
+
     # Relationships
     user: User (Many-to-One)
     recipe: Recipe (Many-to-One)
     granter: User (Many-to-One, optional)
-    
+
     # Database Indices and Constraints
     __table_args__ = (
         UniqueConstraint('user_id', 'recipe_id'),
@@ -233,11 +233,11 @@ class RecipeImage(Base):
     alt_text: str (optional)
     uploaded_at: datetime
     uploaded_by: int (Foreign Key to User)
-    
+
     # Relationships
     recipe: Recipe (Many-to-One)
     uploader: User (Many-to-One)
-    
+
     # Database Indices
     __table_args__ = (
         Index('idx_image_recipe', 'recipe_id'),
@@ -254,10 +254,10 @@ class Ingredient(Base):
     quantity: float
     unit: str
     recipe_id: int (Foreign Key to Recipe, Index)
-    
+
     # Relationships
     recipe: Recipe (Many-to-One)
-    
+
     # Database Indices
     __table_args__ = (
         Index('idx_ingredient_recipe', 'recipe_id'),
@@ -274,10 +274,10 @@ class Instruction(Base):
     description: Text (HTML content with embedded images)
     timing: int (minutes, optional)
     recipe_id: int (Foreign Key to Recipe, Index)
-    
+
     # Relationships
     recipe: Recipe (Many-to-One)
-    
+
     # Database Indices
     __table_args__ = (
         Index('idx_instruction_recipe_step', 'recipe_id', 'step_number'),

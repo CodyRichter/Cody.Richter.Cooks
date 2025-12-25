@@ -1,6 +1,7 @@
 """
 Pytest configuration and fixtures for backend tests.
 """
+
 import pytest
 import asyncio
 from typing import Generator, AsyncGenerator
@@ -12,7 +13,6 @@ from unittest.mock import Mock
 
 from app.main import app
 from app.core.database import Base, get_db
-from app.core.config import settings
 from app.models.user import User
 from app.models.recipe import Recipe
 from app.models.recipe_permission import RecipePermission, PermissionRole
@@ -27,8 +27,7 @@ TEST_DATABASE_URL = "sqlite:///./test.db"
 
 # Create test engine
 test_engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 
 # Create test session
@@ -48,10 +47,10 @@ def db_session() -> Generator[Session, None, None]:
     """Create a fresh database session for each test."""
     # Create all tables
     Base.metadata.create_all(bind=test_engine)
-    
+
     # Create session
     session = TestingSessionLocal()
-    
+
     try:
         yield session
     finally:
@@ -63,34 +62,36 @@ def db_session() -> Generator[Session, None, None]:
 @pytest.fixture(scope="function")
 def client(db_session: Session) -> Generator[TestClient, None, None]:
     """Create a test client with database session override."""
+
     def override_get_db():
         try:
             yield db_session
         finally:
             pass
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="function")
 async def async_client(db_session: Session) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client with database session override."""
+
     def override_get_db():
         try:
             yield db_session
         finally:
             pass
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     async with AsyncClient(app=app, base_url="http://test") as async_test_client:
         yield async_test_client
-    
+
     app.dependency_overrides.clear()
 
 
@@ -100,7 +101,9 @@ def test_user(db_session: Session) -> User:
     user = User(
         username="testuser",
         email="test@example.com",
-        password_hash=PasswordSecurity.hash_password("TestPassword123!")  # Strong password for new validation
+        password_hash=PasswordSecurity.hash_password(
+            "TestPassword123!"
+        ),  # Strong password for new validation
     )
     db_session.add(user)
     db_session.commit()
@@ -114,7 +117,9 @@ def test_user2(db_session: Session) -> User:
     user = User(
         username="testuser2",
         email="test2@example.com",
-        password_hash=PasswordSecurity.hash_password("TestPassword123!")  # Strong password for new validation
+        password_hash=PasswordSecurity.hash_password(
+            "TestPassword123!"
+        ),  # Strong password for new validation
     )
     db_session.add(user)
     db_session.commit()
@@ -129,21 +134,19 @@ def test_recipe(db_session: Session, test_user: User) -> Recipe:
         title="Test Recipe",
         description="<p>This is a test recipe description</p>",
         cooking_time=30,
-        serving_size=4
+        serving_size=4,
     )
     db_session.add(recipe)
     db_session.commit()
     db_session.refresh(recipe)
-    
+
     # Add owner permission
     permission = RecipePermission(
-        user_id=test_user.id,
-        recipe_id=recipe.id,
-        role=PermissionRole.OWNER
+        user_id=test_user.id, recipe_id=recipe.id, role=PermissionRole.OWNER
     )
     db_session.add(permission)
     db_session.commit()
-    
+
     return recipe
 
 
@@ -170,7 +173,7 @@ def sample_recipe_data() -> dict:
         "description": "<p>This is a test recipe description</p>",
         "cooking_time": 30,
         "serving_size": 4,
-        "tags": ["test", "sample"]
+        "tags": ["test", "sample"],
     }
 
 
@@ -182,7 +185,7 @@ def sample_ingredient_data() -> dict:
         "quantity": 1.0,
         "unit": "cup",
         "subtext": "fresh",
-        "order_index": 0
+        "order_index": 0,
     }
 
 
@@ -193,7 +196,7 @@ def sample_instruction_data() -> dict:
         "title": "Test Step",
         "description": "<p>Do something</p>",
         "step_number": 1,
-        "timing": 5
+        "timing": 5,
     }
 
 
@@ -215,20 +218,18 @@ def recipe_with_nested_data(db_session: Session, test_user: User) -> Recipe:
         title="Complete Test Recipe",
         description="<p>Recipe with nested data</p>",
         cooking_time=45,
-        serving_size=6
+        serving_size=6,
     )
     db_session.add(recipe)
     db_session.commit()
     db_session.refresh(recipe)
-    
+
     # Add owner permission
     permission = RecipePermission(
-        user_id=test_user.id,
-        recipe_id=recipe.id,
-        role=PermissionRole.OWNER
+        user_id=test_user.id, recipe_id=recipe.id, role=PermissionRole.OWNER
     )
     db_session.add(permission)
-    
+
     # Add ingredients
     ingredient1 = Ingredient(
         name="Flour",
@@ -236,33 +237,29 @@ def recipe_with_nested_data(db_session: Session, test_user: User) -> Recipe:
         unit="cups",
         subtext="all-purpose",
         order_index=0,
-        recipe_id=recipe.id
+        recipe_id=recipe.id,
     )
     ingredient2 = Ingredient(
-        name="Sugar",
-        quantity=1.0,
-        unit="cup",
-        order_index=1,
-        recipe_id=recipe.id
+        name="Sugar", quantity=1.0, unit="cup", order_index=1, recipe_id=recipe.id
     )
     db_session.add_all([ingredient1, ingredient2])
-    
+
     # Add instructions
     instruction1 = Instruction(
         title="Mix Ingredients",
         description="<p>Combine dry ingredients</p>",
         step_number=1,
         timing=5,
-        recipe_id=recipe.id
+        recipe_id=recipe.id,
     )
     instruction2 = Instruction(
         title="Bake",
         description="<p>Bake in preheated oven</p>",
         step_number=2,
         timing=25,
-        recipe_id=recipe.id
+        recipe_id=recipe.id,
     )
     db_session.add_all([instruction1, instruction2])
-    
+
     db_session.commit()
     return recipe

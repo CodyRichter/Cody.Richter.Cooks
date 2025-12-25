@@ -2,10 +2,7 @@ import {
   ActionIcon,
   Badge,
   Button,
-  Divider,
-  Flex,
   Group,
-  Paper,
   Stack,
   Text,
   TextInput,
@@ -14,7 +11,6 @@ import { IconPlus, IconX } from "@tabler/icons-react";
 
 import Recipe, { RecipeDetail } from "@/types/Recipe";
 import { titleize } from "@/utils/recipeUtils";
-import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 
 interface EditRecipeTagsProps {
@@ -26,7 +22,6 @@ export default function EditRecipeTags({
   recipe,
   setRecipe,
 }: EditRecipeTagsProps) {
-  const isMobile = useMediaQuery("(max-width: 768px)");
 
   // The value of the new tag input field
   const [newTagValue, setNewTagValue] = useState("");

@@ -9,8 +9,8 @@ const nextConfig = {
   // Enable experimental features for better performance
   experimental: {
     optimizePackageImports: [
-      '@mantine/core', 
-      '@mantine/hooks', 
+      '@mantine/core',
+      '@mantine/hooks',
       '@mantine/tiptap',
       '@tabler/icons-react'
     ],

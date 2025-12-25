@@ -17,11 +17,11 @@ import {
   IconPencilExclamation,
   IconTrash,
 } from "@tabler/icons-react";
-import React, { useState } from "react";
+import React from "react";
 
 import { CSS } from "@dnd-kit/utilities";
 import Ingredient from "@/types/Ingredient";
-import Recipe, { RecipeDetail } from "@/types/Recipe";
+import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 
 export default function MobileSortableRecipeIngredient({
@@ -40,7 +40,6 @@ export default function MobileSortableRecipeIngredient({
       id: ingredient.id,
     });
 
-  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <Group

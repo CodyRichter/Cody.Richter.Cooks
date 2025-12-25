@@ -1,16 +1,13 @@
 """Initial database schema
 
 Revision ID: 4a2646f0504e
-Revises: 
+Revises:
 Create Date: 2025-10-29 02:10:52.911200
 
 """
-from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
-revision = '4a2646f0504e'
+revision = "4a2646f0504e"
 down_revision = None
 branch_labels = None
 depends_on = None

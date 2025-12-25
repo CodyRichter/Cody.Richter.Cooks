@@ -28,7 +28,7 @@ graph TB
     E --> F[JWT Token Manager]
     F --> G[Database Layer]
     G --> H[Audit Logging]
-    
+
     I[Security Headers Middleware] --> A
     J[HTTPS Enforcement] --> I
     K[Dependency Scanner] --> L[Updated Dependencies]

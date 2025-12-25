@@ -49,38 +49,6 @@ export default function TextEditorImageUploader({
     setCompressedBase64(null);
   }, []);
 
-  const handleFileSelect = useCallback(
-    async (file: File | null) => {
-      if (!file) {
-        resetState();
-        return;
-      }
-
-      if (!file.type.startsWith("image/")) {
-        setError("Please select a valid image file.");
-        return;
-      }
-
-      setError(null);
-      setSelectedFile(file);
-      setIsProcessing(true);
-
-      try {
-        const base64Data = await compressAndEncodeImage(file);
-        setCompressedBase64(base64Data);
-        setPreviewUrl(base64Data);
-      } catch (error) {
-        console.error("Image processing failed:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to process image"
-        );
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [resetState]
-  );
-
   const compressImage = useCallback(async (file: File): Promise<File> => {
     const compressionLevels = [
       { maxSizeMB: 1.0, label: "WEBP" },
@@ -141,6 +109,43 @@ export default function TextEditorImageUploader({
     [compressImage, fileToBase64]
   );
 
+  const handleFileSelect = useCallback(
+    async (file: File | null) => {
+      if (!file) {
+        resetState();
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setError("Please select a valid image file.");
+        return;
+      }
+
+      setError(null);
+      setSelectedFile(file);
+      setIsProcessing(true);
+
+      try {
+        const base64Data = await compressAndEncodeImage(file);
+        setCompressedBase64(base64Data);
+        setPreviewUrl(base64Data);
+      } catch (error) {
+        console.error("Image processing failed:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to process image"
+        );
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [resetState, compressAndEncodeImage]
+  );
+
+  const handleClose = useCallback(() => {
+    resetState();
+    setModalOpened(false);
+  }, [resetState]);
+
   const handleInsert = useCallback(() => {
     if (!compressedBase64 || !selectedFile) return;
 
@@ -154,12 +159,7 @@ export default function TextEditorImageUploader({
       .run();
 
     handleClose();
-  }, [compressedBase64, selectedFile, editor]);
-
-  const handleClose = useCallback(() => {
-    resetState();
-    setModalOpened(false);
-  }, [resetState]);
+  }, [compressedBase64, selectedFile, editor, handleClose]);
 
   return (
     <>

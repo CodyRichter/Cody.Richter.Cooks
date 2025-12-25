@@ -42,7 +42,7 @@ export function analyzeError(error: ApiError | Error | null): ErrorInfo {
     if (isUnauthorized) return 'Authentication required';
     if (isServerError) return 'Server error occurred';
     if (isNetworkError) return 'Network connection error';
-    
+
     return apiError?.message || error.message || 'An error occurred';
   };
 

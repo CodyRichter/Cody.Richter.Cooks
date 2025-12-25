@@ -43,15 +43,15 @@ export const recipeApi = {
     if (params?.q) cleanParams.q = params.q
     if (params?.page) cleanParams.page = params.page
     if (params?.limit) cleanParams.limit = params.limit
-    
+
     const searchParams = new URLSearchParams();
     Object.entries(cleanParams).forEach(([key, value]) => {
       searchParams.append(key, value.toString());
     });
-    
+
     const queryString = searchParams.toString();
     const endpoint = queryString ? `/api/v1/recipes?${queryString}` : '/api/v1/recipes';
-    
+
     return apiClient.get(endpoint, true)
   },
 

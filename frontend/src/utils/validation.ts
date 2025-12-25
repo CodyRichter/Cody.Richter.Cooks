@@ -2,11 +2,11 @@
  * Form validation utilities matching backend validation rules
  */
 
-import { 
-  RecipeCreate, 
-  RecipeUpdate, 
-  IngredientForRecipe, 
-  InstructionForRecipe 
+import {
+  RecipeCreate,
+  RecipeUpdate,
+  IngredientForRecipe,
+  InstructionForRecipe
 } from '../types/Recipe'
 import { UserCreate, UserUpdate } from '../types/User'
 
@@ -45,9 +45,9 @@ export const validateRecipeCreate = (recipe: RecipeCreate): ValidationResult => 
   recipe.ingredients.forEach((ingredient, index) => {
     const ingredientErrors = validateIngredient(ingredient)
     ingredientErrors.errors.forEach(error => {
-      errors.push({ 
-        field: `ingredients.${index}.${error.field}`, 
-        message: error.message 
+      errors.push({
+        field: `ingredients.${index}.${error.field}`,
+        message: error.message
       })
     })
   })
@@ -56,9 +56,9 @@ export const validateRecipeCreate = (recipe: RecipeCreate): ValidationResult => 
   recipe.instructions.forEach((instruction, index) => {
     const instructionErrors = validateInstruction(instruction)
     instructionErrors.errors.forEach(error => {
-      errors.push({ 
-        field: `instructions.${index}.${error.field}`, 
-        message: error.message 
+      errors.push({
+        field: `instructions.${index}.${error.field}`,
+        message: error.message
       })
     })
   })
@@ -96,9 +96,9 @@ export const validateRecipeUpdate = (recipe: RecipeUpdate): ValidationResult => 
     recipe.ingredients.forEach((ingredient, index) => {
       const ingredientErrors = validateIngredient(ingredient)
       ingredientErrors.errors.forEach(error => {
-        errors.push({ 
-          field: `ingredients.${index}.${error.field}`, 
-          message: error.message 
+        errors.push({
+          field: `ingredients.${index}.${error.field}`,
+          message: error.message
         })
       })
     })
@@ -109,9 +109,9 @@ export const validateRecipeUpdate = (recipe: RecipeUpdate): ValidationResult => 
     recipe.instructions.forEach((instruction, index) => {
       const instructionErrors = validateInstruction(instruction)
       instructionErrors.errors.forEach(error => {
-        errors.push({ 
-          field: `instructions.${index}.${error.field}`, 
-          message: error.message 
+        errors.push({
+          field: `instructions.${index}.${error.field}`,
+          message: error.message
         })
       })
     })
@@ -283,13 +283,13 @@ export const validateHtmlContent = (content: string, allowedTags: string[] = [
   // Simple regex to find HTML tags
   const tagPattern = /<\/?(\w+)[^>]*>/g
   const matches = content.matchAll(tagPattern)
-  
+
   for (const match of matches) {
     const tag = match[1].toLowerCase()
     if (!allowedTags.includes(tag)) {
-      errors.push({ 
-        field: 'content', 
-        message: `HTML tag '${tag}' is not allowed` 
+      errors.push({
+        field: 'content',
+        message: `HTML tag '${tag}' is not allowed`
       })
     }
   }

@@ -46,7 +46,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml stop
 if [ "$CLEANUP" = true ]; then
     echo "🧹 Removing containers..."
     docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
-    
+
     if [ "$VOLUMES" = true ]; then
         echo "⚠️  Removing volumes (this will delete database data)..."
         read -p "Are you sure? This will permanently delete all database data. (y/N): " -n 1 -r

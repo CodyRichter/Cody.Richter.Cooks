@@ -33,7 +33,7 @@ export default function AccountDetailsPage() {
 
   const username = auth.user?.username || "<Username Not Found>";
   const email = auth.user?.email || "<Email Not Found>";
-  
+
   // For now, assume email is verified since we don't have email verification in the backend yet
   const emailVerified = true;
 

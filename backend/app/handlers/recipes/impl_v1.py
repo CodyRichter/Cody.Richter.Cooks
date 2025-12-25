@@ -1,27 +1,20 @@
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy import and_, or_
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
-from app.core.database import get_db
 from app.models.ingredient import Ingredient
 from app.models.instruction import Instruction
 from app.models.recipe import Recipe
 from app.models.recipe_permission import RecipePermission, PermissionRole
 from app.models.user import User
-from app.schemas.recipe import (
-    RecipeCreate, RecipeDetail, RecipeListItem, RecipeList
-)
-from app.schemas.recipe_permission import RecipePermissionDetail, GrantPermissionRequest
-from app.utils.auth import get_current_active_user
+from app.schemas.recipe import RecipeCreate, RecipeDetail, RecipeListItem, RecipeList
+from app.schemas.recipe_permission import RecipePermissionDetail
 from app.utils.helpers import enforce_recipe_permissions, get_user_recipe_permission
 
 
 def create_recipe_internal(
-    recipe_data: RecipeCreate,
-    current_user: User,
-    db: Session
+    recipe_data: RecipeCreate, current_user: User, db: Session
 ) -> RecipeDetail:
     # Create the recipe
     db_recipe = Recipe(
@@ -29,7 +22,7 @@ def create_recipe_internal(
         description=recipe_data.description,
         tags=recipe_data.tags,
         cooking_time=recipe_data.cooking_time,
-        serving_size=recipe_data.serving_size
+        serving_size=recipe_data.serving_size,
     )
 
     db.add(db_recipe)
@@ -44,7 +37,7 @@ def create_recipe_internal(
                 unit=ingredient_data.unit,
                 subtext=ingredient_data.subtext,
                 order_index=ingredient_data.order_index,
-                recipe_id=db_recipe.id
+                recipe_id=db_recipe.id,
             )
             db.add(db_ingredient)
 
@@ -56,15 +49,13 @@ def create_recipe_internal(
                 description=instruction_data.description,
                 step_number=instruction_data.step_number,
                 timing=instruction_data.timing,
-                recipe_id=db_recipe.id
+                recipe_id=db_recipe.id,
             )
             db.add(db_instruction)
 
     # Create owner permission for the user
     owner_permission = RecipePermission(
-        user_id=current_user.id,
-        recipe_id=db_recipe.id,
-        role=PermissionRole.OWNER
+        user_id=current_user.id, recipe_id=db_recipe.id, role=PermissionRole.OWNER
     )
 
     db.add(owner_permission)
@@ -73,28 +64,29 @@ def create_recipe_internal(
 
     return RecipeDetail.model_validate(db_recipe)
 
+
 def update_recipe_internal(
-    recipe_id: str,
-    recipe_data: RecipeDetail,
-    current_user: User,
-    db: Session
+    recipe_id: str, recipe_data: RecipeDetail, current_user: User, db: Session
 ):
     # Check if user has permission to edit this recipe
     enforce_recipe_permissions(
-        db, current_user, recipe_id,
-        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR]
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
     )
 
     # Get the recipe
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if not recipe:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recipe not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
         )
 
     # Update recipe fields (excluding ingredients and instructions)
-    update_data = recipe_data.model_dump(exclude_unset=True, exclude={'ingredients', 'instructions'})
+    update_data = recipe_data.model_dump(
+        exclude_unset=True, exclude={"ingredients", "instructions"}
+    )
     for field, value in update_data.items():
         setattr(recipe, field, value)
 
@@ -111,7 +103,7 @@ def update_recipe_internal(
                 unit=ingredient_data.unit,
                 subtext=ingredient_data.subtext,
                 order_index=ingredient_data.order_index,
-                recipe_id=recipe_id
+                recipe_id=recipe_id,
             )
             db.add(db_ingredient)
 
@@ -127,7 +119,7 @@ def update_recipe_internal(
                 description=instruction_data.description,
                 step_number=instruction_data.step_number,
                 timing=instruction_data.timing,
-                recipe_id=recipe_id
+                recipe_id=recipe_id,
             )
             db.add(db_instruction)
 
@@ -149,8 +141,7 @@ def delete_recipe_internal(
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if not recipe:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recipe not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
         )
 
     # Delete the recipe (cascade will handle related records)
@@ -158,10 +149,7 @@ def delete_recipe_internal(
     db.commit()
 
 
-def get_recipe_internal(
-    recipe_id: str,
-    db: Session
-) -> RecipeDetail:
+def get_recipe_internal(recipe_id: str, db: Session) -> RecipeDetail:
     """
     Get a recipe by ID with all ingredients and instructions.
     No permissions are checked.
@@ -176,15 +164,16 @@ def get_recipe_internal(
     Raises:
         HTTPException: If recipe not found
     """
-    recipe = db.query(Recipe).options(
-        joinedload(Recipe.ingredients),
-        joinedload(Recipe.instructions)
-    ).filter(Recipe.id == recipe_id).first()
+    recipe = (
+        db.query(Recipe)
+        .options(joinedload(Recipe.ingredients), joinedload(Recipe.instructions))
+        .filter(Recipe.id == recipe_id)
+        .first()
+    )
 
     if not recipe:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recipe not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
         )
 
     # Sort ingredients by order_index and instructions by step_number
@@ -199,9 +188,8 @@ def list_recipes_internal(
     title_search_query: Optional[str] = None,  # Fuzzy match of recipe title
     user_id_filter: Optional[str] = None,  # User ID to filter recipes for
     page: int = 1,
-    limit: int = 10
+    limit: int = 10,
 ) -> RecipeList:
-
     query = db.query(Recipe)
 
     if user_id_filter:
@@ -209,7 +197,6 @@ def list_recipes_internal(
 
     if title_search_query:
         query = query.filter(Recipe.title.ilike(f"%{title_search_query}%"))
-
 
     # Pagination Data
     total = query.count()
@@ -222,23 +209,23 @@ def list_recipes_internal(
         page=page,
         limit=limit,
         has_next=(page * limit) < total,
-        has_prev=page > 1
+        has_prev=page > 1,
     )
 
-def list_recipe_permissions_internal(
-        recipe_id: str,
-        user: User,
-    db: Session
-):
+
+def list_recipe_permissions_internal(recipe_id: str, user: User, db: Session):
     # Check if user has permission to view this recipe
-    enforce_recipe_permissions(db, user, recipe_id, [PermissionRole.OWNER, PermissionRole.EDITOR])
+    enforce_recipe_permissions(
+        db, user, recipe_id, [PermissionRole.OWNER, PermissionRole.EDITOR]
+    )
 
     # Get all permissions for this recipe with user details
-    permissions = db.query(RecipePermission).join(
-        User, RecipePermission.user_id == User.id
-    ).filter(
-        RecipePermission.recipe_id == recipe_id
-    ).all()
+    permissions = (
+        db.query(RecipePermission)
+        .join(User, RecipePermission.user_id == User.id)
+        .filter(RecipePermission.recipe_id == recipe_id)
+        .all()
+    )
 
     # Build response with user details
     responses = []
@@ -252,32 +239,29 @@ def list_recipe_permissions_internal(
 
 
 def grant_recipe_permission_internal(
-        recipe_id: str,
-        target_username: str,
-        target_role: PermissionRole,
-        current_user: User,
-        db: Session
+    recipe_id: str,
+    target_username: str,
+    target_role: PermissionRole,
+    current_user: User,
+    db: Session,
 ):
     enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
 
     target_user: User = db.query(User).filter(User.username == target_username).first()
     if not target_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     existing_permission = get_user_recipe_permission(db, target_user.id, recipe_id)
     if existing_permission and existing_permission.role == target_role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User already has permission for this recipe"
+            detail="User already has permission for this recipe",
         )
 
     new_permission = RecipePermission(
-        user_id=target_user.id,
-        recipe_id=recipe_id,
-        role=target_role
+        user_id=target_user.id, recipe_id=recipe_id, role=target_role
     )
 
     db.add(new_permission)
@@ -286,32 +270,28 @@ def grant_recipe_permission_internal(
 
     return RecipePermissionDetail.model_validate(new_permission)
 
+
 def revoke_recipe_permission_internal(
-    recipe_id: str,
-    target_user_id: str,
-    current_user: User,
-    db: Session
+    recipe_id: str, target_user_id: str, current_user: User, db: Session
 ):
     enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
 
     if target_user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You can not revoke your own permissions."
+            detail="You can not revoke your own permissions.",
         )
 
     target_user: User = db.query(User).filter(User.id == target_user_id).first()
     if not target_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     permission = get_user_recipe_permission(db, target_user.id, recipe_id)
     if not permission:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Permission not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found"
         )
 
     # Delete the permission

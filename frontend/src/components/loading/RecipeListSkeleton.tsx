@@ -1,5 +1,5 @@
 import React from 'react'
-import { SimpleGrid, Stack } from '@mantine/core'
+import { SimpleGrid } from '@mantine/core'
 import { RecipeCardSkeleton } from './RecipeCardSkeleton'
 
 interface RecipeListSkeletonProps {

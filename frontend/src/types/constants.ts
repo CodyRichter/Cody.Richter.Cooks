@@ -5,7 +5,7 @@ export const BASE_URL = apiBaseUrl
 export interface NetworkResult {
   isLoading: boolean;
   error: string;
-  response: any;
+  response: unknown;
 }
 
 export const INITIAL_NETWORK_RESULT_WITH_LOADING: NetworkResult = {

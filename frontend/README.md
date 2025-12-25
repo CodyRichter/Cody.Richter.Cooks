@@ -19,7 +19,7 @@ A modern NextJS frontend application for recipe management, integrated with a Fa
    ```bash
    cp .env.example .env.local
    ```
-   
+
    Update `.env.local` with your configuration:
    ```env
    # API Configuration

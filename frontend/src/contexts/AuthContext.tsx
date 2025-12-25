@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Try to get user profile to validate token
         const user = await authApi.getProfile()
         dispatch({ type: 'AUTH_RESTORE', payload: { user } })
-      } catch (error) {
+      } catch {
         // If token is invalid, try to refresh
         try {
           const tokenResponse = await authApi.refreshToken(refreshToken)
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               tokens: tokenResponse
             }
           })
-        } catch (refreshError) {
+        } catch {
           // If refresh fails, clear tokens and stay logged out
           localStorage.removeItem(tokenStorageKey)
           localStorage.removeItem(refreshTokenStorageKey)
@@ -163,8 +163,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           tokens: tokenResponse
         }
       })
-    } catch (error: any) {
-      const errorMessage = error?.message || error?.details?.detail || 'Login failed'
+    } catch (error: unknown) {
+      const err = error as { message?: string; details?: { detail?: string } };
+      const errorMessage = err?.message || err?.details?.detail || 'Login failed'
       dispatch({ type: 'AUTH_ERROR', payload: { error: errorMessage } })
       throw error
     }
@@ -183,8 +184,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           tokens: tokenResponse
         }
       })
-    } catch (error: any) {
-      const errorMessage = error?.message || error?.details?.detail || 'Registration failed'
+    } catch (error: unknown) {
+      const err = error as { message?: string; details?: { detail?: string } };
+      const errorMessage = err?.message || err?.details?.detail || 'Registration failed'
       dispatch({ type: 'AUTH_ERROR', payload: { error: errorMessage } })
       throw error
     }

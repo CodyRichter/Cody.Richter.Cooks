@@ -25,7 +25,7 @@ export function createApiService<T, CreateT = Partial<T>, UpdateT = Partial<T>>(
   return {
     getAll: (params?: Record<string, string | number | boolean>): Promise<T[]> => {
       const searchParams = new URLSearchParams();
-      
+
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
@@ -33,10 +33,10 @@ export function createApiService<T, CreateT = Partial<T>, UpdateT = Partial<T>>(
           }
         });
       }
-      
+
       const queryString = searchParams.toString();
       const endpoint = queryString ? `${baseEndpoint}?${queryString}` : baseEndpoint;
-      
+
       return apiClient.get(endpoint, isPublicByDefault);
     },
 
@@ -56,19 +56,19 @@ export function createApiService<T, CreateT = Partial<T>, UpdateT = Partial<T>>(
 
 /**
  * Example usage for future APIs:
- * 
+ *
  * // For a new "ingredients" API
  * const ingredientService = createApiService<Ingredient>({
  *   baseEndpoint: '/api/v1/ingredients',
  *   isPublicByDefault: true
  * });
- * 
- * // For a private "user-preferences" API  
+ *
+ * // For a private "user-preferences" API
  * const preferencesService = createApiService<UserPreference>({
  *   baseEndpoint: '/api/v1/user-preferences',
  *   isPublicByDefault: false
  * });
- * 
+ *
  * // Then use with React Query:
  * const ingredientsQuery = useApiQuery({
  *   queryKey: ['ingredients'],

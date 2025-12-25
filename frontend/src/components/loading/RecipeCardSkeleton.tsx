@@ -23,11 +23,11 @@ export const RecipeCardSkeleton: React.FC<RecipeCardSkeletonProps> = ({
       <Stack gap="xs" mt={showImage ? "md" : 0}>
         {/* Recipe title */}
         <Skeleton height={24} width="80%" />
-        
+
         {/* Recipe description */}
         <Skeleton height={16} width="100%" />
         <Skeleton height={16} width="70%" />
-        
+
         {showTags && (
           <Group gap="xs" mt="xs">
             <Skeleton height={20} width={60} radius="xl" />
@@ -35,7 +35,7 @@ export const RecipeCardSkeleton: React.FC<RecipeCardSkeletonProps> = ({
             <Skeleton height={20} width={50} radius="xl" />
           </Group>
         )}
-        
+
         {showMetadata && (
           <Group gap="md" mt="sm">
             <Skeleton height={16} width={80} />

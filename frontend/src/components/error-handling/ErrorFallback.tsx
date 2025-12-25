@@ -34,7 +34,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
         <Text size={textSize}>
           {message}
         </Text>
-        
+
         {process.env.NODE_ENV === 'development' && error && (
           <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
             {error.message}

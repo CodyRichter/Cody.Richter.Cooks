@@ -15,7 +15,7 @@ export const useRetry = () => {
         return await operation()
       } catch (error) {
         lastError = error as ApiError | Error
-        
+
         // Don't retry on client errors (4xx except 401, 408, 429)
         if (lastError && typeof lastError === 'object' && 'status' in lastError && 'timestamp' in lastError) {
           const apiError = lastError as ApiError
@@ -25,17 +25,17 @@ export const useRetry = () => {
             }
           }
         }
-        
+
         // If this was the last attempt, throw the error
         if (attempt === maxRetries) {
           throw lastError
         }
-        
+
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt)))
       }
     }
-    
+
     throw lastError!
   }, [])
 

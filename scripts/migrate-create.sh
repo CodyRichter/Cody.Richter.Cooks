@@ -45,18 +45,18 @@ docker-compose exec backend alembic revision --autogenerate -m "$MIGRATION_MESSA
 
 if [ $? -eq 0 ]; then
     echo "✅ Migration file created successfully"
-    
+
     # Show the latest migration files
     echo ""
     echo "📁 Latest migration files:"
     docker-compose exec backend find alembic/versions -name "*.py" -type f -exec basename {} \; | tail -3
-    
+
     echo ""
     echo "📋 Next steps:"
     echo "1. Review the generated migration file in backend/alembic/versions/"
     echo "2. Edit the migration if needed to add custom logic"
     echo "3. Apply the migration with: ./scripts/migrate.sh"
-    
+
 else
     echo "❌ Failed to create migration"
     echo "   Check backend logs: docker-compose logs backend"

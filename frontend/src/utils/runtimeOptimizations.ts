@@ -4,8 +4,8 @@
 declare global {
   interface Window {
     __REACT_DEVTOOLS_GLOBAL_HOOK__?: {
-      onCommitFiberRoot?: any
-      onCommitFiberUnmount?: any
+      onCommitFiberRoot?: unknown
+      onCommitFiberUnmount?: unknown
     }
   }
 }
@@ -40,12 +40,12 @@ export const preventMemoryLeaks = () => {
     // Clean up event listeners on page unload
     window.addEventListener('beforeunload', () => {
       // Clear any global timers
-      const highestTimeoutId = setTimeout(() => {}, 0) as any
+      const highestTimeoutId = setTimeout(() => {}, 0) as unknown as number
       for (let i = 0; i < Number(highestTimeoutId); i++) {
         clearTimeout(i)
       }
-      
-      const highestIntervalId = setInterval(() => {}, 0) as any
+
+      const highestIntervalId = setInterval(() => {}, 0) as unknown as number
       for (let i = 0; i < Number(highestIntervalId); i++) {
         clearInterval(i)
       }
@@ -75,7 +75,7 @@ export const preloadCriticalResources = () => {
       '/fonts/nunito-medium.woff2',
       '/fonts/nunito-semibold.woff2'
     ]
-    
+
     criticalFonts.forEach(font => {
       const link = document.createElement('link')
       link.rel = 'preload'
@@ -85,13 +85,13 @@ export const preloadCriticalResources = () => {
       link.href = font
       document.head.appendChild(link)
     })
-    
+
     // Preload critical images
     const criticalImages = [
       '/chef-hat.svg',
       '/recipe_images/default.jpg'
     ]
-    
+
     criticalImages.forEach(image => {
       const link = document.createElement('link')
       link.rel = 'preload'
@@ -144,21 +144,21 @@ export const monitorPerformance = () => {
           }
         }
       })
-      
+
       observer.observe({ entryTypes: ['longtask'] })
     }
-    
+
     // Monitor layout shifts
     if ('PerformanceObserver' in window) {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const layoutShiftEntry = entry as any
+          const layoutShiftEntry = entry as unknown as { value: number }
           if (layoutShiftEntry.value > 0.1) { // CLS threshold
             console.warn(`📐 Layout shift detected: ${layoutShiftEntry.value.toFixed(3)}`)
           }
         }
       })
-      
+
       observer.observe({ entryTypes: ['layout-shift'] })
     }
   }
@@ -171,10 +171,10 @@ export const monitorBundleSize = () => {
       const resources = performance.getEntriesByType('resource')
       const jsResources = resources.filter(r => r.name.includes('.js'))
       const cssResources = resources.filter(r => r.name.includes('.css'))
-      
-      const totalJSSize = jsResources.reduce((acc, r) => acc + ((r as any).transferSize || 0), 0)
-      const totalCSSSize = cssResources.reduce((acc, r) => acc + ((r as any).transferSize || 0), 0)
-      
+
+      const totalJSSize = jsResources.reduce((acc, r) => acc + ((r as unknown as { transferSize: number }).transferSize || 0), 0)
+      const totalCSSSize = cssResources.reduce((acc, r) => acc + ((r as unknown as { transferSize: number }).transferSize || 0), 0)
+
       console.group('📦 Bundle Size Analysis')
       console.log(`JavaScript: ${(totalJSSize / 1024).toFixed(2)} KB`)
       console.log(`CSS: ${(totalCSSSize / 1024).toFixed(2)} KB`)

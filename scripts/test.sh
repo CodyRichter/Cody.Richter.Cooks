@@ -137,7 +137,7 @@ fi
 if ! docker-compose -f docker-compose.yml -f docker-compose.dev.yml ps backend | grep -q "Up"; then
     print_warning "Backend container is not running. Starting development environment..."
     docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-    
+
     # Wait for services to be ready with timeout
     print_status "Waiting for services to be ready..."
     MAX_WAIT=60
@@ -149,15 +149,15 @@ if ! docker-compose -f docker-compose.yml -f docker-compose.dev.yml ps backend |
         sleep 2
         WAITED=$((WAITED + 2))
     done
-    
+
     if [ $WAITED -ge $MAX_WAIT ]; then
         print_error "Timeout waiting for backend container to start"
         exit 1
     fi
-    
+
     # Additional wait for database initialization
     sleep 5
-    
+
     # Check if database is ready
     print_status "Checking database connection..."
     docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend python -c "
@@ -177,7 +177,7 @@ fi
 print_status "Executing tests..."
 if docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend bash -c "cd /app && $PYTEST_CMD"; then
     print_status "Tests completed successfully!"
-    
+
     # If coverage was requested, show where to find the report
     if [ "$COVERAGE" = true ]; then
         print_status "Coverage report generated:"

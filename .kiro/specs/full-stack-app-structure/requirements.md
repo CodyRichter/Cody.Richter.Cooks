@@ -35,7 +35,7 @@ This feature establishes Cody Richter Cooks with a structured multi-service appl
 #### Acceptance Criteria
 
 1. THE Application_Structure SHALL contain a backend folder for the FastAPI service
-2. THE Application_Structure SHALL contain a frontend folder for the NextJS service  
+2. THE Application_Structure SHALL contain a frontend folder for the NextJS service
 3. THE Application_Structure SHALL contain an infrastructure folder for container configurations
 4. THE Application_Structure SHALL maintain clear separation between service concerns
 5. THE Application_Structure SHALL support independent development of each service

@@ -13,7 +13,7 @@ export const useAuth = () => {
 // Hook for checking specific permissions
 export const usePermissions = () => {
   const { user, isAuthenticated } = useAuth()
-  
+
   return {
     canCreateRecipe: isAuthenticated,
     canEditRecipe: (recipeUserId?: string) => {

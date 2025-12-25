@@ -73,8 +73,8 @@ export const getErrorMessage = (error: ApiError): string => {
 
 // Check if error is a validation error
 export const isValidationError = (error: ApiError): boolean => {
-  return error.status === 422 || 
-         !!error.details?.field_errors || 
+  return error.status === 422 ||
+         !!error.details?.field_errors ||
          !!error.details?.errors
 }
 

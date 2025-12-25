@@ -47,4 +47,4 @@ export interface TokenRefreshResponse {
 }
 
 // Legacy interface for backward compatibility
-export interface UserRegistration extends UserCreate {}
+export type UserRegistration = UserCreate;

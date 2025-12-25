@@ -6,8 +6,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import Ingredient from "@/types/Ingredient";
-import React from "react";
-import Recipe, { RecipeDetail } from "@/types/Recipe";
+import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeIngredient from "./SortableRecipeIngredient";
 
 interface EditRecipeIngredientsProps {

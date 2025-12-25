@@ -122,7 +122,7 @@ export default function LoginPage() {
 
           <Group justify="center">
             <Text size="sm" c="dimmed">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Anchor
                 size="sm"
                 onClick={() => router.push('/auth/register')}

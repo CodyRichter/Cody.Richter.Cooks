@@ -28,12 +28,12 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ error, errorInfo })
-    
+
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Global Error Boundary caught an error:', error, errorInfo)
     }
-    
+
     // Call optional error handler
     this.props.onError?.(error, errorInfo)
   }
@@ -66,7 +66,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               <Title order={2} ta="center">
                 Oops! Something went wrong
               </Title>
-              
+
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <Text size="xs" c="dimmed" ta="center" style={{ fontFamily: 'monospace' }}>
                   {this.state.error.message}

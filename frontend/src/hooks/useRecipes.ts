@@ -49,7 +49,7 @@ export const useMyRecipes = () => {
 // Hook to create a recipe
 export const useCreateRecipe = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (recipe: RecipeCreate) => recipeApi.createRecipe(recipe),
     onSuccess: () => {
@@ -62,9 +62,9 @@ export const useCreateRecipe = () => {
 // Hook to update a recipe
 export const useUpdateRecipe = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ id, ...recipe }: RecipeUpdate & { id: string }) => 
+    mutationFn: ({ id, ...recipe }: RecipeUpdate & { id: string }) =>
       recipeApi.updateRecipe(id, recipe),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['recipe', variables.id] })
@@ -77,7 +77,7 @@ export const useUpdateRecipe = () => {
 // Hook to delete a recipe
 export const useDeleteRecipe = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: string) => recipeApi.deleteRecipe(id),
     onSuccess: () => {
@@ -92,7 +92,7 @@ export const useDeleteRecipe = () => {
 // Hook for search with debouncing
 export const useRecipeSearch = (query: string) => {
   const debouncedQuery = useDebounce(query, 300)
-  
+
   const searchParams = useMemo(() => ({
     q: debouncedQuery
   }), [debouncedQuery])

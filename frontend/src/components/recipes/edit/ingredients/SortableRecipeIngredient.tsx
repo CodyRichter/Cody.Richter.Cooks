@@ -2,7 +2,7 @@ import DesktopSortableRecipeIngredient from "./DesktopSortableRecipeIngredient";
 import Ingredient from "@/types/Ingredient";
 import MobileSortableRecipeIngredient from "./MobileSortableRecipeIngredient";
 import React from "react";
-import Recipe, { RecipeDetail } from "@/types/Recipe";
+import { RecipeDetail } from "@/types/Recipe";
 import { useMediaQuery } from "@mantine/hooks";
 
 export default function SortableRecipeIngredient({

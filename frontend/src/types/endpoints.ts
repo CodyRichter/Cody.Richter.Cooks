@@ -3,19 +3,19 @@
  * These types define the request/response structure for each API endpoint
  */
 
-import { 
-  User, 
-  UserCreate, 
-  UserUpdate, 
-  LoginRequest, 
-  TokenResponse, 
-  TokenRefreshRequest, 
-  TokenRefreshResponse 
+import {
+  User,
+  UserCreate,
+  UserUpdate,
+  LoginRequest,
+  TokenResponse,
+  TokenRefreshRequest,
+  TokenRefreshResponse
 } from './User';
-import { 
-  RecipeCreate, 
-  RecipeUpdate, 
-  RecipeListItem, 
+import {
+  RecipeCreate,
+  RecipeUpdate,
+  RecipeListItem,
   RecipeSearchParams,
   RecipeDetailResponse
 } from './Recipe';
@@ -24,142 +24,142 @@ import InstructionStep from './InstructionStep';
 import { PaginatedResponse } from './api';
 
 // Authentication endpoints
-export namespace AuthEndpoints {
-  export interface Login {
+export type AuthEndpoints = {
+  Login: {
     request: LoginRequest;
     response: TokenResponse;
-  }
+  };
 
-  export interface Register {
+  Register: {
     request: UserCreate;
     response: TokenResponse;
-  }
+  };
 
-  export interface RefreshToken {
+  RefreshToken: {
     request: TokenRefreshRequest;
     response: TokenRefreshResponse;
-  }
+  };
 
-  export interface GetProfile {
+  GetProfile: {
     request: void;
     response: User;
-  }
+  };
 
-  export interface UpdateProfile {
+  UpdateProfile: {
     request: UserUpdate;
     response: User;
-  }
+  };
 
-  export interface Logout {
+  Logout: {
     request: void;
     response: { message: string };
-  }
-}
+  };
+};
 
 // Recipe endpoints
-export namespace RecipeEndpoints {
-  export interface GetRecipes {
+export type RecipeEndpoints = {
+  GetRecipes: {
     request: RecipeSearchParams;
     response: PaginatedResponse<RecipeListItem>;
-  }
+  };
 
-  export interface GetRecipe {
+  GetRecipe: {
     request: { id: string };
     response: RecipeDetailResponse;
-  }
+  };
 
-  export interface CreateRecipe {
+  CreateRecipe: {
     request: RecipeCreate;
     response: RecipeDetailResponse;
-  }
+  };
 
-  export interface UpdateRecipe {
+  UpdateRecipe: {
     request: { id: string } & RecipeUpdate;
     response: RecipeDetailResponse;
-  }
+  };
 
-  export interface DeleteRecipe {
+  DeleteRecipe: {
     request: { id: string };
     response: { message: string };
-  }
+  };
 
-  export interface GetMyRecipes {
+  GetMyRecipes: {
     request: RecipeSearchParams;
     response: PaginatedResponse<RecipeListItem>;
-  }
+  };
 
-  export interface SearchRecipes {
+  SearchRecipes: {
     request: RecipeSearchParams;
     response: PaginatedResponse<RecipeListItem>;
-  }
-}
+  };
+};
 
 // Ingredient endpoints (if needed for standalone operations)
-export namespace IngredientEndpoints {
-  export interface GetIngredients {
+export type IngredientEndpoints = {
+  GetIngredients: {
     request: { recipe_id: string };
     response: Ingredient[];
-  }
+  };
 
-  export interface CreateIngredient {
+  CreateIngredient: {
     request: Omit<Ingredient, 'id'>;
     response: Ingredient;
-  }
+  };
 
-  export interface UpdateIngredient {
+  UpdateIngredient: {
     request: { id: string } & Partial<Omit<Ingredient, 'id'>>;
     response: Ingredient;
-  }
+  };
 
-  export interface DeleteIngredient {
+  DeleteIngredient: {
     request: { id: string };
     response: { message: string };
-  }
-}
+  };
+};
 
 // Instruction endpoints (if needed for standalone operations)
-export namespace InstructionEndpoints {
-  export interface GetInstructions {
+export type InstructionEndpoints = {
+  GetInstructions: {
     request: { recipe_id: string };
     response: InstructionStep[];
-  }
+  };
 
-  export interface CreateInstruction {
+  CreateInstruction: {
     request: Omit<InstructionStep, 'id'>;
     response: InstructionStep;
-  }
+  };
 
-  export interface UpdateInstruction {
+  UpdateInstruction: {
     request: { id: string } & Partial<Omit<InstructionStep, 'id'>>;
     response: InstructionStep;
-  }
+  };
 
-  export interface DeleteInstruction {
+  DeleteInstruction: {
     request: { id: string };
     response: { message: string };
-  }
-}
+  };
+};
 
 // System endpoints
-export namespace SystemEndpoints {
-  export interface HealthCheck {
+export type SystemEndpoints = {
+  HealthCheck: {
     request: void;
     response: {
       status: string;
       timestamp: string;
       version?: string;
     };
-  }
+  };
 
-  export interface GetVersion {
+  GetVersion: {
     request: void;
     response: {
       version: string;
       build_date?: string;
       commit_hash?: string;
     };
-  }
-}
+  };
+};
 
 // Type helpers for extracting request/response types
 export type EndpointRequest<T> = T extends { request: infer R } ? R : never;
@@ -172,7 +172,7 @@ export type IngredientEndpoint = 'GetIngredients' | 'GetIngredient' | 'CreateIng
 export type InstructionEndpoint = 'GetInstructions' | 'GetInstruction' | 'CreateInstruction' | 'UpdateInstruction' | 'DeleteInstruction';
 export type SystemEndpoint = 'Health' | 'Version';
 
-export type ApiEndpoint = 
+export type ApiEndpoint =
   | `auth.${AuthEndpoint}`
   | `recipes.${RecipeEndpoint}`
   | `ingredients.${IngredientEndpoint}`

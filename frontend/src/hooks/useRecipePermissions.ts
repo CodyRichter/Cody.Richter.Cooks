@@ -2,16 +2,15 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { recipePermissionApi } from '../services/apiServices'
 import { useAuth } from '../contexts/AuthContext'
-import { 
-  RecipePermissionWithUser, 
-  UserRecipePermissions, 
-  PermissionRole 
+import {
+  RecipePermissionWithUser,
+  UserRecipePermissions,
 } from '../types/Permission'
 
 // Hook to fetch recipe permissions
 export const useRecipePermissions = (recipeId: string) => {
   const auth = useAuth()
-  
+
   return useQuery<RecipePermissionWithUser[]>({
     queryKey: ['recipe-permissions', recipeId],
     queryFn: () => recipePermissionApi.getRecipePermissions(recipeId),
@@ -25,7 +24,7 @@ export const useRecipePermissions = (recipeId: string) => {
 export const useUserRecipePermissions = (recipeId: string): UserRecipePermissions => {
   const auth = useAuth()
   const { data: permissions, isLoading, error } = useRecipePermissions(recipeId)
-  
+
   return useMemo(() => {
     // If user is not authenticated, they have no permissions
     if (!auth.isAuthenticated || !auth.user) {
@@ -35,7 +34,7 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
         userRole: null
       }
     }
-    
+
     // If we're still loading or there's an error, assume no permissions for safety
     if (isLoading || error) {
       return {
@@ -44,12 +43,12 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
         userRole: null
       }
     }
-    
+
     // Find current user's permission
     const userPermission = Array.isArray(permissions) ? permissions.find(
       (perm) => perm.user_username === auth.user?.username
     ) : undefined
-    
+
     if (!userPermission) {
       return {
         canEdit: false,
@@ -57,10 +56,10 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
         userRole: null
       }
     }
-    
+
     const isOwner = userPermission.role === 'owner'
     const isEditor = userPermission.role === 'editor'
-    
+
     return {
       canEdit: isOwner || isEditor,
       canDelete: isOwner, // Only owners can delete

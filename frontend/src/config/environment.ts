@@ -3,8 +3,8 @@ const getApiBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return process.env.NEXT_PUBLIC_API_BASE_URL
   }
-  
-  return process.env.NODE_ENV === 'production' 
+
+  return process.env.NODE_ENV === 'production'
     ? 'https://api.cooking.cody.richter.codes'
     : 'http://localhost:8000'
 }

@@ -5,10 +5,14 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.recipe_permission import RecipePermission, PermissionRole
+
 if TYPE_CHECKING:
     from app.models.user import User
 
-def get_user_recipe_permission(db: Session, user_id: str, recipe_id: str) -> Optional[RecipePermission]:
+
+def get_user_recipe_permission(
+    db: Session, user_id: str, recipe_id: str
+) -> Optional[RecipePermission]:
     """
     Get user's permission for a specific recipe.
 
@@ -20,16 +24,21 @@ def get_user_recipe_permission(db: Session, user_id: str, recipe_id: str) -> Opt
     Returns:
         RecipePermission object if user has permission, None otherwise
     """
-    return db.query(RecipePermission).filter(
-        and_(
-            RecipePermission.user_id == user_id,
-            RecipePermission.recipe_id == recipe_id
+    return (
+        db.query(RecipePermission)
+        .filter(
+            and_(
+                RecipePermission.user_id == user_id,
+                RecipePermission.recipe_id == recipe_id,
+            )
         )
-    ).first()
+        .first()
+    )
 
 
-def enforce_recipe_permissions(db: Session, user: "User", recipe_id: str,
-                               required_roles: List[PermissionRole]) -> RecipePermission:
+def enforce_recipe_permissions(
+    db: Session, user: "User", recipe_id: str, required_roles: List[PermissionRole]
+) -> RecipePermission:
     """
     Check if user has required permission for a recipe.
 
@@ -50,14 +59,13 @@ def enforce_recipe_permissions(db: Session, user: "User", recipe_id: str,
     if not permission:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recipe not found or access denied"
+            detail="Recipe not found or access denied",
         )
 
     if permission.role not in required_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions for this operation"
+            detail="Insufficient permissions for this operation",
         )
 
     return permission
-

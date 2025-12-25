@@ -103,7 +103,7 @@ export class ApiClient {
   async request<T>(endpoint: string, options: RequestInit & { skipAuth?: boolean } = {}): Promise<T> {
     const { skipAuth, ...fetchOptions } = options
     const url = `${this.baseUrl}${endpoint}`
-    
+
     let response = await fetch(url, {
       ...fetchOptions,
       headers: {

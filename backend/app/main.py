@@ -1,6 +1,7 @@
 """
 FastAPI application entry point with CORS configuration and route setup.
 """
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +15,7 @@ from app.handlers.recipes import router as recipes_router
 # Configure logging
 logging.basicConfig(
     level=logging.INFO if not settings.debug else logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
 logger = logging.getLogger(__name__)
@@ -27,9 +28,9 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Debug mode: {settings.debug}")
     logger.info(f"CORS origins: {settings.cors_origins_list}")
-    
+
     yield
-    
+
     # Shutdown
     logger.info(f"Shutting down {settings.app_name}")
 
@@ -42,7 +43,7 @@ app = FastAPI(
     debug=settings.debug,
     docs_url="/docs" if settings.debug else None,
     redoc_url="/redoc" if settings.debug else None,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configure CORS middleware
@@ -59,6 +60,7 @@ app.include_router(system_router)
 app.include_router(users_router)
 app.include_router(recipes_router)
 
+
 # Root endpoint
 @app.get("/", tags=["root"])
 async def root():
@@ -66,5 +68,7 @@ async def root():
     return {
         "message": f"Welcome to {settings.app_name}",
         "version": settings.app_version,
-        "docs_url": "/docs" if settings.debug else "Documentation disabled in production"
+        "docs_url": "/docs"
+        if settings.debug
+        else "Documentation disabled in production",
     }

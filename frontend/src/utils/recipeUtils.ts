@@ -1,4 +1,6 @@
-import Recipe from "@/types/Recipe";
+import Ingredient from "@/types/Ingredient";
+import InstructionStep from "@/types/InstructionStep";
+import { RecipeDetail } from "@/types/Recipe";
 
 /**
  * Converts a decimal number to a fractional representation and returns it as a string.
@@ -35,7 +37,7 @@ export function convertToFractionalRepresentation(candidate: number): string {
   }
 
   // Reconstruct the fraction string and add the prefix if necessary
-  let fractionString = `${closestNumerator}/${closestDenominator}`;
+  const fractionString = `${closestNumerator}/${closestDenominator}`;
 
   if (closestNumerator === 0 && closestDenominator === 1 && prefix > 0) {
     // If the closest fraction is 0/1, we return only the prefix
@@ -68,7 +70,7 @@ export function titleize(str: string): string {
  * @param recipe The recipe to check
  * @returns True if the recipe is valid, false otherwise
  */
-export function isRecipeValid(recipe: any): boolean {
+export function isRecipeValid(recipe: RecipeDetail): boolean {
   if (!recipe) {
     return false;
   }
@@ -85,13 +87,13 @@ export function isRecipeValid(recipe: any): boolean {
 
   // Check if all ingredients have a name and quantity
   const ingredientsValid = recipe.ingredients.every(
-    (ingredient: any) =>
+    (ingredient: Ingredient) =>
       !!ingredient.name && !!ingredient.quantity && !!ingredient.unit
   );
 
   // Check if all instructions have a step
   const instructionsValid = recipe.instructions.every(
-    (instruction: any) => !!instruction.title && !!instruction.description
+    (instruction: InstructionStep) => !!instruction.title && !!instruction.description
   );
 
   return baseFieldsValid && ingredientsValid && instructionsValid;

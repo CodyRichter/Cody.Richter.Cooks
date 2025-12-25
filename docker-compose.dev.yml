@@ -10,7 +10,7 @@ services:
       - ./backend:/app:cached
     ports:
       - "8000:8000"
-    
+
   database:
     ports:
       - "5432:5432"

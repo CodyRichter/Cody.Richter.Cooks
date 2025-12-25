@@ -15,7 +15,7 @@ export interface BaseError {
 export interface HttpErrorResponse extends BaseError {
   status: number;
   error: string;
-  details?: any;
+  details?: unknown;
 }
 
 // Validation error with field-specific errors
@@ -104,7 +104,7 @@ export interface ClientValidationError extends BaseError {
 }
 
 // Union type for all possible error responses
-export type ApiErrorResponse = 
+export type ApiErrorResponse =
   | HttpErrorResponse
   | ValidationErrorResponse
   | AuthErrorResponse
@@ -121,7 +121,7 @@ export type AppError = ApiErrorResponse | NetworkError | ClientValidationError;
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 // Error category for handling
-export type ErrorCategory = 
+export type ErrorCategory =
   | 'authentication'
   | 'authorization'
   | 'validation'
@@ -140,7 +140,7 @@ export interface EnhancedError extends BaseError {
   technical_message: string;
   suggested_action?: string;
   retry_count?: number;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 // Error handler configuration
@@ -168,7 +168,7 @@ export interface ErrorNotification {
 }
 
 // Error recovery strategies
-export type ErrorRecoveryStrategy = 
+export type ErrorRecoveryStrategy =
   | 'retry'
   | 'refresh_token'
   | 'redirect_login'
@@ -179,8 +179,8 @@ export type ErrorRecoveryStrategy =
 // Error recovery context
 export interface ErrorRecoveryContext {
   strategy: ErrorRecoveryStrategy;
-  retryFn?: () => Promise<any>;
-  fallbackData?: any;
+  retryFn?: () => Promise<unknown>;
+  fallbackData?: unknown;
   redirectUrl?: string;
   userActionRequired?: {
     title: string;

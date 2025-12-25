@@ -7,7 +7,7 @@ import {
 
 import InstructionStep from "@/types/InstructionStep";
 import React from "react";
-import Recipe, { RecipeDetail } from "@/types/Recipe";
+import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeInstruction from "./SortableRecipeInstruction";
 
 interface EditRecipeInstructionsProps {
