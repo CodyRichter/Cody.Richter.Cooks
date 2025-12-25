@@ -15,10 +15,12 @@ from app.handlers.users.impl_v1 import (
     change_password_internal,
 )
 from app.models.user import User
+from app.schemas.auth import (
+    AuthTokenResponse,
+    AuthTokenRefreshRequest,
+    AuthTokenRefreshResponse,
+)
 from app.schemas.user import (
-    TokenRefreshRequest,
-    TokenRefreshResponse,
-    TokenResponse,
     UserCreateSchema,
     UserLogin,
     UserResponseSchema,
@@ -53,7 +55,7 @@ async def register_user(
     return register_user_internal(user_data, request, db)
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=AuthTokenResponse)
 async def login_user(
     login_data: UserLogin, request: Request, db: Session = Depends(get_db)
 ):
@@ -138,9 +140,11 @@ async def change_password(
     return change_password_internal(change_password_data, request, current_user, db)
 
 
-@router.post("/refresh", response_model=TokenRefreshResponse)
+@router.post("/refresh", response_model=AuthTokenRefreshResponse)
 async def refresh_token(
-    refresh_data: TokenRefreshRequest, request: Request, db: Session = Depends(get_db)
+    refresh_data: AuthTokenRefreshRequest,
+    request: Request,
+    db: Session = Depends(get_db),
 ):
     """
     Refresh access token using a valid refresh token.

@@ -5,13 +5,9 @@ Recipe model for storing recipe information with rich content support.
 from sqlalchemy import Column, Integer, String, Text, DateTime, Index, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from typing import TYPE_CHECKING
 
 from app.models import Base
 from app.utils.uuid_utils import SecureIDGenerator
-
-if TYPE_CHECKING:
-    pass
 
 
 class Recipe(Base):

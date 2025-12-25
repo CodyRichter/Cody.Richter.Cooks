@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 
 from app.models.security_audit_log import SecurityEventType
 from app.models.user import User
+from app.schemas.auth import (
+    AuthTokenResponse,
+    AuthTokenRefreshRequest,
+    AuthTokenRefreshResponse,
+)
 from app.schemas.user import (
-    TokenRefreshRequest,
-    TokenRefreshResponse,
-    TokenResponse,
     UserCreateSchema,
     UserLogin,
     UserResponseSchema,
@@ -123,7 +125,7 @@ def register_user_internal(
 
 def login_user_internal(
     login_data: UserLogin, request: Request, db: Session
-) -> TokenResponse:
+) -> AuthTokenResponse:
     audit_logger = get_audit_logger(db)
 
     # Try to authenticate with username first
@@ -165,7 +167,7 @@ def login_user_internal(
         },
     )
 
-    return TokenResponse(
+    return AuthTokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
         token_type="bearer",
@@ -287,8 +289,8 @@ def change_password_internal(
 
 
 def refresh_token_internal(
-    refresh_data: TokenRefreshRequest, request: Request, db: Session
-) -> TokenRefreshResponse:
+    refresh_data: AuthTokenRefreshRequest, request: Request, db: Session
+) -> AuthTokenRefreshResponse:
     audit_logger = get_audit_logger(db)
 
     # Try to refresh the token and get user info
@@ -359,4 +361,4 @@ def refresh_token_internal(
         success=True,
     )
 
-    return TokenRefreshResponse(access_token=new_access_token, token_type="bearer")
+    return AuthTokenRefreshResponse(access_token=new_access_token, token_type="bearer")

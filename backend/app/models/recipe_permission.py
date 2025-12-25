@@ -13,14 +13,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from typing import TYPE_CHECKING
 import enum
 
 from app.models import Base
 from app.utils.uuid_utils import SecureIDGenerator
-
-if TYPE_CHECKING:
-    pass
 
 
 class PermissionRole(str, enum.Enum):

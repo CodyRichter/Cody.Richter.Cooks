@@ -4,13 +4,9 @@ Instruction model for recipe step-by-step instructions.
 
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, Index
 from sqlalchemy.orm import relationship
-from typing import TYPE_CHECKING
 
 from app.models import Base
 from app.utils.uuid_utils import SecureIDGenerator
-
-if TYPE_CHECKING:
-    pass
 
 
 class Instruction(Base):

@@ -8,9 +8,11 @@ from app.schemas.user import (
     UserCreateSchema,
     UserResponseSchema,
     UserLogin,
-    TokenResponse,
-    TokenRefreshRequest,
-    TokenRefreshResponse,
+)
+from app.schemas.auth import (
+    AuthTokenResponse,
+    AuthTokenRefreshRequest,
+    AuthTokenRefreshResponse,
 )
 from app.schemas.recipe import (
     RecipeCreate,
@@ -48,9 +50,9 @@ __all__ = [
     "UserCreateSchema",
     "UserResponseSchema",
     "UserLogin",
-    "TokenResponse",
-    "TokenRefreshRequest",
-    "TokenRefreshResponse",
+    "AuthTokenResponse",
+    "AuthTokenRefreshRequest",
+    "AuthTokenRefreshResponse",
     # Recipe schemas
     "RecipeDetail",
     "RecipeCreate",

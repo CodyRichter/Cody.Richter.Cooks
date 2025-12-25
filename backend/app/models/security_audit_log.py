@@ -5,14 +5,10 @@ Security audit log model for tracking authentication and security events.
 from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from typing import TYPE_CHECKING
 from enum import Enum
 
 from app.models import Base
 from app.utils.uuid_utils import SecureIDGenerator
-
-if TYPE_CHECKING:
-    pass
 
 
 class SecurityEventType(str, Enum):

@@ -71,25 +71,3 @@ class UserChangePassword(BaseModel):
     new_password: str = Field(
         ..., min_length=8, max_length=128, description="New user password"
     )
-
-
-class TokenResponse(BaseModel):
-    """Schema for authentication token responses."""
-
-    access_token: str = Field(..., description="JWT access token")
-    refresh_token: str = Field(..., description="JWT refresh token")
-    token_type: str = Field(default="bearer", description="Token type")
-    user: UserSchema = Field(..., description="User information")
-
-
-class TokenRefreshRequest(BaseModel):
-    """Schema for token refresh requests."""
-
-    refresh_token: str = Field(..., description="JWT refresh token")
-
-
-class TokenRefreshResponse(BaseModel):
-    """Schema for token refresh responses."""
-
-    access_token: str = Field(..., description="New JWT access token")
-    token_type: str = Field(default="bearer", description="Token type")

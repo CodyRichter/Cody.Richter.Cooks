@@ -5,13 +5,8 @@ User model for authentication and user management.
 from sqlalchemy import Column, String, DateTime, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from typing import TYPE_CHECKING
-
 from app.models import Base
 from app.utils.uuid_utils import SecureIDGenerator
-
-if TYPE_CHECKING:
-    pass
 
 
 class User(Base):

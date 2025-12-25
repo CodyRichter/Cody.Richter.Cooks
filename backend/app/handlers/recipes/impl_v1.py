@@ -17,7 +17,6 @@ from app.utils.helpers import enforce_recipe_permissions, get_user_recipe_permis
 def create_recipe_internal(
     recipe_data: RecipeCreate, current_user: User, db: Session
 ) -> RecipeDetail:
-    # Create the recipe
     db_recipe = Recipe(
         title=recipe_data.title,
         description=recipe_data.description,
@@ -29,7 +28,6 @@ def create_recipe_internal(
     db.add(db_recipe)
     db.flush()  # Flush to get the recipe ID
 
-    # Create ingredients
     if recipe_data.ingredients:
         for ingredient_data in recipe_data.ingredients:
             db_ingredient = Ingredient(
@@ -42,7 +40,6 @@ def create_recipe_internal(
             )
             db.add(db_ingredient)
 
-    # Create instructions
     if recipe_data.instructions:
         for instruction_data in recipe_data.instructions:
             db_instruction = Instruction(
@@ -54,7 +51,6 @@ def create_recipe_internal(
             )
             db.add(db_instruction)
 
-    # Create owner permission for the user
     owner_permission = RecipePermission(
         user_id=current_user.id, recipe_id=db_recipe.id, role=PermissionRole.OWNER
     )
@@ -69,7 +65,6 @@ def create_recipe_internal(
 def update_recipe_internal(
     recipe_id: str, recipe_data: RecipeDetail, current_user: User, db: Session
 ):
-    # Check if user has permission to edit this recipe
     enforce_recipe_permissions(
         db,
         current_user,
@@ -77,26 +72,20 @@ def update_recipe_internal(
         required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
     )
 
-    # Get the recipe
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if not recipe:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
         )
 
-    # Update recipe fields (excluding ingredients and instructions)
     update_data = recipe_data.model_dump(
         exclude_unset=True, exclude={"ingredients", "instructions"}
     )
     for field, value in update_data.items():
         setattr(recipe, field, value)
 
-    # Update ingredients if provided
     if recipe_data.ingredients is not None:
-        # Delete existing ingredients
         db.query(Ingredient).filter(Ingredient.recipe_id == recipe_id).delete()
-
-        # Create new ingredients
         for ingredient_data in recipe_data.ingredients:
             db_ingredient = Ingredient(
                 name=ingredient_data.name,
@@ -108,12 +97,8 @@ def update_recipe_internal(
             )
             db.add(db_ingredient)
 
-    # Update instructions if provided
     if recipe_data.instructions is not None:
-        # Delete existing instructions
         db.query(Instruction).filter(Instruction.recipe_id == recipe_id).delete()
-
-        # Create new instructions
         for instruction_data in recipe_data.instructions:
             db_instruction = Instruction(
                 title=instruction_data.title,
@@ -135,10 +120,8 @@ def delete_recipe_internal(
     current_user: User,
     db: Session,
 ):
-    # Check if user is the owner of this recipe
     enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
 
-    # Get the recipe
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if not recipe:
         raise HTTPException(
