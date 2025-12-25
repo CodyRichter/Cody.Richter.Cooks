@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, ReactNode, useCallback, useEffect, useRef } from 'react'
 import { User, UserRegistration, TokenResponse } from '../types/User'
 import { authApi } from '../services/apiServices'
 import { tokenStorageKey, refreshTokenStorageKey } from '../config/environment'
@@ -112,6 +112,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialAuthState)
+  const refreshPromiseRef = useRef<Promise<void> | null>(null)
 
   // Restore authentication state on app load
   useEffect(() => {
@@ -119,9 +120,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (typeof window === 'undefined') return
 
       const accessToken = localStorage.getItem(tokenStorageKey)
-      const refreshToken = localStorage.getItem(refreshTokenStorageKey)
+      const storedRefreshToken = localStorage.getItem(refreshTokenStorageKey)
 
-      if (!accessToken || !refreshToken) return
+      if (!accessToken || !storedRefreshToken) return
 
       try {
         // Try to get user profile to validate token
@@ -130,13 +131,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch {
         // If token is invalid, try to refresh
         try {
-          const tokenResponse = await authApi.refreshToken(refreshToken)
+          const tokenResponse = await authApi.refreshToken(storedRefreshToken)
           const user = await authApi.getProfile()
           dispatch({
             type: 'AUTH_SUCCESS',
             payload: {
               user,
-              tokens: tokenResponse
+              tokens: {
+                ...tokenResponse,
+                refresh_token: storedRefreshToken,
+                user
+              } as TokenResponse
             }
           })
         } catch {
@@ -199,7 +204,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authApi.logout()
     } catch (error) {
       // Continue with logout even if server call fails
-      console.warn('Server logout failed, continuing with local logout:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.warn(`Server logout failed: ${errorMessage}`, error)
     } finally {
       dispatch({ type: 'AUTH_LOGOUT' })
     }
@@ -208,26 +214,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Refresh token function
   const refreshToken = useCallback(async () => {
     if (typeof window === 'undefined') return
+    if (refreshPromiseRef.current) return refreshPromiseRef.current
 
-    const refreshTokenValue = localStorage.getItem(refreshTokenStorageKey)
-    if (!refreshTokenValue) {
-      dispatch({ type: 'AUTH_LOGOUT' })
-      return
-    }
+    refreshPromiseRef.current = (async () => {
+      const refreshTokenValue = localStorage.getItem(refreshTokenStorageKey)
+      if (!refreshTokenValue) {
+        dispatch({ type: 'AUTH_LOGOUT' })
+        return
+      }
+
+      try {
+        const tokenResponse = await authApi.refreshToken(refreshTokenValue)
+        const user = await authApi.getProfile()
+        dispatch({
+          type: 'AUTH_SUCCESS',
+          payload: {
+            user,
+            tokens: {
+              ...tokenResponse,
+              refresh_token: refreshTokenValue,
+              user
+            } as TokenResponse
+          }
+        })
+      } catch (error) {
+        dispatch({ type: 'AUTH_LOGOUT' })
+        throw error
+      }
+    })()
 
     try {
-      const tokenResponse = await authApi.refreshToken(refreshTokenValue)
-      const user = await authApi.getProfile()
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: {
-          user,
-          tokens: tokenResponse
-        }
-      })
-    } catch (error) {
-      dispatch({ type: 'AUTH_LOGOUT' })
-      throw error
+      await refreshPromiseRef.current
+    } finally {
+      refreshPromiseRef.current = null
     }
   }, [])
 

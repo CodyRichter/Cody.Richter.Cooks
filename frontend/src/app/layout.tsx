@@ -7,6 +7,19 @@ import { ColorSchemeScript } from "@mantine/core";
 import { Providers } from "./providers";
 import { AppLayout } from "./AppLayout";
 import type { Metadata } from "next";
+import { Inter, Playfair_Display } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-playfair",
+});
 
 export const metadata: Metadata = {
   title: "Cody Richter Cooks",
@@ -29,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
         <ColorSchemeScript />
       </head>

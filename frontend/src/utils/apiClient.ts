@@ -1,7 +1,6 @@
 import { apiBaseUrl, tokenStorageKey, refreshTokenStorageKey } from '../config/environment'
 
-export interface ApiError {
-  message: string
+export class ApiError extends Error {
   status: number
   code?: string
   details?: {
@@ -10,6 +9,24 @@ export interface ApiError {
     [key: string]: unknown
   } | null
   timestamp: string
+
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details: unknown = null,
+    timestamp: string = new Date().toISOString()
+  ) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.code = code
+    this.details = details as ApiError['details']
+    this.timestamp = timestamp
+
+    // Ensure the prototype is set correctly for instanceof checks
+    Object.setPrototypeOf(this, ApiError.prototype)
+  }
 }
 
 // Simple token manager
@@ -52,7 +69,17 @@ class TokenManager {
 
     if (!response.ok) {
       this.clearTokens()
-      throw new Error('Failed to refresh token')
+      let message = 'Failed to refresh token'
+      let details = null
+      try {
+        const errorData = await response.json()
+        message = errorData.message || errorData.detail || message
+        details = errorData
+      } catch {
+        // Use status text if JSON parsing fails
+        message = response.statusText || message
+      }
+      throw new ApiError(message, response.status, response.status.toString(), details)
     }
 
     const data = await response.json()
@@ -78,13 +105,12 @@ export class ApiClient {
       message = response.statusText || message
     }
 
-    return {
+    return new ApiError(
       message,
-      status: response.status,
-      code: response.status.toString(),
-      details,
-      timestamp: new Date().toISOString()
-    }
+      response.status,
+      response.status.toString(),
+      details
+    )
   }
 
   private getHeaders(skipAuth = false): HeadersInit {

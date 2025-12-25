@@ -9,7 +9,10 @@ import TokenRefreshManager from "../components/TokenRefreshManager";
 import { useState } from "react";
 
 const theme = createTheme({
-  fontFamily: "Nunito, sans-serif",
+  fontFamily: "var(--font-inter), sans-serif",
+  headings: {
+    fontFamily: "var(--font-playfair), serif",
+  },
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {

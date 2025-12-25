@@ -27,7 +27,8 @@ export const useTokenRefresh = () => {
         try {
           await refreshToken()
         } catch (error) {
-          console.error('Token refresh failed:', error)
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          console.error(`Token refresh failed: ${errorMessage}`, error)
         } finally {
           isRefreshingRef.current = false
         }

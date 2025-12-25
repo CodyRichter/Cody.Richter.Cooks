@@ -7,6 +7,7 @@ import {
   NavLink,
   Stack,
   TextInput,
+  Skeleton,
 } from "@mantine/core";
 import {
   IconArrowNarrowRight,
@@ -16,10 +17,9 @@ import {
 } from "@tabler/icons-react";
 import React, { useEffect, useRef, useState } from "react";
 
-import NavigationSkeleton from "./NavigationSkeleton";
 import { getOperatingSystem } from "@/utils/deviceUtils";
 import { recipeApi } from "@/services/apiServices";
-import { useFocusWithin } from "@mantine/hooks";
+import { useFocusWithin, useDebouncedValue } from "@mantine/hooks";
 import { useRouter, usePathname } from "next/navigation";
 import { RecipeListItem } from "@/types/Recipe";
 
@@ -56,11 +56,16 @@ export default function NavigationSidebar({
 }: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const os = getOperatingSystem();
+  const [os, setOs] = useState<string>("Unknown");
+
+  useEffect(() => {
+    setOs(getOperatingSystem());
+  }, []);
 
   const searchbarRef = useRef<HTMLInputElement>(null);
   const { focused: searchbarFocused } = useFocusWithin();
   const [searchText, setSearchText] = React.useState<string>("");
+  const [debouncedSearchText] = useDebouncedValue(searchText, 300);
 
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +74,11 @@ export default function NavigationSidebar({
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPrevPage, setHasPrevPage] = useState(false);
 
+  // Reset to page 1 when search text changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchText]);
+
   useEffect(() => {
     const loadRecipes = async () => {
       try {
@@ -76,7 +86,8 @@ export default function NavigationSidebar({
         setError(null);
         const response = await recipeApi.getRecipes({
           page: currentPage,
-          limit: 10
+          limit: 10,
+          q: debouncedSearchText || undefined
         });
 
         // Response is now a paginated response with metadata
@@ -93,7 +104,7 @@ export default function NavigationSidebar({
     };
 
     loadRecipes();
-  }, [currentPage]);
+  }, [currentPage, debouncedSearchText]);
 
   // Handle Focus Searchbar on Cmd/Ctrl + K
   useEffect(() => {
@@ -140,14 +151,6 @@ export default function NavigationSidebar({
     return pathname === `/recipes/view/${recipeId}`;
   };
 
-  if (isLoading) {
-    return <NavigationSkeleton />;
-  }
-
-  if (error) {
-    return <NavigationSkeleton />;
-  }
-
   return (
     <Stack justify="space-between" h="100%">
       <Stack gap={0} p="xs" mah="85%">
@@ -170,31 +173,49 @@ export default function NavigationSidebar({
 
         <Divider mt="md" mb="sm" color="#eee" />
 
-        {recipes.map((recipe: RecipeListItem) => (
-          <React.Fragment key={`sidebar-recipe-${recipe.id}`}>
-            <NavLink
-              w="100%"
-              miw="44px"
-              onClick={() => handleRecipeClick(recipe.id)}
-              label={recipe.title}
-              rightSection={
-                isRecipeActive(recipe.id) ? (
-                  <IconChefHatFilled size={20} color="#e2a478" />
-                ) : (
-                  <IconArrowNarrowRight size={20} color="gray" />
-                )
-              }
-              active={isRecipeActive(recipe.id)}
-              variant={isRecipeActive(recipe.id) ? "filled" : "subtle"}
-              className={
-                isRecipeActive(recipe.id)
-                  ? "activeSidebarRecipe"
-                  : "sidebarRecipe"
-              }
-            />
-            <Divider color="#eee" />
-          </React.Fragment>
-        ))}
+        {isLoading ? (
+          <Stack gap="md" mt="md">
+            {[...Array(10)].map((_, idx) => (
+              <Skeleton
+                h={22}
+                w="90%"
+                radius="sm"
+                key={`sidebar-skeleton-${idx}`}
+                ml="sm"
+              />
+            ))}
+          </Stack>
+        ) : error ? (
+           <div style={{ padding: 'var(--mantine-spacing-md)', color: 'var(--mantine-color-error)' }}>
+             {error}
+           </div>
+        ) : (
+          recipes.map((recipe: RecipeListItem) => (
+            <React.Fragment key={`sidebar-recipe-${recipe.id}`}>
+              <NavLink
+                w="100%"
+                miw="44px"
+                onClick={() => handleRecipeClick(recipe.id)}
+                label={recipe.title}
+                rightSection={
+                  isRecipeActive(recipe.id) ? (
+                    <IconChefHatFilled size={20} color="#e2a478" />
+                  ) : (
+                    <IconArrowNarrowRight size={20} color="gray" />
+                  )
+                }
+                active={isRecipeActive(recipe.id)}
+                variant={isRecipeActive(recipe.id) ? "filled" : "subtle"}
+                className={
+                  isRecipeActive(recipe.id)
+                    ? "activeSidebarRecipe"
+                    : "sidebarRecipe"
+                }
+              />
+              <Divider color="#eee" />
+            </React.Fragment>
+          ))
+        )}
       </Stack>
       <div>
         <Divider mb="md" color="#eee" />
