@@ -1,18 +1,27 @@
-from typing import List, Optional
-from sqlalchemy.orm import Session
+from fastapi import HTTPException, Request, status
 from sqlalchemy.exc import IntegrityError
-
-from fastapi import Depends, HTTPException, status, Request
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.user import User
-from app.schemas.user import UserResponseSchema, UserCreateSchema, UserUpdateSchema, UserLogin, TokenResponse, TokenRefreshRequest, TokenRefreshResponse
-from app.utils.auth import authenticate_user, create_access_token, create_refresh_token, refresh_access_token
-from app.utils.password_security import PasswordSecurity
-from app.utils.audit_logger import get_audit_logger
 from app.models.security_audit_log import SecurityEventType
+from app.models.user import User
+from app.schemas.user import (
+    TokenRefreshRequest,
+    TokenRefreshResponse,
+    TokenResponse,
+    UserCreateSchema,
+    UserLogin,
+    UserResponseSchema,
+    UserUpdateSchema,
+)
+from app.utils.audit_logger import get_audit_logger
+from app.utils.auth import (
+    authenticate_user,
+    create_access_token,
+    create_refresh_token,
+    refresh_access_token,
+)
+from app.utils.password_security import PasswordSecurity
 
 def register_user_internal(
     user_data: UserCreateSchema,

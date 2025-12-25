@@ -1,30 +1,28 @@
 """
 User API endpoints for registration, authentication, and profile management.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from app.core.database import get_db
 from app.handlers.users.impl_v1 import (
-    register_user_internal,
-    login_user_internal,
     get_user_profile_internal,
+    login_user_internal,
+    refresh_token_internal,
+    register_user_internal,
     update_user_profile_internal,
-    refresh_token_internal
 )
-from app.models.security_audit_log import SecurityEventType
 from app.models.user import User
 from app.schemas.user import (
-    UserLogin, UserResponseSchema, UserCreateSchema, UserUpdateSchema, UserSchema,
-    TokenResponse, TokenRefreshRequest, TokenRefreshResponse
+    TokenRefreshRequest,
+    TokenRefreshResponse,
+    TokenResponse,
+    UserCreateSchema,
+    UserLogin,
+    UserResponseSchema,
+    UserSchema,
 )
-from app.utils.auth import (
-    authenticate_user, create_access_token, create_refresh_token,
-    get_current_active_user, refresh_access_token
-)
-from app.utils.password_security import PasswordSecurity
-from app.utils.audit_logger import get_audit_logger
+from app.utils.auth import get_current_active_user
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
