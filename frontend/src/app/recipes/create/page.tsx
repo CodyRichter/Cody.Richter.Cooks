@@ -2,6 +2,7 @@
 
 import { Button, Group, Text, Container, Stack } from "@mantine/core";
 import React, { useState } from "react";
+import { IconPlus } from "@tabler/icons-react";
 
 import EditRecipe from "../../../components/recipes/edit/EditRecipe";
 import ProtectedRoute from "../../../components/auth/ProtectedRoute";
@@ -95,10 +96,18 @@ export default function CreateRecipe() {
 
           <Group justify="flex-end">
             <Button
+              size="lg"
+              radius="md"
+              color="orange"
+              variant="filled"
               w="200px"
+              leftSection={<IconPlus size={20} />}
               loading={isPending}
               disabled={disableCreateButton}
               onClick={handleCreateRecipe}
+              style={{
+                boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)',
+              }}
             >
               Create Recipe
             </Button>

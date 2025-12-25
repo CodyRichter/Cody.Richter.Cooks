@@ -1,10 +1,10 @@
 'use client';
 
-import { ActionIcon, Button, Group, Text, Container, Stack } from "@mantine/core";
+import { ActionIcon, Button, Group, Text, Container, Stack, Tooltip } from "@mantine/core";
 import { useState, useMemo } from "react";
 
 import EditRecipe from "../../../../components/recipes/edit/EditRecipe";
-import { IconChevronLeft } from "@tabler/icons-react";
+import { IconChevronLeft, IconDeviceFloppy } from "@tabler/icons-react";
 import { ApiErrorAlert } from "../../../../components/error-handling";
 import { RecipeDetail, RecipeUpdate } from "../../../../types/Recipe";
 import RecipeLoadingSkeleton from "../../../../components/recipes/view/RecipeLoadingSkeleton";
@@ -45,7 +45,7 @@ export default function EditRecipePage() {
   }, [auth.isAuthenticated, canEdit]);
 
   // Disable the edit button if the recipe is invalid or updating
-  const disableEditButton: boolean = !isRecipeValid(recipe) || isUpdating;
+  const disableEditButton: boolean = !recipe || !isRecipeValid(recipe) || isUpdating;
 
   // Handle back navigation with optimistic updates
   const handleBackClick = () => {
@@ -137,16 +137,19 @@ export default function EditRecipePage() {
   return (
     <Container size="xl" px="md">
       <Stack gap="lg">
-        <Group>
-          <ActionIcon
-            onClick={handleBackClick}
-            variant="subtle"
-            size="lg"
-            color="black"
-          >
-            <IconChevronLeft />
-          </ActionIcon>
-          <Text fw={700} size="xl">
+        <Group gap="sm">
+          <Tooltip label="Back to Recipe">
+            <ActionIcon
+              onClick={handleBackClick}
+              variant="light"
+              size="lg"
+              color="gray"
+              radius="md"
+            >
+              <IconChevronLeft size={20} />
+            </ActionIcon>
+          </Tooltip>
+          <Text fw={800} size="xl" style={{ letterSpacing: '-0.02em' }}>
             Edit Recipe
           </Text>
         </Group>
@@ -155,10 +158,18 @@ export default function EditRecipePage() {
 
         <Group justify="flex-end">
           <Button
+            size="lg"
+            radius="md"
+            color="orange"
+            variant="filled"
             w="200px"
+            leftSection={<IconDeviceFloppy size={20} />}
             loading={isUpdating}
             disabled={disableEditButton}
             onClick={handleSaveRecipe}
+            style={{
+              boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)',
+            }}
           >
             Save Recipe
           </Button>

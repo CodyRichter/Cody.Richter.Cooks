@@ -1,5 +1,4 @@
 import {
-  Accordion,
   ActionIcon,
   Button,
   Flex,
@@ -9,12 +8,14 @@ import {
   Text,
   TextInput,
   Textarea,
+  Paper,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconExclamationMark,
   IconGripVertical,
-  IconPencilExclamation,
   IconTrash,
+  IconNotes,
 } from "@tabler/icons-react";
 
 import { CSS } from "@dnd-kit/utilities";
@@ -34,131 +35,107 @@ export default function MobileSortableRecipeInstruction({
   index: number;
   setRecipe: (recipe: RecipeDetail) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: instructionStep.id,
     });
 
   return (
-    <Group
+    <Paper
       ref={setNodeRef}
+      p="sm"
+      radius="md"
+      withBorder
+      mb="sm"
+      shadow={isDragging ? "md" : "xs"}
       style={{
         transform: CSS.Transform.toString(
           transform ? { ...transform, x: 0 } : null
         ),
         transition: transition,
+        backgroundColor: isDragging ? 'var(--mantine-color-orange-0)' : 'var(--mantine-color-gray-0)',
+        zIndex: isDragging ? 100 : 1,
+        opacity: isDragging ? 0.9 : 1,
+        border: isDragging ? '1px solid var(--mantine-color-orange-4)' : undefined,
       }}
-      mt="sm"
-      mb="sm"
+      className="sortableItem"
     >
-      <ActionIcon
-        variant="subtle"
-        color="gray"
-        className="sortableMoveIcon"
-        {...attributes}
-        {...listeners}
-        style={{
-          zIndex: 10,
-          touchAction: "none",
-        }}
-      >
-        <IconGripVertical size={24} />
-      </ActionIcon>
-      <Stack
-        gap="sm"
-        style={{
-          width: "85%",
-        }}
-      >
-        <Accordion variant="separated">
-          <Accordion.Item value="instruction-details">
-            <Accordion.Control>
-              {instructionStep.title && instructionStep.description ? (
-                <Text>{instructionStep.title}</Text>
-              ) : (
-                <Group>
-                  <IconPencilExclamation size={20} color="red" />
-                  <Text c="red">Details Missing...</Text>
-                </Group>
-              )}
-            </Accordion.Control>
+      <Group align="flex-start" wrap="nowrap" gap="sm">
+        <Stack gap="xs" align="center" style={{ width: '32px' }}>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            className="sortableMoveIcon"
+            {...attributes}
+            {...listeners}
+            size="md"
+            style={{ touchAction: "none", cursor: isDragging ? 'grabbing' : 'grab' }}
+          >
+            <IconGripVertical size={20} />
+          </ActionIcon>
+          <Text fw={700} size="lg" c="orange.6" style={{ userSelect: 'none' }}>
+            {index + 1}
+          </Text>
+        </Stack>
 
-            <Accordion.Panel>
-              <TextInput
-                label="Title"
-                placeholder="Dice onions..."
-                value={instructionStep.title}
-                size="sm"
-                radius="md"
-                style={{ width: "100%" }}
-                withAsterisk
-                onChange={(e) => {
-                  const newInstructions = [...recipe.instructions];
-                  newInstructions[index].title = e.currentTarget.value;
-                  setRecipe({ ...recipe, instructions: newInstructions });
-                }}
-              />
+        <Stack gap="xs" style={{ flex: 1 }}>
+          <TextInput
+            placeholder="Step Title"
+            value={instructionStep.title}
+            size="sm"
+            radius="md"
+            variant="unstyled"
+            withAsterisk
+            styles={{ input: { fontSize: '1.1rem', fontWeight: 700, padding: 0 } }}
+            onChange={(e) => {
+              const newInstructions = [...recipe.instructions];
+              newInstructions[index].title = e.currentTarget.value;
+              setRecipe({ ...recipe, instructions: newInstructions });
+            }}
+          />
 
-              <Textarea
-                label="Description"
-                placeholder="Using a 10in chef's knife, cut the onions into small pieces..."
-                withAsterisk
-                autosize
-                size="sm"
-                radius="md"
-                style={{ width: "100%" }}
-                maxRows={8}
-                minRows={2}
-                mt="sm"
-                value={instructionStep.description}
-                onChange={(e) => {
-                  const newInstructions = [...recipe.instructions];
-                  newInstructions[index].description = e.currentTarget.value;
-                  setRecipe({ ...recipe, instructions: newInstructions });
-                }}
-              />
+          <Textarea
+            placeholder="Step description..."
+            withAsterisk
+            autosize
+            size="sm"
+            radius="md"
+            variant="unstyled"
+            minRows={2}
+            value={instructionStep.description}
+            leftSection={<IconNotes size="0.9rem" color="var(--mantine-color-gray-5)" />}
+            leftSectionProps={{ style: { alignItems: 'flex-start', paddingTop: '4px' } }}
+            styles={{ input: { paddingLeft: '28px' } }}
+            onChange={(e) => {
+              const newInstructions = [...recipe.instructions];
+              newInstructions[index].description = e.currentTarget.value;
+              setRecipe({ ...recipe, instructions: newInstructions });
+            }}
+          />
+        </Stack>
 
-              <Flex gap="sm" justify="flex-start" mt="sm">
-                <Popover position="bottom" withArrow trapFocus shadow="md">
-                  <Popover.Target>
-                    <Button
-                      variant="outline"
-                      color="red"
-                      size="xs"
-                      leftSection={<IconTrash size={18} />}
-                      style={{ width: "100%" }}
-                    >
-                      Delete
-                    </Button>
-                  </Popover.Target>
-                  <Popover.Dropdown>
-                    <Button
-                      color="red"
-                      onClick={() => {
-                        const newInstructions = [...recipe.instructions];
-                        newInstructions.splice(index, 1);
-                        setRecipe({ ...recipe, instructions: newInstructions });
-                      }}
-                      rightSection={
-                        <IconExclamationMark
-                          style={{ width: 20, height: 20 }}
-                        />
-                      }
-                      leftSection={
-                        <IconExclamationMark
-                          style={{ width: 20, height: 20 }}
-                        />
-                      }
-                    >
-                      Confirm Delete
-                    </Button>
-                  </Popover.Dropdown>
-                </Popover>
-              </Flex>
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion>
-      </Stack>
-    </Group>
+        <Popover position="bottom-end" withArrow trapFocus shadow="md">
+          <Popover.Target>
+            <ActionIcon variant="subtle" color="red" size="md">
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Popover.Target>
+          <Popover.Dropdown p="xs">
+            <Button
+              color="red"
+              size="xs"
+              onClick={() => {
+                const newInstructions = [...recipe.instructions];
+                newInstructions.splice(index, 1);
+                setRecipe({ ...recipe, instructions: newInstructions });
+              }}
+              leftSection={<IconExclamationMark size={14} />}
+            >
+              Delete
+            </Button>
+          </Popover.Dropdown>
+        </Popover>
+      </Group>
+    </Paper>
   );
 }

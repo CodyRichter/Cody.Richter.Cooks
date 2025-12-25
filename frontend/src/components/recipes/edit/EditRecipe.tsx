@@ -7,13 +7,17 @@ import {
   TextInput,
   NumberInput,
   Title,
+  Grid,
+  Tabs,
+  Box,
+  Badge,
 } from "@mantine/core";
 import React, { useState } from "react";
 
 import EditRecipeIngredients from "./ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "./instructions/EditRecipeInstructions";
 import EditRecipeTags from "./tags/EditRecipeTags";
-import { IconPlus, IconClock, IconUsers } from "@tabler/icons-react";
+import { IconPlus, IconClock, IconUsers, IconChefHat, IconListDetails, IconSettings } from "@tabler/icons-react";
 import { RecipeDetail } from "@/types/Recipe";
 import { memo, useCallback } from "react";
 
@@ -55,135 +59,199 @@ const EditRecipe = memo<EditRecipeProps>(({
   }, [recipe, setRecipe]);
 
   return (
-    <Paper
-      shadow="lg"
-      p="lg"
-      radius="md"
-      withBorder
-      style={{ borderLeft: "6px solid #e2a478" }}
-    >
-      <Stack gap="lg">
-        {/* Header Section */}
-        <Stack gap="sm">
-          {/* Recipe Title */}
-          <TextInput
-            label="Recipe Title"
-            size="md"
-            placeholder="French Onion Soup"
-            value={recipe.title}
-            withAsterisk
-            onChange={handleTitleChange}
-            styles={{
-              input: {
-                fontSize: '1.5rem',
-                fontWeight: 600,
-              }
-            }}
-          />
+    <Grid gutter="xl">
+      {/* Main Content Column */}
+      <Grid.Col span={{ base: 12, md: 8 }}>
+        <Stack gap="xl">
+          <Paper shadow="sm" p="xl" radius="md" withBorder>
+            <Stack gap="lg">
+              <TextInput
+                label="Recipe Title"
+                placeholder="Give your recipe a catchy name..."
+                size="xl"
+                variant="unstyled"
+                value={recipe.title}
+                withAsterisk
+                onChange={handleTitleChange}
+                styles={(theme) => ({
+                  input: {
+                    fontSize: '2.5rem',
+                    fontWeight: 800,
+                    padding: 0,
+                    color: theme.colors.orange[7],
+                    '&::placeholder': {
+                      color: theme.colors.gray[4],
+                    }
+                  },
+                  label: {
+                    fontSize: theme.fontSizes.sm,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    color: theme.colors.gray[5],
+                    marginBottom: 4,
+                  }
+                })}
+              />
 
-          {/* Recipe metadata */}
-          <Group gap="md">
-            <NumberInput
-              label="Cooking Time"
-              placeholder="30"
-              value={recipe.cooking_time || ''}
-              onChange={handleCookingTimeChange}
-              min={0}
-              max={1440}
-              step={5}
-              suffix=" minutes"
-              leftSection={<IconClock size="1rem" />}
-              style={{ flex: 1 }}
-            />
+              <Divider label="Short Description" labelPosition="left" />
 
-            <NumberInput
-              label="Serving Size"
-              placeholder="4"
-              value={recipe.serving_size || ''}
-              onChange={handleServingSizeChange}
-              min={1}
-              max={50}
-              suffix=" servings"
-              leftSection={<IconUsers size="1rem" />}
-              style={{ flex: 1 }}
-            />
-          </Group>
+              <Box>
+                <TipTapEditorWrapper
+                  description={description}
+                  setDescription={handleDescriptionChange}
+                />
+              </Box>
+            </Stack>
+          </Paper>
 
-          {/* Recipe Tags */}
-          <EditRecipeTags
-            recipe={recipe}
-            setRecipe={(updatedRecipe) => setRecipe(updatedRecipe as RecipeDetail)}
-          />
+          <Tabs defaultValue="ingredients" variant="pills" radius="md">
+            <Paper shadow="sm" radius="md" withBorder p="md">
+              <Stack gap="md">
+                <Tabs.List grow>
+                  <Tabs.Tab value="ingredients" leftSection={<IconListDetails size="1.2rem" />}>
+                    <Group gap="xs">
+                      Ingredients
+                      <Badge size="sm" variant="light" color="orange">
+                        {recipe.ingredients.length}
+                      </Badge>
+                    </Group>
+                  </Tabs.Tab>
+                  <Tabs.Tab value="instructions" leftSection={<IconChefHat size="1.2rem" />}>
+                    <Group gap="xs">
+                      Instructions
+                      <Badge size="sm" variant="light" color="orange">
+                        {recipe.instructions.length}
+                      </Badge>
+                    </Group>
+                  </Tabs.Tab>
+                </Tabs.List>
+
+                <Tabs.Panel value="ingredients" pt="md">
+                  <Stack gap="md">
+                    <Group justify="space-between" align="center">
+                      <Title order={3} size="h4" fw={600}>Ingredients</Title>
+                      <Button
+                        variant="light"
+                        color="orange"
+                        size="sm"
+                        radius="md"
+                        leftSection={<IconPlus size="1rem" />}
+                        onClick={() => {
+                          const newIngredients = [...recipe.ingredients];
+                          newIngredients.push({
+                            id: crypto.randomUUID(),
+                            quantity: 0,
+                            name: "",
+                            unit: "",
+                            subtext: "",
+                            order_index: newIngredients.length,
+                            recipe_id: recipe.id,
+                          });
+                          setRecipe({ ...recipe, ingredients: newIngredients });
+                        }}
+                      >
+                        Add Ingredient
+                      </Button>
+                    </Group>
+                    <EditRecipeIngredients recipe={recipe} setRecipe={setRecipe} />
+                  </Stack>
+                </Tabs.Panel>
+
+                <Tabs.Panel value="instructions" pt="md">
+                  <Stack gap="md">
+                    <Group justify="space-between" align="center">
+                      <Title order={3} size="h4" fw={600}>Instructions</Title>
+                      <Button
+                        variant="light"
+                        color="orange"
+                        size="sm"
+                        radius="md"
+                        leftSection={<IconPlus size="1rem" />}
+                        onClick={() => {
+                          const newInstructions = [...recipe.instructions];
+                          newInstructions.push({
+                            id: crypto.randomUUID(),
+                            title: "",
+                            description: "",
+                            step_number: newInstructions.length + 1,
+                            recipe_id: recipe.id,
+                          });
+                          setRecipe({ ...recipe, instructions: newInstructions });
+                        }}
+                      >
+                        Add Step
+                      </Button>
+                    </Group>
+                    <EditRecipeInstructions recipe={recipe} setRecipe={setRecipe} />
+                  </Stack>
+                </Tabs.Panel>
+              </Stack>
+            </Paper>
+          </Tabs>
         </Stack>
+      </Grid.Col>
 
-        <Divider />
+      {/* Sidebar Column */}
+      <Grid.Col span={{ base: 12, md: 4 }}>
+        <Stack gap="lg" pos="sticky" top={20}>
+          <Paper shadow="sm" p="xl" radius="md" withBorder style={{ borderTop: '4px solid orange' }}>
+            <Stack gap="lg">
+              <Group gap="xs" align="center">
+                <IconSettings size="1.2rem" style={{ color: 'gray' }} />
+                <Title order={3} size="h4" fw={600}>Recipe Details</Title>
+              </Group>
 
-        {/* Description Section */}
-        <Stack gap="sm">
-          <Title order={4}>Description</Title>
-          <TipTapEditorWrapper
-            description={description}
-            setDescription={handleDescriptionChange}
-          />
+              <Divider />
+
+              <NumberInput
+                label="Cooking Time"
+                placeholder="30"
+                value={recipe.cooking_time || ''}
+                onChange={handleCookingTimeChange}
+                min={0}
+                max={1440}
+                step={5}
+                suffix=" mins"
+                leftSection={<IconClock size="1.1rem" />}
+                variant="filled"
+                radius="md"
+              />
+
+              <NumberInput
+                label="Serving Size"
+                placeholder="4"
+                value={recipe.serving_size || ''}
+                onChange={handleServingSizeChange}
+                min={1}
+                max={50}
+                suffix=" servings"
+                leftSection={<IconUsers size="1.1rem" />}
+                variant="filled"
+                radius="md"
+              />
+
+              <Box>
+                <Title order={5} size="xs" mb="xs" c="dimmed">TAGS</Title>
+                <EditRecipeTags
+                  recipe={recipe}
+                  setRecipe={(updatedRecipe) => setRecipe(updatedRecipe as RecipeDetail)}
+                />
+              </Box>
+            </Stack>
+          </Paper>
+
+          {/* Desktop/Tablet Action Indicator or Help text */}
+          <Paper p="md" radius="md" bg="gray.0" withBorder style={{ borderStyle: 'dashed' }}>
+            <Stack gap="xs">
+              <Title order={6} c="gray.7">Quick Tips</Title>
+              <Box size="sm" c="gray.6" component="div" m={0} style={{ fontSize: '0.85rem' }}>
+                Use the tabs to switch between ingredients and instructions. Drag and drop items to reorder them easily.
+              </Box>
+            </Stack>
+          </Paper>
         </Stack>
-
-        {/* Ingredients Section */}
-        <Stack gap="sm">
-          <Group justify="space-between" align="center">
-            <Title order={4}>Ingredients</Title>
-            <Button
-              variant="outline"
-              size="sm"
-              leftSection={<IconPlus size="1rem" />}
-              onClick={() => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients.push({
-                  id: crypto.randomUUID(),
-                  quantity: 0,
-                  name: "",
-                  unit: "",
-                  subtext: "",
-                  order_index: newIngredients.length,
-                  recipe_id: recipe.id,
-                });
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
-            >
-              Add Ingredient
-            </Button>
-          </Group>
-
-          <EditRecipeIngredients recipe={recipe} setRecipe={setRecipe} />
-        </Stack>
-
-        {/* Instructions Section */}
-        <Stack gap="sm">
-          <Group justify="space-between" align="center">
-            <Title order={4}>Instructions</Title>
-            <Button
-              variant="outline"
-              size="sm"
-              leftSection={<IconPlus size="1rem" />}
-              onClick={() => {
-                const newInstructions = [...recipe.instructions];
-                newInstructions.push({
-                  id: crypto.randomUUID(),
-                  title: "",
-                  description: "",
-                  step_number: newInstructions.length + 1,
-                  recipe_id: recipe.id,
-                });
-                setRecipe({ ...recipe, instructions: newInstructions });
-              }}
-            >
-              Add Step
-            </Button>
-          </Group>
-
-          <EditRecipeInstructions recipe={recipe} setRecipe={setRecipe} />
-        </Stack>
-      </Stack>
-    </Paper>
+      </Grid.Col>
+    </Grid>
   );
 });
 

@@ -8,6 +8,7 @@ import {
 import Ingredient from "@/types/Ingredient";
 import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeIngredient from "./SortableRecipeIngredient";
+import { Grid, Text, Group, Box } from "@mantine/core";
 
 interface EditRecipeIngredientsProps {
   recipe: RecipeDetail;
@@ -45,21 +46,36 @@ export default function EditRecipeIngredients({
   };
 
   return (
-    <DndContext onDragEnd={reorderIngredients}>
-      <SortableContext
-        items={recipe.ingredients}
-        strategy={verticalListSortingStrategy}
-      >
-        {recipe.ingredients.map((ingredient: Ingredient, index: number) => (
-          <SortableRecipeIngredient
-            key={ingredient.id}
-            recipe={recipe}
-            ingredient={ingredient}
-            index={index}
-            setRecipe={setRecipe}
-          />
-        ))}
-      </SortableContext>
-    </DndContext>
+    <Box>
+      {recipe.ingredients.length > 0 && (
+        <Grid gutter="xs" px="lg" mb="xs" style={{ paddingLeft: '64px', paddingRight: '120px' }}>
+          <Grid.Col span={2}>
+            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Qty</Text>
+          </Grid.Col>
+          <Grid.Col span={3}>
+            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Unit</Text>
+          </Grid.Col>
+          <Grid.Col span={7}>
+            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Ingredient Name</Text>
+          </Grid.Col>
+        </Grid>
+      )}
+      <DndContext onDragEnd={reorderIngredients}>
+        <SortableContext
+          items={recipe.ingredients}
+          strategy={verticalListSortingStrategy}
+        >
+          {recipe.ingredients.map((ingredient: Ingredient, index: number) => (
+            <SortableRecipeIngredient
+              key={ingredient.id}
+              recipe={recipe}
+              ingredient={ingredient}
+              index={index}
+              setRecipe={setRecipe}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
+    </Box>
   );
 }

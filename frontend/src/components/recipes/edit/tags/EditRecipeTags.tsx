@@ -81,9 +81,10 @@ export default function EditRecipeTags({
             style={{ flex: 1 }}
           />
           <Button
-            variant="outline"
+            variant="subtle"
             color="gray"
             size="sm"
+            radius="md"
             onClick={() => {
               setIsAddingTag(false);
               setNewTagValue("");
@@ -92,7 +93,10 @@ export default function EditRecipeTags({
             Cancel
           </Button>
           <Button
+            variant="filled"
+            color="orange"
             size="sm"
+            radius="md"
             onClick={addTag}
             disabled={!newTagValue.trim()}
           >
@@ -105,8 +109,10 @@ export default function EditRecipeTags({
             Tags:
           </Text>
           <Button
-            variant="subtle"
+            variant="light"
+            color="orange"
             size="xs"
+            radius="md"
             leftSection={<IconPlus size="0.8rem" />}
             onClick={() => setIsAddingTag(true)}
           >
