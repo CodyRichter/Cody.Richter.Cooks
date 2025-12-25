@@ -65,7 +65,7 @@ export default function ViewRecipe() {
             {/* Header Section */}
             <Group justify="space-between" align="flex-start">
               <Stack gap="sm" style={{ flex: 1 }}>
-                <Title order={2}>{recipe.title}</Title>
+                <Title order={2} fw={700}>{recipe.title}</Title>
 
                 {/* Recipe metadata */}
                 <Group gap="md">

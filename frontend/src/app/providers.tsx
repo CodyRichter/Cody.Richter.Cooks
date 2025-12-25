@@ -11,7 +11,7 @@ import { useState } from "react";
 const theme = createTheme({
   fontFamily: "var(--font-inter), sans-serif",
   headings: {
-    fontFamily: "var(--font-playfair), serif",
+    fontFamily: "var(--font-inter), sans-serif",
   },
 });
 
