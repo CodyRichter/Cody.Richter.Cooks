@@ -2,8 +2,8 @@
  * Error handling utilities for API responses and form validation
  */
 
-import { ApiError } from './apiClient'
-import { ValidationError } from './validation'
+import { ApiError } from '@/utils/apiClient'
+import { ValidationError } from '@/utils/validation'
 
 // Extract field errors from API error response
 export const extractFieldErrors = (error: ApiError): Record<string, string[]> => {

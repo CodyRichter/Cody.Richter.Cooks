@@ -5,10 +5,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import Ingredient from "@/types/Ingredient";
+import { Ingredient } from "@/types/Ingredient";
 import { RecipeDetail } from "@/types/Recipe";
-import SortableRecipeIngredient from "./SortableRecipeIngredient";
-import { Grid, Text, Group, Box } from "@mantine/core";
+import SortableRecipeIngredient from "@/components/recipes/edit/ingredients/SortableRecipeIngredient";
+import { Grid, Text, Box } from "@mantine/core";
 
 interface EditRecipeIngredientsProps {
   recipe: RecipeDetail;

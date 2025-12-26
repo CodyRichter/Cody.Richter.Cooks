@@ -13,7 +13,7 @@ import {
   Anchor,
 } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 

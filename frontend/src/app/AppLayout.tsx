@@ -2,8 +2,8 @@
 
 import { AppShell } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import NavigationHeader from "../components/navigation/header/NavigationHeader";
-import NavigationSidebar from "../components/navigation/sidebar/NavigationSidebar";
+import NavigationHeader from "@/components/navigation/header/NavigationHeader";
+import NavigationSidebar from "@/components/navigation/sidebar/NavigationSidebar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();

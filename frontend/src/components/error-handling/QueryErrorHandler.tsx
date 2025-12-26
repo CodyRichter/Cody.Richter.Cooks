@@ -1,7 +1,7 @@
 import React from 'react';
 import { UseQueryResult } from '@tanstack/react-query';
-import ApiErrorAlert from './ApiErrorAlert';
-import { ApiError } from '../../utils/apiClient';
+import ApiErrorAlert from '@/components/error-handling/ApiErrorAlert';
+import { ApiError } from '@/utils/apiClient';
 
 interface QueryErrorHandlerProps<T> {
     query: UseQueryResult<T, ApiError | Error>;

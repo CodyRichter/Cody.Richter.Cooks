@@ -1,7 +1,6 @@
 import {
   ActionIcon,
   Button,
-  Flex,
   Group,
   NumberInput,
   Popover,
@@ -9,20 +8,17 @@ import {
   Text,
   TextInput,
   Paper,
-  Tooltip,
 } from "@mantine/core";
 import {
   IconExclamationMark,
   IconGripVertical,
   IconInfoCircle,
   IconTrash,
-  IconScale,
-  IconToolsKitchen2,
 } from "@tabler/icons-react";
 import React from "react";
 
 import { CSS } from "@dnd-kit/utilities";
-import Ingredient from "@/types/Ingredient";
+import { Ingredient } from "@/types/Ingredient";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 

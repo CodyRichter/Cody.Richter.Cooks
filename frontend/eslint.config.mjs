@@ -12,6 +12,19 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
     ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*", "../*"],
+              message: "Please use absolute imports with @/ instead of relative imports.",
+            },
+          ],
+        },
+      ],
+    },
   },
 ];
 

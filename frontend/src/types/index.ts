@@ -3,10 +3,10 @@
  */
 
 // Core entity types
-export type { User } from './User';
-export type { default as Recipe } from './Recipe';
-export type { default as Ingredient } from './Ingredient';
-export type { default as InstructionStep } from './InstructionStep';
+export type { User } from '@/types/User';
+export type { Recipe } from '@/types/Recipe';
+export type { Ingredient } from '@/types/Ingredient';
+export type { InstructionStep } from '@/types/InstructionStep';
 
 // User types
 export type {
@@ -17,7 +17,7 @@ export type {
   TokenRefreshRequest,
   TokenRefreshResponse,
   UserRegistration, // Legacy compatibility
-} from './User';
+} from '@/types/User';
 
 // Recipe types
 export type {
@@ -30,7 +30,7 @@ export type {
   RecipeResponse,
   RecipeDetailResponse,
   RecipeSearchParams,
-} from './Recipe';
+} from '@/types/Recipe';
 
 // Permission types
 export type {
@@ -44,7 +44,7 @@ export type {
   GrantPermissionRequest,
   RevokePermissionRequest,
   UserRecipePermissions
-} from './Permission';
+} from '@/types/Permission';
 
 // API types
 export type {
@@ -60,7 +60,7 @@ export type {
   RequestConfig,
   CacheConfig,
   ApiRequestOptions,
-} from './api';
+} from '@/types/api';
 
 // Endpoint types
 export type {
@@ -77,7 +77,7 @@ export type {
   InstructionEndpoint,
   SystemEndpoint,
   ApiEndpoint,
-} from './endpoints';
+} from '@/types/endpoints';
 
 // Validation types
 export type {
@@ -87,7 +87,7 @@ export type {
   FieldError,
   FormValidationState,
   HtmlValidationOptions,
-} from './validation';
+} from '@/types/validation';
 
 export {
   UserValidationSchemas,
@@ -96,7 +96,7 @@ export {
   InstructionValidationSchema,
   DefaultHtmlValidationOptions,
   SearchValidationSchema,
-} from './validation';
+} from '@/types/validation';
 
 // Error types
 export type {
@@ -119,7 +119,7 @@ export type {
   ErrorNotification,
   ErrorRecoveryStrategy,
   ErrorRecoveryContext,
-} from './errors';
+} from '@/types/errors';
 
 // Constants
-export * from './constants';
+export * from '@/types/constants';

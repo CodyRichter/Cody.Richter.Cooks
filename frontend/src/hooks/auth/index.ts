@@ -1,2 +1,2 @@
 // Authentication hooks exports
-export { useAuth, usePermissions } from '../useAuth'
+export { useAuth, usePermissions } from '@/hooks/useAuth'

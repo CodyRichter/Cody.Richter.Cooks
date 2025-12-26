@@ -1,6 +1,6 @@
 import React from 'react'
 import { SimpleGrid } from '@mantine/core'
-import { RecipeCardSkeleton } from './RecipeCardSkeleton'
+import { RecipeCardSkeleton } from '@/components/loading/RecipeCardSkeleton'
 
 interface RecipeListSkeletonProps {
   count?: number

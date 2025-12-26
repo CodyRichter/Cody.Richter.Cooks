@@ -4,8 +4,8 @@ import "@mantine/tiptap/styles.css";
 import "@/styles/styles.css";
 
 import { ColorSchemeScript } from "@mantine/core";
-import { Providers } from "./providers";
-import { AppLayout } from "./AppLayout";
+import { Providers } from "@/app/providers";
+import { AppLayout } from "@/app/AppLayout";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 

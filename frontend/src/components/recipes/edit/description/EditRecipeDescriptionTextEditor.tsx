@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/react";
 import { RichTextEditor } from "@mantine/tiptap";
-import TextEditorImageUploader from "./TextEditorImageUploader";
+import TextEditorImageUploader from "@/components/recipes/edit/description/TextEditorImageUploader";
 import { useMediaQuery } from "@mantine/hooks";
 
 export default function EditRecipeDescriptionTextEditor({

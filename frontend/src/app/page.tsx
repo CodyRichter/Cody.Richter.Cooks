@@ -17,10 +17,10 @@ import {
 
 import { IconSearch, IconAlertCircle } from "@tabler/icons-react";
 import React, { useState } from "react";
-import RecipePreviewCard from "../components/recipes/preview/RecipePreviewCard";
+import RecipePreviewCard from "@/components/recipes/preview/RecipePreviewCard";
 import { useMediaQuery } from "@mantine/hooks";
-import { useRecipeSearch, useRecipes } from "../hooks/useRecipes";
-import { RecipeListSkeleton } from "../components/loading";
+import { useRecipeSearch, useRecipes } from "@/hooks/useRecipes";
+import { RecipeListSkeleton } from "@/components/loading";
 import { useCallback, useMemo } from "react";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 

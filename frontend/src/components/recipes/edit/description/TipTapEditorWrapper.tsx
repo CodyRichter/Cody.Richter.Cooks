@@ -5,9 +5,9 @@ import StarterKit from "@tiptap/starter-kit";
 import SubScript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextEditorImageExtension } from "./TextEditorTiptapExtension";
+import { TextEditorImageExtension } from "@/components/recipes/edit/description/TextEditorTiptapExtension";
 import Underline from "@tiptap/extension-underline";
-import EditRecipeDescriptionTextEditor from "./EditRecipeDescriptionTextEditor";
+import EditRecipeDescriptionTextEditor from "@/components/recipes/edit/description/EditRecipeDescriptionTextEditor";
 
 interface TipTapEditorWrapperProps {
     description: string;

@@ -14,15 +14,15 @@ import {
 } from "@mantine/core";
 import React, { useState } from "react";
 
-import EditRecipeIngredients from "./ingredients/EditRecipeIngredients";
-import EditRecipeInstructions from "./instructions/EditRecipeInstructions";
-import EditRecipeTags from "./tags/EditRecipeTags";
+import EditRecipeIngredients from "@/components/recipes/edit/ingredients/EditRecipeIngredients";
+import EditRecipeInstructions from "@/components/recipes/edit/instructions/EditRecipeInstructions";
+import EditRecipeTags from "@/components/recipes/edit/tags/EditRecipeTags";
 import { IconPlus, IconClock, IconUsers, IconChefHat, IconListDetails, IconSettings } from "@tabler/icons-react";
 import { RecipeDetail } from "@/types/Recipe";
 import { memo, useCallback } from "react";
 
 // Import TipTap editor directly - Next.js handles code splitting
-import TipTapEditorWrapper from "./description/TipTapEditorWrapper";
+import TipTapEditorWrapper from "@/components/recipes/edit/description/TipTapEditorWrapper";
 
 interface EditRecipeProps {
   recipe: RecipeDetail;

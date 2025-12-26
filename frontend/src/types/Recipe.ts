@@ -1,7 +1,7 @@
-import Ingredient from "./Ingredient";
-import InstructionStep from "./InstructionStep";
+import { Ingredient } from "@/types/Ingredient";
+import { InstructionStep } from "@/types/InstructionStep";
 
-export default interface Recipe {
+export interface Recipe {
   id: string;
   title: string;
   description?: string;

@@ -1,7 +1,6 @@
-import DesktopSortableRecipeIngredient from "./DesktopSortableRecipeIngredient";
-import Ingredient from "@/types/Ingredient";
-import MobileSortableRecipeIngredient from "./MobileSortableRecipeIngredient";
-import React from "react";
+import DesktopSortableRecipeIngredient from "@/components/recipes/edit/ingredients/DesktopSortableRecipeIngredient";
+import { Ingredient } from "@/types/Ingredient";
+import MobileSortableRecipeIngredient from "@/components/recipes/edit/ingredients/MobileSortableRecipeIngredient";
 import { RecipeDetail } from "@/types/Recipe";
 import { useMediaQuery } from "@mantine/hooks";
 

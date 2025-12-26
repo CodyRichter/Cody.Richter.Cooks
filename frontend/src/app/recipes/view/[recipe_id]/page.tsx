@@ -6,17 +6,17 @@ import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 
 import { Button } from "@mantine/core";
-import DeleteRecipeModal from "../../../../components/recipes/delete/DeleteRecipeModal";
-import RecipeIngredientCard from "../../../../components/recipes/view/RecipeIngredientCard";
-import RecipeInstructionsCard from "../../../../components/recipes/view/RecipeInstructionsCard";
-import RecipeLoadingSkeleton from "../../../../components/recipes/view/RecipeLoadingSkeleton";
-import { ApiErrorAlert } from "../../../../components/error-handling";
-import { titleize } from "../../../../utils/recipeUtils";
-import { useAuth } from "../../../../contexts/AuthContext";
+import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
+import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard";
+import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
+import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
+import { ApiErrorAlert } from "@/components/error-handling";
+import { titleize } from "@/utils/recipeUtils";
+import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
-import { useAppNavigation } from "../../../../hooks/useAppNavigation";
-import { useRecipe } from "../../../../hooks/useRecipes";
-import { useUserRecipePermissions } from "../../../../hooks/useRecipePermissions";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { useRecipe } from "@/hooks/useRecipes";
+import { useUserRecipePermissions } from "@/hooks/useRecipePermissions";
 
 export default function ViewRecipe() {
   const auth = useAuth();

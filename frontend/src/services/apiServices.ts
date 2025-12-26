@@ -1,7 +1,7 @@
-import { apiClient } from '../utils/apiClient'
-import { createApiService } from '../utils/createApiService'
-import { User, UserRegistration, TokenResponse, LoginRequest, UserUpdate, TokenRefreshResponse } from '../types/User'
-import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipeSearchParams } from '../types/Recipe'
+import { apiClient } from '@/utils/apiClient'
+import { createApiService } from '@/utils/createApiService'
+import { User, UserRegistration, TokenResponse, LoginRequest, UserUpdate, TokenRefreshResponse } from '@/types/User'
+import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipeSearchParams } from '@/types/Recipe'
 
 // Auth API - specialized due to different patterns
 export const authApi = {

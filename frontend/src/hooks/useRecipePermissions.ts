@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { recipePermissionApi } from '../services/apiServices'
-import { useAuth } from '../contexts/AuthContext'
+import { recipePermissionApi } from '@/services/apiServices'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   RecipePermissionWithUser,
   UserRecipePermissions,
-} from '../types/Permission'
+} from '@/types/Permission'
 
 // Hook to fetch recipe permissions
 export const useRecipePermissions = (recipeId: string) => {

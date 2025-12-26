@@ -1,6 +1,6 @@
-import DesktopSortableRecipeInstruction from "./DesktopSortableRecipeInstruction";
-import InstructionStep from "@/types/InstructionStep";
-import MobileSortableRecipeInstruction from "./MobileSortableRecipeInstruction";
+import DesktopSortableRecipeInstruction from "@/components/recipes/edit/instructions/DesktopSortableRecipeInstruction";
+import { InstructionStep } from "@/types/InstructionStep";
+import MobileSortableRecipeInstruction from "@/components/recipes/edit/instructions/MobileSortableRecipeInstruction";
 import React from "react";
 import { RecipeDetail } from "@/types/Recipe";
 import { useMediaQuery } from "@mantine/hooks";

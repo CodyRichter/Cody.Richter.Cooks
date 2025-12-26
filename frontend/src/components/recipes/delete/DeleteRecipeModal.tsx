@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
-import { useDeleteRecipe } from "../../../hooks/useRecipes";
+import { useDeleteRecipe } from "@/hooks/useRecipes";
 
 export default function DeleteRecipeModal({
   recipeTitle,

@@ -1,5 +1,5 @@
 import React from 'react'
-import { useTokenRefresh } from '../hooks/useTokenRefresh'
+import { useTokenRefresh } from '@/hooks/useTokenRefresh'
 
 interface TokenRefreshManagerProps {
     children: React.ReactNode

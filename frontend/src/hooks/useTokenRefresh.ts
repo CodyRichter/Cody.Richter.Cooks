@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { getAccessToken, isTokenExpiringSoon } from '../utils/auth'
+import { useAuth } from '@/contexts/AuthContext'
+import { getAccessToken, isTokenExpiringSoon } from '@/utils/auth'
 
 export const useTokenRefresh = () => {
   const { refreshToken, isAuthenticated } = useAuth()

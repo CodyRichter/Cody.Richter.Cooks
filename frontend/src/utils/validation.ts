@@ -7,8 +7,8 @@ import {
   RecipeUpdate,
   IngredientForRecipe,
   InstructionForRecipe
-} from '../types/Recipe'
-import { UserCreate, UserUpdate } from '../types/User'
+} from '@/types/Recipe'
+import { UserCreate, UserUpdate } from '@/types/User'
 
 export interface ValidationError {
   field: string

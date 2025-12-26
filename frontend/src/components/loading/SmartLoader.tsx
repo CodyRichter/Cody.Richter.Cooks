@@ -1,8 +1,8 @@
 import React from 'react'
-import { RecipeCardSkeleton } from './RecipeCardSkeleton'
-import { RecipeDetailSkeleton } from './RecipeDetailSkeleton'
-import { RecipeListSkeleton } from './RecipeListSkeleton'
-import { ProgressiveLoader } from './ProgressiveLoader'
+import { RecipeCardSkeleton } from '@/components/loading/RecipeCardSkeleton'
+import { RecipeDetailSkeleton } from '@/components/loading/RecipeDetailSkeleton'
+import { RecipeListSkeleton } from '@/components/loading/RecipeListSkeleton'
+import { ProgressiveLoader } from '@/components/loading/ProgressiveLoader'
 import { Center, Loader, Text, Stack } from '@mantine/core'
 
 interface SmartLoaderProps {

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Center, Loader } from '@mantine/core'
 
 interface ProtectedRouteProps {

@@ -11,17 +11,17 @@ import {
   TokenResponse,
   TokenRefreshRequest,
   TokenRefreshResponse
-} from './User';
+} from '@/types/User';
 import {
   RecipeCreate,
   RecipeUpdate,
   RecipeListItem,
   RecipeSearchParams,
   RecipeDetailResponse
-} from './Recipe';
-import Ingredient from './Ingredient';
-import InstructionStep from './InstructionStep';
-import { PaginatedResponse } from './api';
+} from '@/types/Recipe';
+import { Ingredient } from '@/types/Ingredient';
+import { InstructionStep } from '@/types/InstructionStep';
+import { PaginatedResponse } from '@/types/api';
 
 // Authentication endpoints
 export type AuthEndpoints = {

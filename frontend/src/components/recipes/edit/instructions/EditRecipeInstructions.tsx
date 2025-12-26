@@ -5,10 +5,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import InstructionStep from "@/types/InstructionStep";
+import { InstructionStep } from "@/types/InstructionStep";
 import React from "react";
 import { RecipeDetail } from "@/types/Recipe";
-import SortableRecipeInstruction from "./SortableRecipeInstruction";
+import SortableRecipeInstruction from "@/components/recipes/edit/instructions/SortableRecipeInstruction";
 
 interface EditRecipeInstructionsProps {
   recipe: RecipeDetail;

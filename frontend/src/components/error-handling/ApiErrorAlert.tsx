@@ -3,7 +3,7 @@
 import React from "react";
 import { Alert, Button, Stack, Text } from "@mantine/core";
 import { IconAlertTriangle, IconRefresh, IconError404, IconLockX, IconWifi } from "@tabler/icons-react";
-import { ApiError } from "../../utils/apiClient";
+import { ApiError } from "@/types/api";
 
 interface ApiErrorAlertProps {
     error: ApiError | Error | null;

@@ -1,8 +1,8 @@
 import { Card, Text, Badge, Group, Stack, Box, ThemeIcon } from "@mantine/core";
 import { IconClock, IconUsers, IconChefHat } from "@tabler/icons-react";
-import { useAppNavigation } from "../../../hooks/useAppNavigation";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { memo, useCallback, useMemo } from "react";
-import { RecipeListItem } from "../../../types/Recipe";
+import { RecipeListItem } from "@/types/Recipe";
 
 interface RecipePreviewCardProps {
   recipe: RecipeListItem;

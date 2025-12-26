@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RecipeCreate, RecipeUpdate, RecipeSearchParams } from '../types/Recipe'
-import { recipeApi } from '../services/apiServices'
+import { RecipeCreate, RecipeUpdate, RecipeSearchParams } from '@/types/Recipe'
+import { recipeApi } from '@/services/apiServices'
 
 // Custom debounce hook
 const useDebounce = <T>(value: T, delay: number): T => {

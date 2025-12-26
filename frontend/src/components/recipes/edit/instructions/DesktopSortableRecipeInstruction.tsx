@@ -1,14 +1,12 @@
 import {
   ActionIcon,
   Button,
-  Flex,
   Group,
   Popover,
   TextInput,
   Textarea,
   Paper,
   Text,
-  Badge,
   Tooltip,
   Stack,
 } from "@mantine/core";
@@ -16,13 +14,11 @@ import {
   IconExclamationMark,
   IconGripVertical,
   IconTrash,
-  IconClock,
   IconNotes,
 } from "@tabler/icons-react";
 
 import { CSS } from "@dnd-kit/utilities";
-import InstructionStep from "@/types/InstructionStep";
-import React from "react";
+import { InstructionStep } from "@/types/InstructionStep";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 

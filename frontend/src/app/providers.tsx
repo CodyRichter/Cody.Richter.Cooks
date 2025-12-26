@@ -3,9 +3,9 @@
 import { MantineProvider, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "../contexts/AuthContext";
-import GlobalErrorBoundary from "../components/error-handling/GlobalErrorBoundary";
-import TokenRefreshManager from "../components/TokenRefreshManager";
+import { AuthProvider } from "@/contexts/AuthContext";
+import GlobalErrorBoundary from "@/components/error-handling/GlobalErrorBoundary";
+import TokenRefreshManager from "@/components/TokenRefreshManager";
 import { useState } from "react";
 
 const theme = createTheme({

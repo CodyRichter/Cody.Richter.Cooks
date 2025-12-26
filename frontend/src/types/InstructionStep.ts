@@ -1,4 +1,4 @@
-export default interface InstructionStep {
+export interface InstructionStep {
   id: string;
   title: string;
   description: string;

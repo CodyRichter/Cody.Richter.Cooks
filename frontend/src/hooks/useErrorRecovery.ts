@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { ApiError } from '../utils/apiClient'
+import { ApiError } from '@/utils/apiClient'
 
 // Simple retry hook for manual retries
 export const useRetry = () => {

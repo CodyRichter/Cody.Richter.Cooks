@@ -1,5 +1,5 @@
-import Ingredient from "@/types/Ingredient";
-import InstructionStep from "@/types/InstructionStep";
+import { Ingredient } from "@/types/Ingredient";
+import { InstructionStep } from "@/types/InstructionStep";
 import { RecipeDetail } from "@/types/Recipe";
 
 /**

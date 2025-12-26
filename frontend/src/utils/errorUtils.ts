@@ -1,4 +1,4 @@
-import { ApiError } from './apiClient';
+import { ApiError } from '@/utils/apiClient';
 
 export interface ErrorInfo {
   isNotFound: boolean;

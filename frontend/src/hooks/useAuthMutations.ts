@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { authApi } from '../services/apiServices'
+import { authApi } from '@/services/apiServices'
 
 interface ChangePasswordParams {
   currentPassword: string

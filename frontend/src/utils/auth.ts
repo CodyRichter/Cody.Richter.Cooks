@@ -1,5 +1,5 @@
 // JWT-based authentication utilities
-import { tokenStorageKey, refreshTokenStorageKey } from '../config/environment'
+import { tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
 
 export const authConfig = {
   tokenStorageKey,

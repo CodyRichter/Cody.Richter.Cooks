@@ -1,4 +1,4 @@
-import { apiBaseUrl, tokenStorageKey, refreshTokenStorageKey } from '../config/environment'
+import { apiBaseUrl, tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
 
 export class ApiError extends Error {
   status: number

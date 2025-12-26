@@ -4,13 +4,13 @@ import { Button, Group, Text, Container, Stack } from "@mantine/core";
 import React, { useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
 
-import EditRecipe from "../../../components/recipes/edit/EditRecipe";
-import ProtectedRoute from "../../../components/auth/ProtectedRoute";
-import { isRecipeValid } from "../../../utils/recipeUtils";
+import EditRecipe from "@/components/recipes/edit/EditRecipe";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { isRecipeValid } from "@/utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
-import { useCreateRecipe } from "../../../hooks/useRecipes";
-import { RecipeCreate, RecipeDetail } from "../../../types/Recipe";
+import { useCreateRecipe } from "@/hooks/useRecipes";
+import { RecipeCreate, RecipeDetail } from "@/types/Recipe";
 
 export default function CreateRecipe() {
   const router = useRouter();

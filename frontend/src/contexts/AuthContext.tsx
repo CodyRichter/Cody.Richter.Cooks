@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, ReactNode, useCallback, useEffect, useRef } from 'react'
-import { User, UserRegistration, TokenResponse } from '../types/User'
-import { authApi } from '../services/apiServices'
-import { tokenStorageKey, refreshTokenStorageKey } from '../config/environment'
+import { User, UserRegistration, TokenResponse } from '@/types/User'
+import { authApi } from '@/services/apiServices'
+import { tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
 
 // Authentication state interface
 interface AuthState {

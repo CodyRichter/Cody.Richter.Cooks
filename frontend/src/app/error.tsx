@@ -1,7 +1,7 @@
 'use client';
 
 import { Container, Button, Stack } from "@mantine/core";
-import { ApiErrorAlert } from "../components/error-handling";
+import { ApiErrorAlert } from "@/components/error-handling";
 import { useEffect } from "react";
 
 export default function Error({

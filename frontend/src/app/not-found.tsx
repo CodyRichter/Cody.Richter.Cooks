@@ -1,5 +1,5 @@
 import { Container } from "@mantine/core";
-import { ApiErrorAlert } from "../components/error-handling";
+import { ApiErrorAlert } from "@/components/error-handling";
 
 export default function NotFound() {
     const notFoundError = {
