@@ -104,7 +104,11 @@ export default function Home() {
   return (
     <Container size="xl" px="md">
       <Stack gap="lg">
-        <Title ta="center" fw={400} order={1}>
+        <Title ta="center" fw={700} order={1}
+          style={{
+            letterSpacing: "-0.7px",
+          }}
+        >
           Welcome to Cody Richter Cooks
         </Title>
 

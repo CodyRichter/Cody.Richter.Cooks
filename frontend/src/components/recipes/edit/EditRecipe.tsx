@@ -78,7 +78,6 @@ const EditRecipe = memo<EditRecipeProps>(({
                     fontSize: '2.5rem',
                     fontWeight: 800,
                     padding: 0,
-                    color: theme.colors.orange[7],
                     '&::placeholder': {
                       color: theme.colors.gray[4],
                     }

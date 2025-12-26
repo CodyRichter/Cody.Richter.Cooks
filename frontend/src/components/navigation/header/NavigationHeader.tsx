@@ -16,7 +16,6 @@ import {
 } from "@tabler/icons-react";
 import React from "react";
 
-import Typist from "react-typist-component";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMediaQuery } from "@mantine/hooks";
 import { useRouter } from "next/navigation";
@@ -42,200 +41,144 @@ export default function NavigationHeader({
 
   return (
     <>
-      <Group mt="md" ml="md" mr="md" justify="space-between">
-        <Group gap="0">
+      <Group h="100%" px="md" justify="space-between" align="center">
+        <Group gap="xs">
           <Burger
             opened={mobileOpened}
             onClick={toggleMobile}
             hiddenFrom="sm"
             size="sm"
-            className="headerSidebarNavContainer"
           />
           <Burger
             opened={desktopOpened}
             onClick={toggleDesktop}
             visibleFrom="sm"
             size="sm"
-            className="headerSidebarNavContainer"
           />
 
-          <Divider orientation="vertical" size="xs" ml="sm" mr="sm" />
+          <Divider orientation="vertical" size="xs" mx="sm" />
 
           <Text
-            span
-            size="xl"
+            component="span"
             fw={500}
-            style={{ cursor: "pointer" }}
-            className="zeroRight"
-            onClick={() => router.push('/')}
+            style={{
+              fontFamily: "var(--font-inter), sans-serif",
+              fontSize: isMobile ? "1.0rem" : "1.4rem",
+              cursor: "pointer",
+              letterSpacing: "-0.7px",
+              lineHeight: 1,
+            }}
+            onClick={() => router.push("/")}
           >
-            Cody Richter C
+            Cody Richter Cooks
           </Text>
-
-          <Typist
-            typingDelay={130}
-            loop={false}
-            hideCursorWhenDone
-            cursor={
-              <Text span size="xl" fw={500}>
-                |
-              </Text>
-            }
-          >
-            <Text
-              span
-              size="xl"
-              fw={500}
-              style={{ cursor: "pointer" }}
-              onClick={() => router.push('/')}
-            >
-              odes
-            </Text>
-            <Text>&#8203;</Text>
-            <Typist.Delay ms={2000} />
-            <Typist.Backspace count={5} />
-            <Text
-              span
-              size="xl"
-              fw={500}
-              style={{ cursor: "pointer" }}
-              onClick={() => router.push('/')}
-            >
-              ooks
-            </Text>
-          </Typist>
         </Group>
-
-        {/* The Right Menu Is Split Between the Mobile and Desktop Views */}
-        {/* The Mobile view will show all options in a dropdown menu,  */}
-        {/* while the Desktop view will show them inline as buttons. */}
 
         {isMobile ? (
           <>
-            <Menu shadow="lg" width={280}>
-              <Menu.Target>
+            {auth.isAuthenticated ? (
+              <Group gap="0">
                 <ActionIcon
                   variant="subtle"
-                  size="lg"
+                  size="xl"
                   hiddenFrom="sm"
-                  radius={"xl"}
+                  radius="xl"
+                  color="gray"
+                  onClick={() => router.push('/recipes/create')}
                 >
-                  <IconDotsVertical />
+                  <IconPencilPlus size={28} />
                 </ActionIcon>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                {auth.isAuthenticated ? (
-                  <>
-                    <Menu.Label>Application</Menu.Label>
-                    <Menu.Item
-                      leftSection={<IconPencilPlus size={14} />}
-                      onClick={() => router.push('/recipes/create')}
+                <Menu shadow="lg" width={200} position="bottom-end">
+                  <Menu.Target>
+                    <ActionIcon
+                      variant="subtle"
+                      size="xl"
+                      hiddenFrom="sm"
+                      radius="xl"
+                      color="gray"
                     >
-                      Create Recipe
-                    </Menu.Item>
+                      <IconUserCircle size={28} />
+                    </ActionIcon>
+                  </Menu.Target>
 
-                    <Menu.Divider />
-
+                  <Menu.Dropdown>
                     <Menu.Label>Account</Menu.Label>
-
                     <Menu.Item
-                      leftSection={<IconUserCircle size={14} />}
+                      leftSection={<IconUserCircle size={16} />}
                       onClick={() => router.push('/auth/account')}
                     >
                       Account Settings
                     </Menu.Item>
                     <Menu.Item
-                      leftSection={<IconLogout size={14} />}
+                      leftSection={<IconLogout size={16} />}
+                      color="red"
                       onClick={() => auth.logout()}
                     >
                       Logout
                     </Menu.Item>
-                  </>
-                ) : (
-                  <>
-                    <Menu.Label>Account</Menu.Label>
-                    <Menu.Item
-                      onClick={() => router.push('/auth/login')}
-                      leftSection={<IconLogin size={14} />}
-                    >
-                      Login / Register
-                    </Menu.Item>
-                  </>
-                )}
-              </Menu.Dropdown>
-            </Menu>
+                  </Menu.Dropdown>
+                </Menu>
+              </Group>
+            ) : (
+              <Button
+                variant="subtle"
+                size="sm"
+                onClick={() => router.push('/auth/login')}
+                color="gray"
+              >
+                Log in
+              </Button>
+            )}
           </>
         ) : (
-          <Group>
-            {auth.isAuthenticated && (
+          <Group gap="sm">
+            {auth.isAuthenticated ? (
               <>
                 <Button
-                  rightSection={<IconPencilPlus />}
-                  variant="subtle"
-                  size="sm"
-                  visibleFrom="sm"
-                  gradient={{
-                    from: "rgba(80, 70, 232, 1)",
-                    to: "rgba(45, 237, 237, 1)",
-                    deg: 211,
-                  }}
+                  leftSection={<IconPencilPlus size={20} />}
+                  variant="default"
+                  radius="xl"
+                  h={38}
                   onClick={() => router.push('/recipes/create')}
                 >
                   Create Recipe
                 </Button>
-                <ActionIcon
-                  variant="subtle"
-                  size="lg"
-                  hiddenFrom="sm"
-                  onClick={() => router.push('/recipes/create')}
-                >
-                  <IconPencilPlus />
-                </ActionIcon>
 
-                <Divider orientation="vertical" size="xs" />
+                <Menu shadow="md" width={200} position="bottom-end" withArrow>
+                  <Menu.Target>
+                    <ActionIcon variant="subtle" size={38} radius="xl" color="black">
+                      <IconUserCircle size={24} />
+                    </ActionIcon>
+                  </Menu.Target>
 
-                <ActionIcon
-                  variant="subtle"
-                  size={isMobile ? "md" : "lg"}
-                  onClick={() => router.push('/auth/account')}
-                >
-                  <IconUserCircle />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  size="lg"
-                  onClick={() => auth.logout()}
-                >
-                  <IconLogout />
-                </ActionIcon>
+                  <Menu.Dropdown>
+                    <Menu.Label>Account</Menu.Label>
+                    <Menu.Item
+                      leftSection={<IconUserCircle size={16} />}
+                      onClick={() => router.push('/auth/account')}
+                    >
+                      Settings
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item
+                      leftSection={<IconLogout size={16} />}
+                      color="red"
+                      onClick={() => auth.logout()}
+                    >
+                      Logout
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
               </>
-            )}
-            {!auth.isAuthenticated && (
-              <>
-                <Button
-                  rightSection={<IconLogin />}
-                  variant="subtle"
-                  size="sm"
-                  visibleFrom="sm"
-                  gradient={{
-                    from: "rgba(80, 70, 232, 1)",
-                    to: "rgba(45, 237, 237, 1)",
-                    deg: 211,
-                  }}
-                  onClick={() => router.push('/auth/login')}
-                >
-                  Login / Register
-                </Button>
-                <ActionIcon
-                  variant="subtle"
-                  size="lg"
-                  hiddenFrom="sm"
-                  onClick={() => router.push('/auth/login')}
-                >
-                  <IconLogin />
-                </ActionIcon>
-              </>
+            ) : (
+              <Button
+                variant="default"
+                radius="xl"
+                h={38}
+                onClick={() => router.push('/auth/login')}
+              >
+                Log in
+              </Button>
             )}
           </Group>
         )}

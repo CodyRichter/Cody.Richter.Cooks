@@ -7,14 +7,13 @@ import { ColorSchemeScript } from "@mantine/core";
 import { Providers } from "@/app/providers";
 import { AppLayout } from "@/app/AppLayout";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Nunito_Sans } from "next/font/google";
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
 });
-
 
 
 export const metadata: Metadata = {
