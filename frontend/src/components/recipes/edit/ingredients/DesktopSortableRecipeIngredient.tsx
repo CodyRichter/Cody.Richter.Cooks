@@ -31,11 +31,11 @@ const DesktopSortableRecipeIngredient = memo(({
   form: UseFormReturnType<RecipeDetail>;
   index: number;
 }) => {
-  const ingredient = form.values.ingredients[index];
+  const { id } = form.getValues().ingredients[index];
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: ingredient.id,
+      id: id,
     });
 
   return (
@@ -82,6 +82,7 @@ const DesktopSortableRecipeIngredient = memo(({
               variant="unstyled"
               hideControls
               styles={{ input: { fontWeight: 600, textAlign: 'center' } }}
+              key={form.key(`ingredients.${index}.quantity`)}
               {...form.getInputProps(`ingredients.${index}.quantity`)}
             />
           </Grid.Col>
@@ -95,6 +96,7 @@ const DesktopSortableRecipeIngredient = memo(({
               withAsterisk
               leftSection={<IconScale size="1rem" color="var(--mantine-color-gray-5)" />}
               styles={{ input: { fontWeight: 500 } }}
+              key={form.key(`ingredients.${index}.unit`)}
               {...form.getInputProps(`ingredients.${index}.unit`)}
             />
           </Grid.Col>
@@ -108,6 +110,7 @@ const DesktopSortableRecipeIngredient = memo(({
               withAsterisk
               leftSection={<IconToolsKitchen2 size="1rem" color="var(--mantine-color-gray-5)" />}
               styles={{ input: { fontWeight: 500 } }}
+              key={form.key(`ingredients.${index}.name`)}
               {...form.getInputProps(`ingredients.${index}.name`)}
             />
           </Grid.Col>
@@ -128,6 +131,7 @@ const DesktopSortableRecipeIngredient = memo(({
                     placeholder="e.g. Can substitute with shallots"
                     size="sm"
                     radius="md"
+                    key={form.key(`ingredients.${index}.subtext`)}
                     {...form.getInputProps(`ingredients.${index}.subtext`)}
                   />
                 </Popover.Dropdown>

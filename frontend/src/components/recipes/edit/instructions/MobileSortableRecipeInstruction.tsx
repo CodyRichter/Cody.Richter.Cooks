@@ -30,11 +30,11 @@ const MobileSortableRecipeInstruction = memo(({
   form: UseFormReturnType<RecipeDetail>;
   index: number;
 }) => {
-  const instructionStep = form.values.instructions[index];
+  const { id } = form.getValues().instructions[index];
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: instructionStep.id,
+      id: id,
     });
 
   return (
@@ -83,6 +83,7 @@ const MobileSortableRecipeInstruction = memo(({
             variant="unstyled"
             withAsterisk
             styles={{ input: { fontSize: '1.1rem', fontWeight: 700, padding: 0 } }}
+            key={form.key(`instructions.${index}.title`)}
             {...form.getInputProps(`instructions.${index}.title`)}
           />
 
@@ -97,6 +98,7 @@ const MobileSortableRecipeInstruction = memo(({
             leftSection={<IconNotes size="0.9rem" color="var(--mantine-color-gray-5)" />}
             leftSectionProps={{ style: { alignItems: 'flex-start', paddingTop: '4px' } }}
             styles={{ input: { paddingLeft: '28px' } }}
+            key={form.key(`instructions.${index}.description`)}
             {...form.getInputProps(`instructions.${index}.description`)}
           />
         </Stack>

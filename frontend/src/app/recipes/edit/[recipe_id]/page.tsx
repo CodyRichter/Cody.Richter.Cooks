@@ -1,7 +1,7 @@
 'use client';
 
 import { ActionIcon, Button, Group, Text, Container, Stack, Tooltip } from "@mantine/core";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm, UseFormReturnType } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
@@ -29,8 +29,12 @@ export default function EditRecipePage() {
   // Get user permissions for this recipe
   const { canEdit } = useUserRecipePermissions(recipe_id);
 
+  // No longer using formVersion state as it causes re-renders on every keystroke.
+  // We'll use form.watch() in components that need reactivity.
+
   // Initialize form
   const form = useForm<RecipeDetail>({
+    mode: 'uncontrolled',
     initialValues: originalRecipe || {
       id: '',
       title: '',
@@ -44,36 +48,35 @@ export default function EditRecipePage() {
       updated_at: '',
     },
     validate: {
-      title: (value: string) => (value.trim().length < 3 ? 'Title must be at least 3 characters' : null),
+      title: (value: string) => (value?.trim().length < 3 ? 'Title must be at least 3 characters' : null),
     },
   });
 
   // Update mutation
-  const { mutate: updateRecipe, isPending: isUpdating, error: updateError } = useUpdateRecipe();
+  const { mutate: updateRecipe, isPending: isUpdating } = useUpdateRecipe();
 
   // Sync originalRecipe to form once loaded
+  const hasInitialized = useRef(false);
   useEffect(() => {
-    if (originalRecipe) {
+    if (originalRecipe && !hasInitialized.current) {
       form.initialize(originalRecipe);
+      hasInitialized.current = true;
     }
-  }, [originalRecipe]);
+  }, [originalRecipe, form]);
 
   // Check if user has permission to edit this recipe
   const hasPermission = useMemo(() => {
     return auth.isAuthenticated && canEdit;
   }, [auth.isAuthenticated, canEdit]);
 
-  // Disable the edit button if the recipe is invalid or updating
-  const disableEditButton: boolean = !isRecipeValid(form.values) || isUpdating || !form.isDirty();
-
   // Handle back navigation with optimistic updates
   const handleBackClick = () => {
-    navigateToRecipe(recipe_id, form.values);
+    navigateToRecipe(recipe_id, form.getValues());
   };
 
   // Save the recipe to the server
   const handleSaveRecipe = async () => {
-    const { values } = form;
+    const values = form.getValues();
 
     if (!isRecipeValid(values)) {
       notifications.show({
@@ -178,24 +181,59 @@ export default function EditRecipePage() {
         <EditRecipe form={form} />
 
         <Group justify="flex-end">
-          <Button
-            size="lg"
-            radius="md"
-            color="orange"
-            variant="filled"
-            w="200px"
-            leftSection={<IconDeviceFloppy size={20} />}
+          <SaveRecipeButton
+            form={form}
             loading={isUpdating}
-            disabled={disableEditButton}
-            onClick={handleSaveRecipe}
-            style={{
-              boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)',
-            }}
-          >
-            Save Recipe
-          </Button>
+            onSave={handleSaveRecipe}
+          />
         </Group>
       </Stack>
     </Container>
+  );
+}
+
+/**
+ * Optimized Save button component that only re-renders when necessary
+ */
+function SaveRecipeButton({
+  form,
+  loading,
+  onSave,
+}: {
+  form: UseFormReturnType<RecipeDetail>;
+  loading: boolean;
+  onSave: () => void;
+}) {
+  // Subscribe this component to changes in these fields to update button state
+  // Calling watch in the component body subscribes the component to re-renders
+  form.watch('title', () => {});
+  form.watch('description', () => {});
+  form.watch('ingredients', () => {});
+  form.watch('instructions', () => {});
+  form.watch('cooking_time', () => {});
+  form.watch('serving_size', () => {});
+  form.watch('tags', () => {});
+
+  const values = form.getValues();
+  const isValid = isRecipeValid(values);
+  const dirty = form.isDirty();
+
+  return (
+    <Button
+      size="lg"
+      radius="md"
+      color="orange"
+      variant="filled"
+      w="200px"
+      leftSection={<IconDeviceFloppy size={20} />}
+      loading={loading}
+      disabled={!isValid || loading || !dirty}
+      onClick={onSave}
+      style={{
+        boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)',
+      }}
+    >
+      Save Recipe
+    </Button>
   );
 }

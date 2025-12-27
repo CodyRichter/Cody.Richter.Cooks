@@ -23,7 +23,9 @@ interface EditRecipeInstructionsProps {
 const EditRecipeInstructions = memo(({
   form,
 }: EditRecipeInstructionsProps) => {
-  const recipe = form.values;
+  // Subscribe to changes in instructions to handle re-ordering and additions
+  form.watch('instructions', () => {});
+  const instructions = form.getValues().instructions;
 
   const reorderInstructions = (e: DragEndEvent) => {
     const { active, over } = e;
@@ -31,8 +33,9 @@ const EditRecipeInstructions = memo(({
       return;
     }
     if (active.id !== over.id) {
-      const from = recipe.instructions.findIndex((ins) => ins.id === active.id);
-      const to = recipe.instructions.findIndex((ins) => ins.id === over.id);
+      const currentInstructions = form.getValues().instructions;
+      const from = currentInstructions.findIndex((ins) => ins.id === active.id);
+      const to = currentInstructions.findIndex((ins) => ins.id === over.id);
       form.reorderListItem('instructions', { from, to });
     }
   };
@@ -40,10 +43,10 @@ const EditRecipeInstructions = memo(({
   return (
     <DndContext onDragEnd={reorderInstructions}>
       <SortableContext
-        items={recipe.instructions}
+        items={instructions}
         strategy={verticalListSortingStrategy}
       >
-        {recipe.instructions.map(
+        {instructions.map(
           (instruction: InstructionStep, index: number) => (
             <SortableRecipeInstruction
               key={instruction.id}

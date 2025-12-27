@@ -30,11 +30,11 @@ const MobileSortableRecipeIngredient = memo(({
   form: UseFormReturnType<RecipeDetail>;
   index: number;
 }) => {
-  const ingredient = form.values.ingredients[index];
+  const { id, subtext } = form.getValues().ingredients[index];
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: ingredient.id,
+      id: id,
     });
 
   return (
@@ -81,6 +81,7 @@ const MobileSortableRecipeIngredient = memo(({
               variant="unstyled"
               hideControls
               styles={{ input: { fontWeight: 700, width: '40px', textAlign: 'center' } }}
+              key={form.key(`ingredients.${index}.quantity`)}
               {...form.getInputProps(`ingredients.${index}.quantity`)}
             />
             <TextInput
@@ -90,6 +91,7 @@ const MobileSortableRecipeIngredient = memo(({
               variant="unstyled"
               withAsterisk
               styles={{ input: { fontWeight: 500, fontStyle: 'italic', width: '60px' } }}
+              key={form.key(`ingredients.${index}.unit`)}
               {...form.getInputProps(`ingredients.${index}.unit`)}
             />
             <TextInput
@@ -100,13 +102,14 @@ const MobileSortableRecipeIngredient = memo(({
               withAsterisk
               style={{ flex: 1 }}
               styles={{ input: { fontWeight: 600 } }}
+              key={form.key(`ingredients.${index}.name`)}
               {...form.getInputProps(`ingredients.${index}.name`)}
             />
           </Group>
 
-          {ingredient.subtext && (
+          {subtext && (
             <Text size="xs" c="dimmed" fs="italic" pl="sm">
-              {ingredient.subtext}
+              {subtext}
             </Text>
           )}
         </Stack>
@@ -124,6 +127,7 @@ const MobileSortableRecipeIngredient = memo(({
                 placeholder="e.g. Can substitute with..."
                 size="sm"
                 radius="md"
+                key={form.key(`ingredients.${index}.subtext`)}
                 {...form.getInputProps(`ingredients.${index}.subtext`)}
               />
             </Popover.Dropdown>

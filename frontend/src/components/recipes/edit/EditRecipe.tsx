@@ -32,7 +32,8 @@ interface EditRecipeProps {
 const EditRecipe = memo<EditRecipeProps>(({
   form,
 }) => {
-  const recipe = form.values;
+  // Use getValues() for access to other fields
+  const recipe = form.getValues();
 
   return (
     <Grid gutter="xl">
@@ -46,6 +47,7 @@ const EditRecipe = memo<EditRecipeProps>(({
                 placeholder="Give your recipe a catchy name..."
                 size="xl"
                 variant="unstyled"
+                key={form.key('title')}
                 {...form.getInputProps('title')}
                 withAsterisk
                 styles={(theme) => ({
@@ -85,17 +87,13 @@ const EditRecipe = memo<EditRecipeProps>(({
                   <Tabs.Tab value="ingredients" leftSection={<IconListDetails size="1.2rem" />}>
                     <Group gap="xs">
                       Ingredients
-                      <Badge size="sm" variant="light" color="orange">
-                        {recipe.ingredients.length}
-                      </Badge>
+                      <FormBadgeCount form={form} path="ingredients" />
                     </Group>
                   </Tabs.Tab>
                   <Tabs.Tab value="instructions" leftSection={<IconChefHat size="1.2rem" />}>
                     <Group gap="xs">
                       Instructions
-                      <Badge size="sm" variant="light" color="orange">
-                        {recipe.instructions.length}
-                      </Badge>
+                      <FormBadgeCount form={form} path="instructions" />
                     </Group>
                   </Tabs.Tab>
                 </Tabs.List>
@@ -111,14 +109,15 @@ const EditRecipe = memo<EditRecipeProps>(({
                         radius="md"
                         leftSection={<IconPlus size="1rem" />}
                         onClick={() => {
+                          const currentRecipe = form.getValues();
                           form.insertListItem('ingredients', {
                             id: crypto.randomUUID(),
                             quantity: 0,
                             name: "",
                             unit: "",
                             subtext: "",
-                            order_index: recipe.ingredients.length,
-                            recipe_id: recipe.id,
+                            order_index: currentRecipe.ingredients.length,
+                            recipe_id: currentRecipe.id,
                           });
                         }}
                       >
@@ -140,12 +139,13 @@ const EditRecipe = memo<EditRecipeProps>(({
                         radius="md"
                         leftSection={<IconPlus size="1rem" />}
                         onClick={() => {
+                          const currentRecipe = form.getValues();
                           form.insertListItem('instructions', {
                             id: crypto.randomUUID(),
                             title: "",
                             description: "",
-                            step_number: recipe.instructions.length + 1,
-                            recipe_id: recipe.id,
+                            step_number: currentRecipe.instructions.length + 1,
+                            recipe_id: currentRecipe.id,
                           });
                         }}
                       >
@@ -176,6 +176,7 @@ const EditRecipe = memo<EditRecipeProps>(({
               <NumberInput
                 label="Cooking Time"
                 placeholder="30"
+                key={form.key('cooking_time')}
                 {...form.getInputProps('cooking_time')}
                 min={0}
                 max={1440}
@@ -189,6 +190,7 @@ const EditRecipe = memo<EditRecipeProps>(({
               <NumberInput
                 label="Serving Size"
                 placeholder="4"
+                key={form.key('serving_size')}
                 {...form.getInputProps('serving_size')}
                 min={1}
                 max={50}
@@ -221,5 +223,20 @@ const EditRecipe = memo<EditRecipeProps>(({
 });
 
 EditRecipe.displayName = 'EditRecipe';
+
+/**
+ * Isolated component to show count badges without re-rendering the whole form
+ */
+const FormBadgeCount = ({ form, path }: { form: UseFormReturnType<RecipeDetail>, path: 'ingredients' | 'instructions' }) => {
+  // Subscribe to changes in the array
+  form.watch(path, () => {});
+  const count = form.getValues()[path].length;
+
+  return (
+    <Badge size="sm" variant="light" color="orange">
+      {count}
+    </Badge>
+  );
+};
 
 export default EditRecipe;

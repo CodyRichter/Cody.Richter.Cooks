@@ -21,7 +21,7 @@ interface EditRecipeTagsProps {
 const EditRecipeTags = memo(({
   form,
 }: EditRecipeTagsProps) => {
-  const recipe = form.values;
+  const recipe = form.getValues();
 
   // The value of the new tag input field
   const [newTagValue, setNewTagValue] = useState("");

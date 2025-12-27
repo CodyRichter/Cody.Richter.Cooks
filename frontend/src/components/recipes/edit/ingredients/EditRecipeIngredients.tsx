@@ -23,7 +23,9 @@ interface EditRecipeIngredientsProps {
 const EditRecipeIngredients = memo(({
   form,
 }: EditRecipeIngredientsProps) => {
-  const recipe = form.values;
+  // Subscribe to changes in the ingredients list to handle re-ordering and additions
+  form.watch('ingredients', () => {});
+  const ingredients = form.getValues().ingredients;
 
   const reorderIngredients = (e: DragEndEvent) => {
     const { active, over } = e;
@@ -31,15 +33,16 @@ const EditRecipeIngredients = memo(({
       return;
     }
     if (active.id !== over.id) {
-      const from = recipe.ingredients.findIndex((ing) => ing.id === active.id);
-      const to = recipe.ingredients.findIndex((ing) => ing.id === over.id);
+      const currentIngredients = form.getValues().ingredients;
+      const from = currentIngredients.findIndex((ing) => ing.id === active.id);
+      const to = currentIngredients.findIndex((ing) => ing.id === over.id);
       form.reorderListItem('ingredients', { from, to });
     }
   };
 
   return (
     <Box>
-      {recipe.ingredients.length > 0 && (
+      {ingredients.length > 0 && (
         <Grid gutter="xs" px="lg" mb="xs" style={{ paddingLeft: '64px', paddingRight: '120px' }}>
           <Grid.Col span={2}>
             <Text size="xs" fw={700} c="dimmed" tt="uppercase">Qty</Text>
@@ -54,10 +57,10 @@ const EditRecipeIngredients = memo(({
       )}
       <DndContext onDragEnd={reorderIngredients}>
         <SortableContext
-          items={recipe.ingredients}
+          items={ingredients}
           strategy={verticalListSortingStrategy}
         >
-          {recipe.ingredients.map((ingredient: Ingredient, index: number) => (
+          {ingredients.map((ingredient: Ingredient, index: number) => (
             <SortableRecipeIngredient
               key={ingredient.id}
               form={form}
