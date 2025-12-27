@@ -8,6 +8,9 @@ import {
   Stack,
   TextInput,
   Skeleton,
+  ActionIcon,
+  Text,
+  CloseButton,
 } from "@mantine/core";
 import {
   IconArrowNarrowRight,
@@ -71,6 +74,7 @@ export default function NavigationSidebar({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPrevPage, setHasPrevPage] = useState(false);
 
@@ -92,6 +96,7 @@ export default function NavigationSidebar({
 
         // Response is now a paginated response with metadata
         setRecipes(response.items);
+        setTotalResults(response.total);
         setHasNextPage(response.has_next);
         setHasPrevPage(response.has_prev);
       } catch (err: unknown) {
@@ -157,8 +162,17 @@ export default function NavigationSidebar({
         <TextInput
           radius="md"
           placeholder="Search recipes"
-          rightSection={<SearchShortcutText os={os} />}
-          rightSectionWidth={os === "macOS" ? 65 : 80}
+          rightSection={
+            searchText ? (
+              <CloseButton
+                onClick={() => setSearchText("")}
+                aria-label="Clear search"
+              />
+            ) : (
+              <SearchShortcutText os={os} />
+            )
+          }
+          rightSectionWidth={searchText ? 35 : (os === "macOS" ? 65 : 80)}
           variant="filled"
           ref={searchbarRef}
           value={searchText}
@@ -212,38 +226,38 @@ export default function NavigationSidebar({
                     : "sidebarRecipe"
                 }
               />
-              <Divider color="#eee" />
             </React.Fragment>
           ))
         )}
       </Stack>
       <div>
         <Divider mb="md" color="#eee" />
-        <Group justify="space-between" mb="xl" mt="xs">
-          <Button
-            size="compact-md"
+        <Group justify="center" gap="sm" mb="xl" mt="xs">
+          <ActionIcon
             variant="light"
+            size="lg"
+            radius="md"
             onClick={handlePaginationBack}
             disabled={!hasPrevPage}
-            leftSection={<IconChevronLeft size={16} />}
-            ml="sm"
-            w="40%"
-            radius="md"
+            aria-label="Previous page"
           >
-            Previous
-          </Button>
-          <Button
-            size="compact-md"
+            <IconChevronLeft size={18} />
+          </ActionIcon>
+
+          <Text size="sm" fw={600} c="dimmed">
+            Page {currentPage} of {Math.ceil(totalResults / 10) || 1}
+          </Text>
+
+          <ActionIcon
             variant="light"
+            size="lg"
+            radius="md"
             onClick={handlePaginationForward}
             disabled={!hasNextPage}
-            rightSection={<IconChevronRight size={16} />}
-            mr="sm"
-            w="40%"
-            radius="md"
+            aria-label="Next page"
           >
-            Next
-          </Button>
+            <IconChevronRight size={18} />
+          </ActionIcon>
         </Group>
       </div>
     </Stack>
