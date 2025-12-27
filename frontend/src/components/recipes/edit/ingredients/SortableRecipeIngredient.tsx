@@ -1,39 +1,36 @@
 import DesktopSortableRecipeIngredient from "@/components/recipes/edit/ingredients/DesktopSortableRecipeIngredient";
-import { Ingredient } from "@/types/Ingredient";
 import MobileSortableRecipeIngredient from "@/components/recipes/edit/ingredients/MobileSortableRecipeIngredient";
 import { RecipeDetail } from "@/types/Recipe";
 import { useMediaQuery } from "@mantine/hooks";
+import { UseFormReturnType } from "@mantine/form";
+import { memo } from "react";
 
-export default function SortableRecipeIngredient({
-  recipe,
-  ingredient,
+const SortableRecipeIngredient = memo(({
+  form,
   index,
-  setRecipe,
 }: {
-  recipe: RecipeDetail;
-  ingredient: Ingredient;
+  form: UseFormReturnType<RecipeDetail>;
   index: number;
-  setRecipe: (recipe: RecipeDetail) => void;
-}) {
+}) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   if (isMobile) {
     return (
       <MobileSortableRecipeIngredient
-        recipe={recipe}
-        ingredient={ingredient}
+        form={form}
         index={index}
-        setRecipe={setRecipe}
       />
     );
   } else {
     return (
       <DesktopSortableRecipeIngredient
-        recipe={recipe}
-        ingredient={ingredient}
+        form={form}
         index={index}
-        setRecipe={setRecipe}
       />
     );
   }
-}
+});
+
+SortableRecipeIngredient.displayName = 'SortableRecipeIngredient';
+
+export default SortableRecipeIngredient;

@@ -1,7 +1,6 @@
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
@@ -9,10 +8,11 @@ import { InstructionStep } from "@/types/InstructionStep";
 import React from "react";
 import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeInstruction from "@/components/recipes/edit/instructions/SortableRecipeInstruction";
+import { UseFormReturnType } from "@mantine/form";
+import { memo } from "react";
 
 interface EditRecipeInstructionsProps {
-  recipe: RecipeDetail;
-  setRecipe: (recipe: RecipeDetail) => void;
+  form: UseFormReturnType<RecipeDetail>;
 }
 
 /**
@@ -20,28 +20,20 @@ interface EditRecipeInstructionsProps {
  * for a recipe. It allows users to drag and drop instructions to reorder them.
  * It uses the DnD Kit library for drag and drop functionality.
  */
-export default function EditRecipeInstructions({
-  recipe,
-  setRecipe,
-}: EditRecipeInstructionsProps) {
+const EditRecipeInstructions = memo(({
+  form,
+}: EditRecipeInstructionsProps) => {
+  const recipe = form.values;
+
   const reorderInstructions = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!active || !over || !active.id || !over.id) {
       return;
     }
     if (active.id !== over.id) {
-      setRecipe({
-        ...recipe,
-        instructions: arrayMove(
-          recipe.instructions,
-          recipe.instructions.findIndex(
-            (instruction) => instruction.id === active.id
-          ),
-          recipe.instructions.findIndex(
-            (instruction) => instruction.id === over.id
-          )
-        ),
-      });
+      const from = recipe.instructions.findIndex((ins) => ins.id === active.id);
+      const to = recipe.instructions.findIndex((ins) => ins.id === over.id);
+      form.reorderListItem('instructions', { from, to });
     }
   };
 
@@ -55,14 +47,16 @@ export default function EditRecipeInstructions({
           (instruction: InstructionStep, index: number) => (
             <SortableRecipeInstruction
               key={instruction.id}
-              recipe={recipe}
-              instructionStep={instruction}
+              form={form}
               index={index}
-              setRecipe={setRecipe}
             />
           )
         )}
       </SortableContext>
     </DndContext>
   );
-}
+});
+
+EditRecipeInstructions.displayName = 'EditRecipeInstructions';
+
+export default EditRecipeInstructions;

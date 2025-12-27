@@ -18,21 +18,20 @@ import {
 } from "@tabler/icons-react";
 
 import { CSS } from "@dnd-kit/utilities";
-import { InstructionStep } from "@/types/InstructionStep";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
+import { UseFormReturnType } from "@mantine/form";
+import { memo } from "react";
 
-export default function DesktopSortableRecipeInstruction({
-  recipe,
-  instructionStep,
+const DesktopSortableRecipeInstruction = memo(({
+  form,
   index,
-  setRecipe,
 }: {
-  recipe: RecipeDetail;
-  instructionStep: InstructionStep;
+  form: UseFormReturnType<RecipeDetail>;
   index: number;
-  setRecipe: (recipe: RecipeDetail) => void;
-}) {
+}) => {
+  const instructionStep = form.values.instructions[index];
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: instructionStep.id,
@@ -79,17 +78,12 @@ export default function DesktopSortableRecipeInstruction({
         <Stack gap="xs" style={{ flex: 1 }}>
           <TextInput
             placeholder="Step Title (e.g. Sautéing the aromatics)"
-            value={instructionStep.title}
             size="md"
             radius="md"
             variant="unstyled"
             withAsterisk
             styles={{ input: { fontSize: '1.2rem', fontWeight: 700, padding: 0 } }}
-            onChange={(e) => {
-              const newInstructions = [...recipe.instructions];
-              newInstructions[index].title = e.currentTarget.value;
-              setRecipe({ ...recipe, instructions: newInstructions });
-            }}
+            {...form.getInputProps(`instructions.${index}.title`)}
           />
 
           <Textarea
@@ -100,15 +94,10 @@ export default function DesktopSortableRecipeInstruction({
             radius="md"
             variant="unstyled"
             minRows={2}
-            value={instructionStep.description}
             leftSection={<IconNotes size="1rem" color="var(--mantine-color-gray-5)" />}
             leftSectionProps={{ style: { alignItems: 'flex-start', paddingTop: '4px' } }}
             styles={{ input: { paddingLeft: '32px' } }}
-            onChange={(e) => {
-              const newInstructions = [...recipe.instructions];
-              newInstructions[index].description = e.currentTarget.value;
-              setRecipe({ ...recipe, instructions: newInstructions });
-            }}
+            {...form.getInputProps(`instructions.${index}.description`)}
           />
         </Stack>
 
@@ -131,9 +120,7 @@ export default function DesktopSortableRecipeInstruction({
                 color="red"
                 size="xs"
                 onClick={() => {
-                  const newInstructions = [...recipe.instructions];
-                  newInstructions.splice(index, 1);
-                  setRecipe({ ...recipe, instructions: newInstructions });
+                  form.removeListItem('instructions', index);
                 }}
                 leftSection={<IconExclamationMark size={14} />}
               >
@@ -145,4 +132,8 @@ export default function DesktopSortableRecipeInstruction({
       </Group>
     </Paper>
   );
-}
+});
+
+DesktopSortableRecipeInstruction.displayName = 'DesktopSortableRecipeInstruction';
+
+export default DesktopSortableRecipeInstruction;

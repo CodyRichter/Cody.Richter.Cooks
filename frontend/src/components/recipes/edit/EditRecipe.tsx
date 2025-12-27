@@ -12,51 +12,27 @@ import {
   Box,
   Badge,
 } from "@mantine/core";
-import React, { useState } from "react";
+import React from "react";
 
 import EditRecipeIngredients from "@/components/recipes/edit/ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "@/components/recipes/edit/instructions/EditRecipeInstructions";
 import EditRecipeTags from "@/components/recipes/edit/tags/EditRecipeTags";
 import { IconPlus, IconClock, IconUsers, IconChefHat, IconListDetails, IconSettings } from "@tabler/icons-react";
 import { RecipeDetail } from "@/types/Recipe";
-import { memo, useCallback } from "react";
+import { memo } from "react";
+import { UseFormReturnType } from "@mantine/form";
 
 // Import TipTap editor directly - Next.js handles code splitting
 import TipTapEditorWrapper from "@/components/recipes/edit/description/TipTapEditorWrapper";
 
 interface EditRecipeProps {
-  recipe: RecipeDetail;
-  setRecipe: (recipe: RecipeDetail) => void;
+  form: UseFormReturnType<RecipeDetail>;
 }
 
 const EditRecipe = memo<EditRecipeProps>(({
-  recipe,
-  setRecipe,
+  form,
 }) => {
-  // Due to how the TipTap RichTextEditor works, we need to use a separate state for the description
-  // and update the recipe object when the description changes.
-  const [description, setDescription] = useState(recipe.description || '');
-
-  // Memoize the description update to prevent unnecessary re-renders
-  const handleDescriptionChange = useCallback((newDescription: string) => {
-    setDescription(newDescription);
-    setRecipe({ ...recipe, description: newDescription });
-  }, [recipe, setRecipe]);
-
-  // Memoize the title change handler
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setRecipe({ ...recipe, title: e.currentTarget.value });
-  }, [recipe, setRecipe]);
-
-  // Memoize the cooking time change handler
-  const handleCookingTimeChange = useCallback((value: string | number) => {
-    setRecipe({ ...recipe, cooking_time: typeof value === 'string' ? parseInt(value) || undefined : value || undefined });
-  }, [recipe, setRecipe]);
-
-  // Memoize the serving size change handler
-  const handleServingSizeChange = useCallback((value: string | number) => {
-    setRecipe({ ...recipe, serving_size: typeof value === 'string' ? parseInt(value) || undefined : value || undefined });
-  }, [recipe, setRecipe]);
+  const recipe = form.values;
 
   return (
     <Grid gutter="xl">
@@ -70,9 +46,8 @@ const EditRecipe = memo<EditRecipeProps>(({
                 placeholder="Give your recipe a catchy name..."
                 size="xl"
                 variant="unstyled"
-                value={recipe.title}
+                {...form.getInputProps('title')}
                 withAsterisk
-                onChange={handleTitleChange}
                 styles={(theme) => ({
                   input: {
                     fontSize: '2.5rem',
@@ -96,8 +71,8 @@ const EditRecipe = memo<EditRecipeProps>(({
 
               <Box>
                 <TipTapEditorWrapper
-                  description={description}
-                  setDescription={handleDescriptionChange}
+                  description={recipe.description || ''}
+                  setDescription={(val) => form.setFieldValue('description', val)}
                 />
               </Box>
             </Stack>
@@ -136,23 +111,21 @@ const EditRecipe = memo<EditRecipeProps>(({
                         radius="md"
                         leftSection={<IconPlus size="1rem" />}
                         onClick={() => {
-                          const newIngredients = [...recipe.ingredients];
-                          newIngredients.push({
+                          form.insertListItem('ingredients', {
                             id: crypto.randomUUID(),
                             quantity: 0,
                             name: "",
                             unit: "",
                             subtext: "",
-                            order_index: newIngredients.length,
+                            order_index: recipe.ingredients.length,
                             recipe_id: recipe.id,
                           });
-                          setRecipe({ ...recipe, ingredients: newIngredients });
                         }}
                       >
                         Add Ingredient
                       </Button>
                     </Group>
-                    <EditRecipeIngredients recipe={recipe} setRecipe={setRecipe} />
+                    <EditRecipeIngredients form={form} />
                   </Stack>
                 </Tabs.Panel>
 
@@ -167,21 +140,19 @@ const EditRecipe = memo<EditRecipeProps>(({
                         radius="md"
                         leftSection={<IconPlus size="1rem" />}
                         onClick={() => {
-                          const newInstructions = [...recipe.instructions];
-                          newInstructions.push({
+                          form.insertListItem('instructions', {
                             id: crypto.randomUUID(),
                             title: "",
                             description: "",
-                            step_number: newInstructions.length + 1,
+                            step_number: recipe.instructions.length + 1,
                             recipe_id: recipe.id,
                           });
-                          setRecipe({ ...recipe, instructions: newInstructions });
                         }}
                       >
                         Add Step
                       </Button>
                     </Group>
-                    <EditRecipeInstructions recipe={recipe} setRecipe={setRecipe} />
+                    <EditRecipeInstructions form={form} />
                   </Stack>
                 </Tabs.Panel>
               </Stack>
@@ -205,8 +176,7 @@ const EditRecipe = memo<EditRecipeProps>(({
               <NumberInput
                 label="Cooking Time"
                 placeholder="30"
-                value={recipe.cooking_time || ''}
-                onChange={handleCookingTimeChange}
+                {...form.getInputProps('cooking_time')}
                 min={0}
                 max={1440}
                 step={5}
@@ -219,8 +189,7 @@ const EditRecipe = memo<EditRecipeProps>(({
               <NumberInput
                 label="Serving Size"
                 placeholder="4"
-                value={recipe.serving_size || ''}
-                onChange={handleServingSizeChange}
+                {...form.getInputProps('serving_size')}
                 min={1}
                 max={50}
                 suffix=" servings"
@@ -231,10 +200,7 @@ const EditRecipe = memo<EditRecipeProps>(({
 
               <Box>
                 <Title order={5} size="xs" mb="xs" c="dimmed">TAGS</Title>
-                <EditRecipeTags
-                  recipe={recipe}
-                  setRecipe={(updatedRecipe) => setRecipe(updatedRecipe as RecipeDetail)}
-                />
+                <EditRecipeTags form={form} />
               </Box>
             </Stack>
           </Paper>

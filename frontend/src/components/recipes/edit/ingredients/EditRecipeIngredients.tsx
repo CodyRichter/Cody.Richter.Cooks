@@ -1,7 +1,6 @@
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
@@ -9,10 +8,11 @@ import { Ingredient } from "@/types/Ingredient";
 import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeIngredient from "@/components/recipes/edit/ingredients/SortableRecipeIngredient";
 import { Grid, Text, Box } from "@mantine/core";
+import { UseFormReturnType } from "@mantine/form";
+import { memo } from "react";
 
 interface EditRecipeIngredientsProps {
-  recipe: RecipeDetail;
-  setRecipe: (recipe: RecipeDetail) => void;
+  form: UseFormReturnType<RecipeDetail>;
 }
 
 /**
@@ -20,28 +20,20 @@ interface EditRecipeIngredientsProps {
  * for a recipe. It allows users to drag and drop ingredients to reorder them.
  * It uses the DnD Kit library for drag and drop functionality.
  */
-export default function EditRecipeIngredients({
-  recipe,
-  setRecipe,
-}: EditRecipeIngredientsProps) {
+const EditRecipeIngredients = memo(({
+  form,
+}: EditRecipeIngredientsProps) => {
+  const recipe = form.values;
+
   const reorderIngredients = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!active || !over || !active.id || !over.id) {
       return;
     }
     if (active.id !== over.id) {
-      setRecipe({
-        ...recipe,
-        ingredients: arrayMove(
-          recipe.ingredients,
-          recipe.ingredients.findIndex(
-            (ingredient) => ingredient.id === active.id
-          ),
-          recipe.ingredients.findIndex(
-            (ingredient) => ingredient.id === over.id
-          )
-        ),
-      });
+      const from = recipe.ingredients.findIndex((ing) => ing.id === active.id);
+      const to = recipe.ingredients.findIndex((ing) => ing.id === over.id);
+      form.reorderListItem('ingredients', { from, to });
     }
   };
 
@@ -68,14 +60,16 @@ export default function EditRecipeIngredients({
           {recipe.ingredients.map((ingredient: Ingredient, index: number) => (
             <SortableRecipeIngredient
               key={ingredient.id}
-              recipe={recipe}
-              ingredient={ingredient}
+              form={form}
               index={index}
-              setRecipe={setRecipe}
             />
           ))}
         </SortableContext>
       </DndContext>
     </Box>
   );
-}
+});
+
+EditRecipeIngredients.displayName = 'EditRecipeIngredients';
+
+export default EditRecipeIngredients;

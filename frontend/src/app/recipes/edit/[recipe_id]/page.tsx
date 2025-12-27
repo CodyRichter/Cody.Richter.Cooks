@@ -1,7 +1,8 @@
 'use client';
 
 import { ActionIcon, Button, Group, Text, Container, Stack, Tooltip } from "@mantine/core";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm, UseFormReturnType } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
 import { IconChevronLeft, IconDeviceFloppy } from "@tabler/icons-react";
@@ -28,16 +29,34 @@ export default function EditRecipePage() {
   // Get user permissions for this recipe
   const { canEdit } = useUserRecipePermissions(recipe_id);
 
-  // Local state for editing - initialize directly from originalRecipe
-  const [recipe, setRecipe] = useState<RecipeDetail | null>(originalRecipe || null);
+  // Initialize form
+  const form = useForm<RecipeDetail>({
+    initialValues: originalRecipe || {
+      id: '',
+      title: '',
+      description: '',
+      tags: [],
+      ingredients: [],
+      instructions: [],
+      cooking_time: undefined,
+      serving_size: undefined,
+      created_at: '',
+      updated_at: '',
+    },
+    validate: {
+      title: (value: string) => (value.trim().length < 3 ? 'Title must be at least 3 characters' : null),
+    },
+  });
 
   // Update mutation
   const { mutate: updateRecipe, isPending: isUpdating, error: updateError } = useUpdateRecipe();
 
-  // Update local state when original recipe loads (only if not already set)
-  if (originalRecipe && !recipe) {
-    setRecipe(originalRecipe);
-  }
+  // Sync originalRecipe to form once loaded
+  useEffect(() => {
+    if (originalRecipe) {
+      form.initialize(originalRecipe);
+    }
+  }, [originalRecipe]);
 
   // Check if user has permission to edit this recipe
   const hasPermission = useMemo(() => {
@@ -45,19 +64,21 @@ export default function EditRecipePage() {
   }, [auth.isAuthenticated, canEdit]);
 
   // Disable the edit button if the recipe is invalid or updating
-  const disableEditButton: boolean = !recipe || !isRecipeValid(recipe) || isUpdating;
+  const disableEditButton: boolean = !isRecipeValid(form.values) || isUpdating || !form.isDirty();
 
   // Handle back navigation with optimistic updates
   const handleBackClick = () => {
-    navigateToRecipe(recipe_id, recipe || undefined);
+    navigateToRecipe(recipe_id, form.values);
   };
 
   // Save the recipe to the server
   const handleSaveRecipe = async () => {
-    if (!recipe || !isRecipeValid(recipe)) {
+    const { values } = form;
+
+    if (!isRecipeValid(values)) {
       notifications.show({
         title: "Invalid Recipe",
-        message: "Please ensure all fields are filled out before updating the recipe.",
+        message: "Please ensure all fields are filled out correctly before updating the recipe.",
         color: "red",
       });
       return;
@@ -65,20 +86,20 @@ export default function EditRecipePage() {
 
     // Convert RecipeDetail to RecipeUpdate format
     const updateData: RecipeUpdate & { id: string } = {
-      id: recipe.id,
-      title: recipe.title,
-      description: recipe.description,
-      tags: recipe.tags,
-      cooking_time: recipe.cooking_time,
-      serving_size: recipe.serving_size,
-      ingredients: recipe.ingredients.map(ing => ({
+      id: values.id,
+      title: values.title,
+      description: values.description,
+      tags: values.tags,
+      cooking_time: values.cooking_time,
+      serving_size: values.serving_size,
+      ingredients: values.ingredients.map((ing) => ({
         name: ing.name,
         quantity: ing.quantity,
         unit: ing.unit,
         subtext: ing.subtext,
         order_index: ing.order_index
       })),
-      instructions: recipe.instructions.map(inst => ({
+      instructions: values.instructions.map((inst) => ({
         title: inst.title,
         description: inst.description,
         step_number: inst.step_number,
@@ -93,12 +114,12 @@ export default function EditRecipePage() {
           message: "The recipe has been updated successfully.",
           color: "teal",
         });
-        navigateToRecipe(recipe.id, recipe);
+        navigateToRecipe(values.id, values);
       },
-      onError: () => {
+      onError: (err) => {
         notifications.show({
           title: "Error Updating Recipe",
-          message: updateError?.message || "Failed to update recipe. Please try again.",
+          message: err?.message || "Failed to update recipe. Please try again.",
           color: "red",
         });
       }
@@ -122,7 +143,7 @@ export default function EditRecipePage() {
     );
   }
 
-  if (error || !recipe) {
+  if (error || !originalRecipe) {
     return (
       <Container size="md" py="xl">
         <ApiErrorAlert
@@ -154,7 +175,7 @@ export default function EditRecipePage() {
           </Text>
         </Group>
 
-        <EditRecipe recipe={recipe} setRecipe={setRecipe} />
+        <EditRecipe form={form} />
 
         <Group justify="flex-end">
           <Button

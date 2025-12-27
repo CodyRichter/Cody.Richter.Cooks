@@ -18,21 +18,20 @@ import {
 import React from "react";
 
 import { CSS } from "@dnd-kit/utilities";
-import { Ingredient } from "@/types/Ingredient";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
+import { UseFormReturnType } from "@mantine/form";
+import { memo } from "react";
 
-export default function MobileSortableRecipeIngredient({
-  recipe,
-  ingredient,
+const MobileSortableRecipeIngredient = memo(({
+  form,
   index,
-  setRecipe,
 }: {
-  recipe: RecipeDetail;
-  ingredient: Ingredient;
+  form: UseFormReturnType<RecipeDetail>;
   index: number;
-  setRecipe: (recipe: RecipeDetail) => void;
-}) {
+}) => {
+  const ingredient = form.values.ingredients[index];
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: ingredient.id,
@@ -75,7 +74,6 @@ export default function MobileSortableRecipeIngredient({
           <Group gap="xs" wrap="nowrap" align="center">
             <NumberInput
               placeholder="0"
-              value={ingredient.quantity}
               withAsterisk
               allowNegative={false}
               size="sm"
@@ -83,40 +81,26 @@ export default function MobileSortableRecipeIngredient({
               variant="unstyled"
               hideControls
               styles={{ input: { fontWeight: 700, width: '40px', textAlign: 'center' } }}
-              onChange={(newValue) => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients[index].quantity = newValue as number;
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
+              {...form.getInputProps(`ingredients.${index}.quantity`)}
             />
             <TextInput
               placeholder="Unit"
-              value={ingredient.unit}
               size="sm"
               radius="md"
               variant="unstyled"
               withAsterisk
               styles={{ input: { fontWeight: 500, fontStyle: 'italic', width: '60px' } }}
-              onChange={(e) => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients[index].unit = e.currentTarget.value;
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
+              {...form.getInputProps(`ingredients.${index}.unit`)}
             />
             <TextInput
               placeholder="Ingredient Name"
-              value={ingredient.name}
               size="sm"
               radius="md"
               variant="unstyled"
               withAsterisk
               style={{ flex: 1 }}
               styles={{ input: { fontWeight: 600 } }}
-              onChange={(e) => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients[index].name = e.currentTarget.value;
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
+              {...form.getInputProps(`ingredients.${index}.name`)}
             />
           </Group>
 
@@ -138,14 +122,9 @@ export default function MobileSortableRecipeIngredient({
               <TextInput
                 label="Notes"
                 placeholder="e.g. Can substitute with..."
-                value={ingredient.subtext}
                 size="sm"
                 radius="md"
-                onChange={(e) => {
-                  const newIngredients = [...recipe.ingredients];
-                  newIngredients[index].subtext = e.currentTarget.value;
-                  setRecipe({ ...recipe, ingredients: newIngredients });
-                }}
+                {...form.getInputProps(`ingredients.${index}.subtext`)}
               />
             </Popover.Dropdown>
           </Popover>
@@ -161,9 +140,7 @@ export default function MobileSortableRecipeIngredient({
                 color="red"
                 size="xs"
                 onClick={() => {
-                  const newIngredients = [...recipe.ingredients];
-                  newIngredients.splice(index, 1);
-                  setRecipe({ ...recipe, ingredients: newIngredients });
+                  form.removeListItem('ingredients', index);
                 }}
                 leftSection={<IconExclamationMark size={14} />}
               >
@@ -175,4 +152,8 @@ export default function MobileSortableRecipeIngredient({
       </Group>
     </Paper>
   );
-}
+});
+
+MobileSortableRecipeIngredient.displayName = 'MobileSortableRecipeIngredient';
+
+export default MobileSortableRecipeIngredient;

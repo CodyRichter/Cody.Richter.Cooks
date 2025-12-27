@@ -19,21 +19,20 @@ import {
 } from "@tabler/icons-react";
 
 import { CSS } from "@dnd-kit/utilities";
-import { Ingredient } from "@/types/Ingredient";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
+import { UseFormReturnType } from "@mantine/form";
+import { memo } from "react";
 
-export default function DesktopSortableRecipeIngredient({
-  recipe,
-  ingredient,
+const DesktopSortableRecipeIngredient = memo(({
+  form,
   index,
-  setRecipe,
 }: {
-  recipe: RecipeDetail;
-  ingredient: Ingredient;
+  form: UseFormReturnType<RecipeDetail>;
   index: number;
-  setRecipe: (recipe: RecipeDetail) => void;
-}) {
+}) => {
+  const ingredient = form.values.ingredients[index];
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: ingredient.id,
@@ -76,7 +75,6 @@ export default function DesktopSortableRecipeIngredient({
           <Grid.Col span={2}>
             <NumberInput
               placeholder="0"
-              value={ingredient.quantity}
               withAsterisk
               allowNegative={false}
               size="sm"
@@ -84,47 +82,33 @@ export default function DesktopSortableRecipeIngredient({
               variant="unstyled"
               hideControls
               styles={{ input: { fontWeight: 600, textAlign: 'center' } }}
-              onChange={(newValue) => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients[index].quantity = newValue as number;
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
+              {...form.getInputProps(`ingredients.${index}.quantity`)}
             />
           </Grid.Col>
 
           <Grid.Col span={3}>
             <TextInput
               placeholder="Tbsp, g, ml..."
-              value={ingredient.unit}
               size="sm"
               radius="md"
               variant="unstyled"
               withAsterisk
               leftSection={<IconScale size="1rem" color="var(--mantine-color-gray-5)" />}
               styles={{ input: { fontWeight: 500 } }}
-              onChange={(e) => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients[index].unit = e.currentTarget.value;
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
+              {...form.getInputProps(`ingredients.${index}.unit`)}
             />
           </Grid.Col>
 
           <Grid.Col span={5}>
             <TextInput
               placeholder="Freshly chopped onions..."
-              value={ingredient.name}
               size="sm"
               radius="md"
               variant="unstyled"
               withAsterisk
               leftSection={<IconToolsKitchen2 size="1rem" color="var(--mantine-color-gray-5)" />}
               styles={{ input: { fontWeight: 500 } }}
-              onChange={(e) => {
-                const newIngredients = [...recipe.ingredients];
-                newIngredients[index].name = e.currentTarget.value;
-                setRecipe({ ...recipe, ingredients: newIngredients });
-              }}
+              {...form.getInputProps(`ingredients.${index}.name`)}
             />
           </Grid.Col>
 
@@ -142,14 +126,9 @@ export default function DesktopSortableRecipeIngredient({
                   <TextInput
                     label="Additional Information"
                     placeholder="e.g. Can substitute with shallots"
-                    value={ingredient.subtext}
                     size="sm"
                     radius="md"
-                    onChange={(e) => {
-                      const newIngredients = [...recipe.ingredients];
-                      newIngredients[index].subtext = e.currentTarget.value;
-                      setRecipe({ ...recipe, ingredients: newIngredients });
-                    }}
+                    {...form.getInputProps(`ingredients.${index}.subtext`)}
                   />
                 </Popover.Dropdown>
               </Popover>
@@ -172,9 +151,7 @@ export default function DesktopSortableRecipeIngredient({
                     color="red"
                     size="xs"
                     onClick={() => {
-                      const newIngredients = [...recipe.ingredients];
-                      newIngredients.splice(index, 1);
-                      setRecipe({ ...recipe, ingredients: newIngredients });
+                      form.removeListItem('ingredients', index);
                     }}
                     leftSection={<IconExclamationMark size={14} />}
                   >
@@ -188,4 +165,8 @@ export default function DesktopSortableRecipeIngredient({
       </Group>
     </Paper>
   );
-}
+});
+
+DesktopSortableRecipeIngredient.displayName = 'DesktopSortableRecipeIngredient';
+
+export default DesktopSortableRecipeIngredient;

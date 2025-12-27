@@ -9,19 +9,19 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconX } from "@tabler/icons-react";
 
-import Recipe, { RecipeDetail } from "@/types/Recipe";
+import { RecipeDetail } from "@/types/Recipe";
 import { titleize } from "@/utils/recipeUtils";
-import { useState } from "react";
+import { useState, memo } from "react";
+import { UseFormReturnType } from "@mantine/form";
 
 interface EditRecipeTagsProps {
-  recipe: Recipe | RecipeDetail;
-  setRecipe: (recipe: Recipe | RecipeDetail) => void;
+  form: UseFormReturnType<RecipeDetail>;
 }
 
-export default function EditRecipeTags({
-  recipe,
-  setRecipe,
-}: EditRecipeTagsProps) {
+const EditRecipeTags = memo(({
+  form,
+}: EditRecipeTagsProps) => {
+  const recipe = form.values;
 
   // The value of the new tag input field
   const [newTagValue, setNewTagValue] = useState("");
@@ -31,7 +31,7 @@ export default function EditRecipeTags({
 
   // Handles the change in tags in the recipe object
   const handleTagChange = (newTags: string[]) => {
-    setRecipe({ ...recipe, tags: Array.from(new Set(newTags)) });
+    form.setFieldValue('tags', Array.from(new Set(newTags)));
   };
 
   // Attempts to add a tag to the recipe
@@ -42,8 +42,9 @@ export default function EditRecipeTags({
       .replace(/[^a-z0-9\s]/g, "")
       .replace(/\s+/g, "-");
 
-    if (cleanValue && !(recipe.tags || []).includes(cleanValue)) {
-      handleTagChange([...(recipe.tags || []), cleanValue]);
+    const currentTags = recipe.tags || [];
+    if (cleanValue && !currentTags.includes(cleanValue)) {
+      handleTagChange([...currentTags, cleanValue]);
       setNewTagValue("");
     }
     setIsAddingTag(false);
@@ -51,7 +52,8 @@ export default function EditRecipeTags({
 
   // Removes a tag from the recipe
   const removeTag = (tagToRemove: string) => {
-    handleTagChange((recipe.tags || []).filter((tag) => tag !== tagToRemove));
+    const currentTags = recipe.tags || [];
+    handleTagChange(currentTags.filter((tag: string) => tag !== tagToRemove));
   };
 
   // Quality of life keyboard shortcuts for the "Add Tag" input field
@@ -64,6 +66,8 @@ export default function EditRecipeTags({
       setNewTagValue("");
     }
   };
+
+  const tags = recipe.tags || [];
 
   return (
     <Stack gap="sm">
@@ -122,9 +126,9 @@ export default function EditRecipeTags({
       )}
 
       {/* Tags Display */}
-      {(recipe.tags || []).length > 0 && (
+      {tags.length > 0 && (
         <Group gap="xs">
-          {(recipe.tags || []).map((tag, index) => (
+          {tags.map((tag: string, index: number) => (
             <Badge
               key={`tag-${index}`}
               variant="light"
@@ -158,4 +162,8 @@ export default function EditRecipeTags({
       )}
     </Stack>
   );
-}
+});
+
+EditRecipeTags.displayName = 'EditRecipeTags';
+
+export default EditRecipeTags;

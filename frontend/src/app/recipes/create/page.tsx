@@ -1,8 +1,9 @@
 'use client';
 
 import { Button, Group, Text, Container, Stack } from "@mantine/core";
-import React, { useState } from "react";
+import React from "react";
 import { IconPlus } from "@tabler/icons-react";
+import { useForm, UseFormReturnType } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -15,26 +16,33 @@ import { RecipeCreate, RecipeDetail } from "@/types/Recipe";
 export default function CreateRecipe() {
   const router = useRouter();
 
-  const [newRecipe, setNewRecipe] = useState<RecipeDetail>({
-    id: "temp-new-recipe",
-    title: "",
-    description: "",
-    tags: [],
-    cooking_time: undefined,
-    serving_size: undefined,
-    ingredients: [],
-    instructions: [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+  const form: UseFormReturnType<RecipeDetail> = useForm<RecipeDetail>({
+    initialValues: {
+      id: "temp-new-recipe",
+      title: "",
+      description: "",
+      tags: [],
+      cooking_time: undefined,
+      serving_size: undefined,
+      ingredients: [],
+      instructions: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    validate: {
+      title: (value) => (value.trim().length < 3 ? 'Title must be at least 3 characters' : null),
+    },
   });
 
   const { mutateAsync: createRecipe, isPending, error } = useCreateRecipe();
 
   // Disable the create button if the recipe is invalid or network is loading
-  const disableCreateButton: boolean = !isRecipeValid(newRecipe) || isPending;
+  const disableCreateButton: boolean = !isRecipeValid(form.values) || isPending;
 
   const handleCreateRecipe = async () => {
-    if (!isRecipeValid(newRecipe)) {
+    const { values } = form;
+
+    if (!isRecipeValid(values)) {
       notifications.show({
         title: "Invalid Recipe",
         message: "Please ensure all fields are filled out before creating the recipe.",
@@ -43,21 +51,21 @@ export default function CreateRecipe() {
       return;
     }
 
-    // Convert RecipeDetail to RecipeCreate for API
+    // Convert RecipeDetail to RecipeUpdate for API
     const recipeToCreate: RecipeCreate = {
-      title: newRecipe.title,
-      description: newRecipe.description,
-      tags: newRecipe.tags,
-      cooking_time: newRecipe.cooking_time,
-      serving_size: newRecipe.serving_size,
-      ingredients: newRecipe.ingredients.map(ing => ({
+      title: values.title,
+      description: values.description,
+      tags: values.tags,
+      cooking_time: values.cooking_time,
+      serving_size: values.serving_size,
+      ingredients: values.ingredients.map(ing => ({
         name: ing.name,
         quantity: ing.quantity,
         unit: ing.unit,
         subtext: ing.subtext,
         order_index: ing.order_index
       })),
-      instructions: newRecipe.instructions.map(inst => ({
+      instructions: values.instructions.map(inst => ({
         title: inst.title,
         description: inst.description,
         step_number: inst.step_number,
@@ -74,10 +82,10 @@ export default function CreateRecipe() {
         });
         router.push(`/recipes/view/${createdRecipe.id}`);
       },
-      onError: () => {
+      onError: (err) => {
         notifications.show({
           title: "Error Creating Recipe",
-          message: error?.message || "Failed to create recipe. Please try again.",
+          message: err?.message || "Failed to create recipe. Please try again.",
           color: "red",
         });
       }
@@ -92,7 +100,7 @@ export default function CreateRecipe() {
             Create New Recipe
           </Text>
 
-          <EditRecipe recipe={newRecipe} setRecipe={setNewRecipe} />
+          <EditRecipe form={form} />
 
           <Group justify="flex-end">
             <Button
