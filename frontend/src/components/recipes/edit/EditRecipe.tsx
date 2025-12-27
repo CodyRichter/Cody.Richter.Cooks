@@ -10,30 +10,29 @@ import {
   Grid,
   Tabs,
   Box,
-  Badge,
 } from "@mantine/core";
-import React from "react";
-
 import EditRecipeIngredients from "@/components/recipes/edit/ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "@/components/recipes/edit/instructions/EditRecipeInstructions";
 import EditRecipeTags from "@/components/recipes/edit/tags/EditRecipeTags";
 import { IconPlus, IconClock, IconUsers, IconChefHat, IconListDetails, IconSettings } from "@tabler/icons-react";
 import { RecipeDetail } from "@/types/Recipe";
-import { memo } from "react";
+import { useCallback } from "react";
 import { UseFormReturnType } from "@mantine/form";
-
-// Import TipTap editor directly - Next.js handles code splitting
 import TipTapEditorWrapper from "@/components/recipes/edit/description/TipTapEditorWrapper";
 
 interface EditRecipeProps {
   form: UseFormReturnType<RecipeDetail>;
 }
 
-const EditRecipe = memo<EditRecipeProps>(({
-  form,
-}) => {
-  // Use getValues() for access to other fields
-  const recipe = form.getValues();
+export default function EditRecipe({ form }: EditRecipeProps) {
+  // Memoize the setDescription callback to prevent TipTap editor recreation
+  const setDescription = useCallback((val: string) => {
+    form.setFieldValue('description', val);
+  }, [form]);
+
+  // Get initial description for TipTap (it manages its own state internally)
+  // Using getValues() only for initial render - TipTap handles subsequent updates
+  const initialDescription = form.getValues().description || '';
 
   return (
     <Grid gutter="xl">
@@ -73,8 +72,8 @@ const EditRecipe = memo<EditRecipeProps>(({
 
               <Box>
                 <TipTapEditorWrapper
-                  description={recipe.description || ''}
-                  setDescription={(val) => form.setFieldValue('description', val)}
+                  description={initialDescription}
+                  setDescription={setDescription}
                 />
               </Box>
             </Stack>
@@ -85,16 +84,10 @@ const EditRecipe = memo<EditRecipeProps>(({
               <Stack gap="md">
                 <Tabs.List grow>
                   <Tabs.Tab value="ingredients" leftSection={<IconListDetails size="1.2rem" />}>
-                    <Group gap="xs">
-                      Ingredients
-                      <FormBadgeCount form={form} path="ingredients" />
-                    </Group>
+                    Ingredients
                   </Tabs.Tab>
                   <Tabs.Tab value="instructions" leftSection={<IconChefHat size="1.2rem" />}>
-                    <Group gap="xs">
-                      Instructions
-                      <FormBadgeCount form={form} path="instructions" />
-                    </Group>
+                    Instructions
                   </Tabs.Tab>
                 </Tabs.List>
 
@@ -220,23 +213,4 @@ const EditRecipe = memo<EditRecipeProps>(({
       </Grid.Col>
     </Grid>
   );
-});
-
-EditRecipe.displayName = 'EditRecipe';
-
-/**
- * Isolated component to show count badges without re-rendering the whole form
- */
-const FormBadgeCount = ({ form, path }: { form: UseFormReturnType<RecipeDetail>, path: 'ingredients' | 'instructions' }) => {
-  // Subscribe to changes in the array
-  form.watch(path, () => {});
-  const count = form.getValues()[path].length;
-
-  return (
-    <Badge size="sm" variant="light" color="orange">
-      {count}
-    </Badge>
-  );
-};
-
-export default EditRecipe;
+}

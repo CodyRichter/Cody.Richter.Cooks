@@ -22,20 +22,25 @@ import { CSS } from "@dnd-kit/utilities";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 import { UseFormReturnType } from "@mantine/form";
-import { memo } from "react";
 
-const DesktopSortableRecipeIngredient = memo(({
-  form,
-  index,
-}: {
+interface DesktopSortableRecipeIngredientProps {
   form: UseFormReturnType<RecipeDetail>;
   index: number;
-}) => {
-  const { id } = form.getValues().ingredients[index];
+  ingredientId: string;
+}
 
+/**
+ * Desktop layout for a sortable ingredient row.
+ * Uses Mantine Form's uncontrolled mode for inputs.
+ */
+export default function DesktopSortableRecipeIngredient({
+  form,
+  index,
+  ingredientId,
+}: DesktopSortableRecipeIngredientProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: id,
+      id: ingredientId,
     });
 
   return (
@@ -169,8 +174,4 @@ const DesktopSortableRecipeIngredient = memo(({
       </Group>
     </Paper>
   );
-});
-
-DesktopSortableRecipeIngredient.displayName = 'DesktopSortableRecipeIngredient';
-
-export default DesktopSortableRecipeIngredient;
+}

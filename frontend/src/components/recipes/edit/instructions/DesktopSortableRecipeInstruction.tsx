@@ -21,20 +21,25 @@ import { CSS } from "@dnd-kit/utilities";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 import { UseFormReturnType } from "@mantine/form";
-import { memo } from "react";
 
-const DesktopSortableRecipeInstruction = memo(({
-  form,
-  index,
-}: {
+interface DesktopSortableRecipeInstructionProps {
   form: UseFormReturnType<RecipeDetail>;
   index: number;
-}) => {
-  const { id } = form.getValues().instructions[index];
+  instructionId: string;
+}
 
+/**
+ * Desktop layout for a sortable instruction card.
+ * Uses Mantine Form's uncontrolled mode for inputs.
+ */
+export default function DesktopSortableRecipeInstruction({
+  form,
+  index,
+  instructionId,
+}: DesktopSortableRecipeInstructionProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: id,
+      id: instructionId,
     });
 
   return (
@@ -134,8 +139,4 @@ const DesktopSortableRecipeInstruction = memo(({
       </Group>
     </Paper>
   );
-});
-
-DesktopSortableRecipeInstruction.displayName = 'DesktopSortableRecipeInstruction';
-
-export default DesktopSortableRecipeInstruction;
+}

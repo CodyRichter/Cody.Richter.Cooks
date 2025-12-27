@@ -11,23 +11,31 @@ import { IconPlus, IconX } from "@tabler/icons-react";
 
 import { RecipeDetail } from "@/types/Recipe";
 import { titleize } from "@/utils/recipeUtils";
-import { useState, memo } from "react";
+import { useState } from "react";
 import { UseFormReturnType } from "@mantine/form";
 
 interface EditRecipeTagsProps {
   form: UseFormReturnType<RecipeDetail>;
 }
 
-const EditRecipeTags = memo(({
+/**
+ * Component for managing recipe tags.
+ * Uses form.watch() to stay in sync with tag changes.
+ */
+export default function EditRecipeTags({
   form,
-}: EditRecipeTagsProps) => {
-  const recipe = form.getValues();
+}: EditRecipeTagsProps) {
+  // Track tags list - updated by form.watch callback
+  const [tags, setTags] = useState<string[]>(() => form.getValues().tags || []);
 
-  // The value of the new tag input field
+  // Track local UI state
   const [newTagValue, setNewTagValue] = useState("");
-
-  // Whether the "Add Tag" input field is shown
   const [isAddingTag, setIsAddingTag] = useState(false);
+
+  // Subscribe to tag changes
+  form.watch('tags', ({ value }) => {
+    setTags(value || []);
+  });
 
   // Handles the change in tags in the recipe object
   const handleTagChange = (newTags: string[]) => {
@@ -42,9 +50,8 @@ const EditRecipeTags = memo(({
       .replace(/[^a-z0-9\s]/g, "")
       .replace(/\s+/g, "-");
 
-    const currentTags = recipe.tags || [];
-    if (cleanValue && !currentTags.includes(cleanValue)) {
-      handleTagChange([...currentTags, cleanValue]);
+    if (cleanValue && !tags.includes(cleanValue)) {
+      handleTagChange([...tags, cleanValue]);
       setNewTagValue("");
     }
     setIsAddingTag(false);
@@ -52,11 +59,10 @@ const EditRecipeTags = memo(({
 
   // Removes a tag from the recipe
   const removeTag = (tagToRemove: string) => {
-    const currentTags = recipe.tags || [];
-    handleTagChange(currentTags.filter((tag: string) => tag !== tagToRemove));
+    handleTagChange(tags.filter((tag: string) => tag !== tagToRemove));
   };
 
-  // Quality of life keyboard shortcuts for the "Add Tag" input field
+  // Keyboard shortcuts for the "Add Tag" input
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -66,8 +72,6 @@ const EditRecipeTags = memo(({
       setNewTagValue("");
     }
   };
-
-  const tags = recipe.tags || [];
 
   return (
     <Stack gap="sm">
@@ -162,8 +166,4 @@ const EditRecipeTags = memo(({
       )}
     </Stack>
   );
-});
-
-EditRecipeTags.displayName = 'EditRecipeTags';
-
-export default EditRecipeTags;
+}

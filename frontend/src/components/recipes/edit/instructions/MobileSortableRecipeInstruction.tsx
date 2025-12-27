@@ -15,26 +15,30 @@ import {
   IconTrash,
   IconNotes,
 } from "@tabler/icons-react";
-import React from "react";
 
 import { CSS } from "@dnd-kit/utilities";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 import { UseFormReturnType } from "@mantine/form";
-import { memo } from "react";
 
-const MobileSortableRecipeInstruction = memo(({
-  form,
-  index,
-}: {
+interface MobileSortableRecipeInstructionProps {
   form: UseFormReturnType<RecipeDetail>;
   index: number;
-}) => {
-  const { id } = form.getValues().instructions[index];
+  instructionId: string;
+}
 
+/**
+ * Mobile layout for a sortable instruction card.
+ * Uses Mantine Form's uncontrolled mode for inputs.
+ */
+export default function MobileSortableRecipeInstruction({
+  form,
+  index,
+  instructionId,
+}: MobileSortableRecipeInstructionProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: id,
+      id: instructionId,
     });
 
   return (
@@ -125,8 +129,4 @@ const MobileSortableRecipeInstruction = memo(({
       </Group>
     </Paper>
   );
-});
-
-MobileSortableRecipeInstruction.displayName = 'MobileSortableRecipeInstruction';
-
-export default MobileSortableRecipeInstruction;
+}

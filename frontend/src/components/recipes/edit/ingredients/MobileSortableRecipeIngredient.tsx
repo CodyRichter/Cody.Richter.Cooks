@@ -15,26 +15,40 @@ import {
   IconInfoCircle,
   IconTrash,
 } from "@tabler/icons-react";
-import React from "react";
 
 import { CSS } from "@dnd-kit/utilities";
 import { RecipeDetail } from "@/types/Recipe";
 import { useSortable } from "@dnd-kit/sortable";
 import { UseFormReturnType } from "@mantine/form";
-import { memo } from "react";
+import { useState } from "react";
 
-const MobileSortableRecipeIngredient = memo(({
-  form,
-  index,
-}: {
+interface MobileSortableRecipeIngredientProps {
   form: UseFormReturnType<RecipeDetail>;
   index: number;
-}) => {
-  const { id, subtext } = form.getValues().ingredients[index];
+  ingredientId: string;
+}
+
+/**
+ * Mobile layout for a sortable ingredient card.
+ * Uses Mantine Form's uncontrolled mode for inputs.
+ */
+export default function MobileSortableRecipeIngredient({
+  form,
+  index,
+  ingredientId,
+}: MobileSortableRecipeIngredientProps) {
+  // Track subtext for display - updated by form.watch callback
+  const [subtext, setSubtext] = useState(
+    () => form.getValues().ingredients[index]?.subtext || ''
+  );
+
+  form.watch(`ingredients.${index}.subtext`, ({ value }) => {
+    setSubtext(value || '');
+  });
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: id,
+      id: ingredientId,
     });
 
   return (
@@ -156,8 +170,4 @@ const MobileSortableRecipeIngredient = memo(({
       </Group>
     </Paper>
   );
-});
-
-MobileSortableRecipeIngredient.displayName = 'MobileSortableRecipeIngredient';
-
-export default MobileSortableRecipeIngredient;
+}

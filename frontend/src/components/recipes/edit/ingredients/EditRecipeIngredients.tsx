@@ -9,25 +9,30 @@ import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeIngredient from "@/components/recipes/edit/ingredients/SortableRecipeIngredient";
 import { Grid, Text, Box } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
-import { memo } from "react";
+import { useState, useCallback } from "react";
 
 interface EditRecipeIngredientsProps {
   form: UseFormReturnType<RecipeDetail>;
 }
 
 /**
- * The EditRecipeIngredients component is responsible for rendering the list of ingredients
- * for a recipe. It allows users to drag and drop ingredients to reorder them.
- * It uses the DnD Kit library for drag and drop functionality.
+ * The EditRecipeIngredients component renders the sortable list of ingredients.
+ * Uses form.watch() to react to list changes (add/remove/reorder).
  */
-const EditRecipeIngredients = memo(({
+export default function EditRecipeIngredients({
   form,
-}: EditRecipeIngredientsProps) => {
-  // Subscribe to changes in the ingredients list to handle re-ordering and additions
-  form.watch('ingredients', () => {});
-  const ingredients = form.getValues().ingredients;
+}: EditRecipeIngredientsProps) {
+  // Track ingredients list - updated by form.watch callback
+  const [ingredients, setIngredients] = useState<Ingredient[]>(
+    () => form.getValues().ingredients
+  );
 
-  const reorderIngredients = (e: DragEndEvent) => {
+  // Subscribe to ingredient list changes
+  form.watch('ingredients', ({ value }) => {
+    setIngredients(value);
+  });
+
+  const reorderIngredients = useCallback((e: DragEndEvent) => {
     const { active, over } = e;
     if (!active || !over || !active.id || !over.id) {
       return;
@@ -38,7 +43,7 @@ const EditRecipeIngredients = memo(({
       const to = currentIngredients.findIndex((ing) => ing.id === over.id);
       form.reorderListItem('ingredients', { from, to });
     }
-  };
+  }, [form]);
 
   return (
     <Box>
@@ -65,14 +70,11 @@ const EditRecipeIngredients = memo(({
               key={ingredient.id}
               form={form}
               index={index}
+              ingredientId={ingredient.id}
             />
           ))}
         </SortableContext>
       </DndContext>
     </Box>
   );
-});
-
-EditRecipeIngredients.displayName = 'EditRecipeIngredients';
-
-export default EditRecipeIngredients;
+}

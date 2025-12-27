@@ -3,15 +3,22 @@ import MobileSortableRecipeIngredient from "@/components/recipes/edit/ingredient
 import { RecipeDetail } from "@/types/Recipe";
 import { useMediaQuery } from "@mantine/hooks";
 import { UseFormReturnType } from "@mantine/form";
-import { memo } from "react";
 
-const SortableRecipeIngredient = memo(({
-  form,
-  index,
-}: {
+interface SortableRecipeIngredientProps {
   form: UseFormReturnType<RecipeDetail>;
   index: number;
-}) => {
+  ingredientId: string;
+}
+
+/**
+ * Responsive wrapper that renders the appropriate sortable ingredient component.
+ * memo() is not used here since the form prop doesn't benefit from memoization.
+ */
+export default function SortableRecipeIngredient({
+  form,
+  index,
+  ingredientId,
+}: SortableRecipeIngredientProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   if (isMobile) {
@@ -19,18 +26,16 @@ const SortableRecipeIngredient = memo(({
       <MobileSortableRecipeIngredient
         form={form}
         index={index}
-      />
-    );
-  } else {
-    return (
-      <DesktopSortableRecipeIngredient
-        form={form}
-        index={index}
+        ingredientId={ingredientId}
       />
     );
   }
-});
 
-SortableRecipeIngredient.displayName = 'SortableRecipeIngredient';
-
-export default SortableRecipeIngredient;
+  return (
+    <DesktopSortableRecipeIngredient
+      form={form}
+      index={index}
+      ingredientId={ingredientId}
+    />
+  );
+}
