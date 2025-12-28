@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge, Divider, Group, Paper, Text, Title, Container, Stack } from "@mantine/core";
-import { IconEdit, IconTrash, IconClock, IconUsers } from "@tabler/icons-react";
+import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, Menu, ActionIcon, Box } from "@mantine/core";
+import { IconEdit, IconTrash, IconClock, IconUsers, IconShieldLock, IconDots } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 
@@ -57,9 +57,12 @@ export default function ViewRecipe() {
         <Paper
           shadow="lg"
           p="lg"
-          radius="md"
+          radius="lg"
           withBorder
-          style={{ borderLeft: "6px solid #e2a478" }}
+          style={{
+            borderLeft: "4px solid var(--mantine-color-orange-4)",
+            backgroundColor: "var(--mantine-color-white)",
+          }}
         >
           <Stack gap="lg">
             {/* Header Section */}
@@ -68,51 +71,55 @@ export default function ViewRecipe() {
                 <Title order={2} fw={700}>{recipe.title}</Title>
 
                 {/* Recipe metadata */}
-                <Group gap="md">
+                <Group gap="xs" c="dimmed">
                   {recipe.cooking_time && (
-                    <Group gap="xs">
-                      <IconClock size="1rem" />
-                      <Text size="sm" c="dimmed">
-                        {recipe.cooking_time} minutes
+                    <Group gap="4px">
+                      <IconClock size="0.9rem" stroke={1.5} />
+                      <Text size="xs" fw={600}>
+                        {recipe.cooking_time}m
                       </Text>
                     </Group>
                   )}
 
+                  {(recipe.cooking_time || recipe.serving_size) && (
+                    <Text size="xs" c="gray.4" fw={700}>•</Text>
+                  )}
+
                   {recipe.serving_size && (
-                    <Group gap="xs">
-                      <IconUsers size="1rem" />
-                      <Text size="sm" c="dimmed">
+                    <Group gap="4px">
+                      <IconUsers size="0.9rem" stroke={1.5} />
+                      <Text size="xs" fw={600}>
                         {Math.round(recipe.serving_size * scaleFactor)} servings
                         {scaleFactor !== 1 && (
-                          <Text component="span" size="xs" c="dimmed" ml="xs">
-                            (originally {recipe.serving_size})
+                          <Text component="span" size="xs" c="dimmed" ml="4px">
+                            (x{scaleFactor})
                           </Text>
                         )}
                       </Text>
                     </Group>
                   )}
 
-                  <Text size="sm" c="dimmed">
-                    Created {new Date(recipe.created_at).toLocaleDateString()}
+                  <Text size="xs" c="gray.4" fw={700}>•</Text>
+
+                  <Text size="xs" fw={600}>
+                    {new Date(recipe.created_at).toLocaleDateString()}
                   </Text>
                 </Group>
 
                 {/* Tags */}
                 {recipe.tags && recipe.tags.length > 0 && (
-                  <Group gap="xs" mt="sm">
-                    <Text size="sm" c="dimmed" fw={400}>
-                      Tags:
-                    </Text>
+                  <Group gap="6px" mt="xs">
                     {recipe.tags.map((tag) => (
                       <Badge
                         key={tag}
-                        variant="light"
-                        color="orange"
-                        radius="md"
-                        size="lg"
+                        variant="outline"
+                        color="orange.8"
+                        radius="sm"
+                        size="sm"
                         style={{
                           textTransform: "none",
-                          fontWeight: 700,
+                          fontWeight: 500,
+                          borderWidth: "1px",
                         }}
                       >
                         {titleize(tag)}
@@ -124,36 +131,61 @@ export default function ViewRecipe() {
 
               {/* Action Buttons */}
               {auth.isAuthenticated && (canEdit || canDelete) && (
-                <Group gap="sm" style={{ flexShrink: 0 }}>
+                <Group gap="xs" style={{ flexShrink: 0 }}>
                   {canEdit && (
                     <Button
-                      variant="outline"
+                      variant="filled"
                       color="blue"
                       size="sm"
-                      radius="sm"
-                      leftSection={<IconEdit size="1rem" />}
+                      radius="xl"
+                      leftSection={<IconEdit size="1rem" stroke={1.5} />}
                       onClick={handleEditClick}
                       style={{
                         transition: "all 0.2s ease",
+                        fontWeight: 600,
+                        boxShadow: '0 4px 12px rgba(34, 139, 230, 0.15)',
                       }}
                     >
                       Edit
                     </Button>
                   )}
-                  {canDelete && (
-                    <Button
-                      variant="outline"
-                      color="red"
-                      size="sm"
-                      radius="sm"
-                      leftSection={<IconTrash size="1rem" />}
-                      onClick={open}
-                      style={{
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      Delete
-                    </Button>
+
+                  {(canEdit || canDelete) && (
+                    <Menu position="bottom-end" shadow="md" width={180} radius="md">
+                      <Menu.Target>
+                        <ActionIcon
+                          variant="light"
+                          color="gray"
+                          size="lg"
+                          radius="xl"
+                        >
+                          <IconDots size="1.2rem" stroke={1.5} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        {canEdit && (
+                          <Menu.Item
+                            leftSection={<IconShieldLock size="1rem" />}
+                            onClick={() => {}} // No-op for now
+                          >
+                            Manage Access
+                          </Menu.Item>
+                        )}
+
+                        {canDelete && (
+                          <>
+                            {canEdit && <Menu.Divider />}
+                            <Menu.Item
+                              color="red"
+                              leftSection={<IconTrash size="1rem" />}
+                              onClick={open}
+                            >
+                              Delete Recipe
+                            </Menu.Item>
+                          </>
+                        )}
+                      </Menu.Dropdown>
+                    </Menu>
                   )}
                 </Group>
               )}
@@ -163,8 +195,7 @@ export default function ViewRecipe() {
 
             {/* Description Section */}
             {recipe.description && (
-              <Stack gap="sm">
-                <Title order={4}>Description</Title>
+              <Box>
                 <div
                   dangerouslySetInnerHTML={{ __html: recipe.description }}
                   style={{
@@ -174,7 +205,7 @@ export default function ViewRecipe() {
                     fontWeight: 400,
                   }}
                 />
-              </Stack>
+              </Box>
             )}
 
             {/* Ingredients Section */}
