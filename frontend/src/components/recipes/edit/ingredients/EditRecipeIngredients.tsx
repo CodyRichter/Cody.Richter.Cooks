@@ -9,7 +9,6 @@ import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeIngredient from "@/components/recipes/edit/ingredients/SortableRecipeIngredient";
 import { Grid, Text, Box } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
-import { useState, useCallback } from "react";
 
 interface EditRecipeIngredientsProps {
   form: UseFormReturnType<RecipeDetail>;
@@ -22,17 +21,13 @@ interface EditRecipeIngredientsProps {
 export default function EditRecipeIngredients({
   form,
 }: EditRecipeIngredientsProps) {
-  // Track ingredients list - updated by form.watch callback
-  const [ingredients, setIngredients] = useState<Ingredient[]>(
-    () => form.getValues().ingredients
-  );
+  // Subscribe to ingredients changes - this makes the component reactive to form updates
+  form.watch('ingredients', () => {});
 
-  // Subscribe to ingredient list changes
-  form.watch('ingredients', ({ value }) => {
-    setIngredients(value);
-  });
+  // Get current ingredients from form
+  const ingredients = form.getValues().ingredients;
 
-  const reorderIngredients = useCallback((e: DragEndEvent) => {
+  const reorderIngredients = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!active || !over || !active.id || !over.id) {
       return;
@@ -43,7 +38,7 @@ export default function EditRecipeIngredients({
       const to = currentIngredients.findIndex((ing) => ing.id === over.id);
       form.reorderListItem('ingredients', { from, to });
     }
-  }, [form]);
+  };
 
   return (
     <Box>

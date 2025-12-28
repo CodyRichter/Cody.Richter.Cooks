@@ -8,8 +8,6 @@ import {
   Text,
 } from "@mantine/core";
 import {
-  IconDotsVertical,
-  IconLogin,
   IconLogout,
   IconPencilPlus,
   IconUserCircle,

@@ -8,7 +8,6 @@ import { InstructionStep } from "@/types/InstructionStep";
 import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeInstruction from "@/components/recipes/edit/instructions/SortableRecipeInstruction";
 import { UseFormReturnType } from "@mantine/form";
-import { useState, useCallback } from "react";
 
 interface EditRecipeInstructionsProps {
   form: UseFormReturnType<RecipeDetail>;
@@ -21,17 +20,13 @@ interface EditRecipeInstructionsProps {
 export default function EditRecipeInstructions({
   form,
 }: EditRecipeInstructionsProps) {
-  // Track instructions list - updated by form.watch callback
-  const [instructions, setInstructions] = useState<InstructionStep[]>(
-    () => form.getValues().instructions
-  );
+  // Subscribe to instructions changes - this makes the component reactive to form updates
+  form.watch('instructions', () => {});
 
-  // Subscribe to instruction list changes
-  form.watch('instructions', ({ value }) => {
-    setInstructions(value);
-  });
+  // Get current instructions from form
+  const instructions = form.getValues().instructions;
 
-  const reorderInstructions = useCallback((e: DragEndEvent) => {
+  const reorderInstructions = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!active || !over || !active.id || !over.id) {
       return;
@@ -42,7 +37,7 @@ export default function EditRecipeInstructions({
       const to = currentInstructions.findIndex((ins) => ins.id === over.id);
       form.reorderListItem('instructions', { from, to });
     }
-  }, [form]);
+  };
 
   return (
     <DndContext onDragEnd={reorderInstructions}>

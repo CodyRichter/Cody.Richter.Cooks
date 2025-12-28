@@ -34,7 +34,7 @@ export default function CreateRecipe() {
     },
   });
 
-  const { mutateAsync: createRecipe, isPending, error } = useCreateRecipe();
+  const { mutateAsync: createRecipe, isPending } = useCreateRecipe();
 
   // Disable the create button if the recipe is invalid or network is loading
   const disableCreateButton: boolean = !isRecipeValid(form.values) || isPending;
