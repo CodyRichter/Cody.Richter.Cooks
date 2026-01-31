@@ -5,7 +5,7 @@ const getApiBaseUrl = (): string => {
   }
 
   return process.env.NODE_ENV === 'production'
-    ? 'https://api.cooking.cody.richter.codes'
+    ? 'https://cooking-backend-123919757857.us-central1.run.app'
     : 'http://localhost:8000'
 }
 
