@@ -71,7 +71,7 @@ export default function MobileSortableRecipeIngredient({
       }}
       className="sortableItem"
     >
-      <Group gap="sm" align="center" wrap="nowrap">
+      <Group gap="sm" align="flex-start" wrap="nowrap">
         <ActionIcon
           variant="subtle"
           color="gray"
@@ -79,22 +79,24 @@ export default function MobileSortableRecipeIngredient({
           {...attributes}
           {...listeners}
           size="lg"
+          mt={4} // Align with top row
           style={{ touchAction: "none", cursor: isDragging ? 'grabbing' : 'grab' }}
         >
           <IconGripVertical size={20} />
         </ActionIcon>
 
         <Stack gap="xs" style={{ flex: 1 }}>
-          <Group gap="xs" wrap="nowrap" align="center">
+          {/* Row 1: Quantity, Unit, Spacer, Actions */}
+          <Group gap="sm" wrap="nowrap" align="center">
             <NumberInput
               placeholder="0"
               withAsterisk
               allowNegative={false}
               size="sm"
               radius="md"
-              variant="unstyled"
-              hideControls
-              styles={{ input: { fontWeight: 700, width: '40px', textAlign: 'center' } }}
+              variant="default" // Added visual boundary
+              hideControls={false} // Keep controls for mobile ease of use
+              styles={{ input: { fontWeight: 700, width: '70px', textAlign: 'center' } }}
               key={form.key(`ingredients.${index}.quantity`)}
               {...form.getInputProps(`ingredients.${index}.quantity`)}
             />
@@ -102,71 +104,76 @@ export default function MobileSortableRecipeIngredient({
               placeholder="Unit"
               size="sm"
               radius="md"
-              variant="unstyled"
+              variant="default" // Added visual boundary
               withAsterisk
-              styles={{ input: { fontWeight: 500, fontStyle: 'italic', width: '60px' } }}
+              style={{ flex: 1 }}
+              styles={{ input: { fontWeight: 500, fontStyle: 'italic' } }}
               key={form.key(`ingredients.${index}.unit`)}
               {...form.getInputProps(`ingredients.${index}.unit`)}
             />
-            <TextInput
-              placeholder="Ingredient Name"
-              size="sm"
-              radius="md"
-              variant="unstyled"
-              withAsterisk
-              style={{ flex: 1 }}
-              styles={{ input: { fontWeight: 600 } }}
-              key={form.key(`ingredients.${index}.name`)}
-              {...form.getInputProps(`ingredients.${index}.name`)}
-            />
+
+            {/* Spacer removed to let Unit fill space */}
+
+            <Group gap={4} wrap="nowrap">
+              <Popover width={280} position="bottom-end" withArrow trapFocus shadow="md">
+                <Popover.Target>
+                  <ActionIcon variant="subtle" color={subtext ? "blue" : "gray"} size="lg">
+                    <IconInfoCircle size={20} />
+                  </ActionIcon>
+                </Popover.Target>
+                <Popover.Dropdown p="md">
+                  <TextInput
+                    label="Notes"
+                    placeholder="e.g. Can substitute with..."
+                    size="sm"
+                    radius="md"
+                    key={form.key(`ingredients.${index}.subtext`)}
+                    {...form.getInputProps(`ingredients.${index}.subtext`)}
+                  />
+                </Popover.Dropdown>
+              </Popover>
+
+              <Popover position="bottom-end" withArrow trapFocus shadow="md">
+                <Popover.Target>
+                  <ActionIcon variant="subtle" color="red" size="lg">
+                    <IconTrash size={20} />
+                  </ActionIcon>
+                </Popover.Target>
+                <Popover.Dropdown p="xs">
+                  <Button
+                    color="red"
+                    size="xs"
+                    onClick={() => {
+                      form.removeListItem('ingredients', index);
+                    }}
+                    leftSection={<IconExclamationMark size={14} />}
+                  >
+                    Delete
+                  </Button>
+                </Popover.Dropdown>
+              </Popover>
+            </Group>
           </Group>
 
+          {/* Row 2: Ingredient Name */}
+          <TextInput
+            placeholder="Ingredient Name"
+            size="md" // Larger text for name
+            radius="md"
+            variant="default"
+            withAsterisk
+            styles={{ input: { fontWeight: 600 } }}
+            key={form.key(`ingredients.${index}.name`)}
+            {...form.getInputProps(`ingredients.${index}.name`)}
+          />
+
+          {/* Row 3: Subtext display (if present) */}
           {subtext && (
-            <Text size="xs" c="dimmed" fs="italic" pl="sm">
-              {subtext}
+            <Text size="xs" c="dimmed" fs="italic">
+               Note: {subtext}
             </Text>
           )}
         </Stack>
-
-        <Group gap={4} wrap="nowrap">
-          <Popover width={280} position="bottom-end" withArrow trapFocus shadow="md">
-            <Popover.Target>
-              <ActionIcon variant="subtle" color="blue" size="md">
-                <IconInfoCircle size={18} />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown p="md">
-              <TextInput
-                label="Notes"
-                placeholder="e.g. Can substitute with..."
-                size="sm"
-                radius="md"
-                key={form.key(`ingredients.${index}.subtext`)}
-                {...form.getInputProps(`ingredients.${index}.subtext`)}
-              />
-            </Popover.Dropdown>
-          </Popover>
-
-          <Popover position="bottom-end" withArrow trapFocus shadow="md">
-            <Popover.Target>
-              <ActionIcon variant="subtle" color="red" size="md">
-                <IconTrash size={18} />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown p="xs">
-              <Button
-                color="red"
-                size="xs"
-                onClick={() => {
-                  form.removeListItem('ingredients', index);
-                }}
-                leftSection={<IconExclamationMark size={14} />}
-              >
-                Delete
-              </Button>
-            </Popover.Dropdown>
-          </Popover>
-        </Group>
       </Group>
     </Paper>
   );

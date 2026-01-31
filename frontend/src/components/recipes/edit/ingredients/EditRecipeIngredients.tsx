@@ -9,6 +9,7 @@ import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeIngredient from "@/components/recipes/edit/ingredients/SortableRecipeIngredient";
 import { Grid, Text, Box } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface EditRecipeIngredientsProps {
   form: UseFormReturnType<RecipeDetail>;
@@ -21,6 +22,7 @@ interface EditRecipeIngredientsProps {
 export default function EditRecipeIngredients({
   form,
 }: EditRecipeIngredientsProps) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   // Subscribe to ingredients changes - this makes the component reactive to form updates
   form.watch('ingredients', () => {});
 
@@ -42,7 +44,7 @@ export default function EditRecipeIngredients({
 
   return (
     <Box>
-      {ingredients.length > 0 && (
+      {ingredients.length > 0 && !isMobile && (
         <Grid gutter="xs" px="lg" mb="xs" style={{ paddingLeft: '64px', paddingRight: '120px' }}>
           <Grid.Col span={2}>
             <Text size="xs" fw={700} c="dimmed" tt="uppercase">Qty</Text>
