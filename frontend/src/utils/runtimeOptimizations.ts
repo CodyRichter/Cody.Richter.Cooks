@@ -57,11 +57,14 @@ export const preventMemoryLeaks = () => {
 export const optimizeImageLoading = () => {
   if (typeof window !== 'undefined' && 'loading' in HTMLImageElement.prototype) {
     // Use native lazy loading when available
-    const images = document.querySelectorAll('img[data-src]')
+    const images = document.querySelectorAll<HTMLImageElement>('img[data-src]')
     images.forEach(img => {
-      img.setAttribute('loading', 'lazy')
-      img.setAttribute('src', img.getAttribute('data-src') || '')
-      img.removeAttribute('data-src')
+      const src = img.getAttribute('data-src')
+      if (src && !src.toLowerCase().startsWith('javascript:')) {
+        img.loading = 'lazy'
+        img.src = src
+        img.removeAttribute('data-src')
+      }
     })
   }
 }
