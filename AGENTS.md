@@ -23,6 +23,7 @@ This repository hosts the "Cody Richter Cooks" application, a full-stack web pla
 3.  **Clean Code**:
     - **Linting**: Ensure `npm run lint` (frontend) and `flake8 .` (backend) pass before requesting review.
     - **Formatting**: We use `prettier` (frontend) and `black` (backend).
+    - **No Dead Code**: Do NOT leave commented-out code blocks in your changes. Delete unused code instead of commenting it out.
 
 ## 3. Pull Request / Contribution Expectations
 When creating changes for the user:

@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     container_name: recipe-backend
     environment:
-      DATABASE_URL: postgresql://recipe_user:recipe_password@database:5432/recipe_db
+      DATABASE_URL: ${DATABASE_URL:-postgresql://recipe_user:recipe_password@database:5432/recipe_db}
       CORS_ORIGINS: "http://localhost:3000,http://frontend:3000"
     ports:
       - "8000:8000"
@@ -43,3 +43,8 @@ volumes:
 networks:
   default:
     name: recipe-network
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.16.238.0/24
+        - subnet: 2001:db8:1::/64

@@ -27,6 +27,12 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Debug mode: {settings.debug}")
+    # Masking DB password for log safety
+    db_log_url = settings.database_url
+    if "@" in db_log_url:
+        host_part = db_log_url.split("@")[1]
+        db_log_url = f"postgresql://****:****@{host_part}"
+    logger.info(f"Database: {db_log_url}")
     logger.info(f"CORS origins: {settings.cors_origins_list}")
 
     yield

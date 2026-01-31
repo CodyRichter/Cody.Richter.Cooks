@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Database settings
-    database_url: str = "postgresql://postgres:postgres@localhost:5432/recipes"
+    # Database settings
+    database_url: str = "postgresql://postgres:postgres@localhost:5432/postgres"
 
     # CORS settings
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
