@@ -6,6 +6,7 @@ import {
   Group,
   Menu,
   Text,
+  Badge,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -70,6 +71,17 @@ export default function NavigationHeader({
           >
             Cody Richter Cooks
           </Text>
+          {process.env.NODE_ENV !== 'production' && (
+            <Badge
+              color="red"
+              variant="filled"
+              size="lg"
+              radius="md"
+              style={{ cursor: 'default' }}
+            >
+              DEV
+            </Badge>
+          )}
         </Group>
 
         {isMobile ? (
