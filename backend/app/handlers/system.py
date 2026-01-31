@@ -19,7 +19,7 @@ class HealthcheckResponse(BaseModel):
 
 
 @router.get(
-    "/health",
+    "/health/",
     response_model=HealthcheckResponse,
     status_code=status.HTTP_200_OK,
     summary="Health Check",

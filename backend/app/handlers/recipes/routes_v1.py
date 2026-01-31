@@ -69,7 +69,7 @@ async def get_my_recipes(
     )
 
 
-@router.get("/{recipe_id}", response_model=RecipeDetail)
+@router.get("/{recipe_id}/", response_model=RecipeDetail)
 async def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
     """
     Get a recipe by ID with all ingredients and instructions. Public endpoint - anyone can view recipes.
@@ -87,7 +87,7 @@ async def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
     return get_recipe_internal(recipe_id, db)
 
 
-@router.put("/{recipe_id}", response_model=RecipeDetail)
+@router.put("/{recipe_id}/", response_model=RecipeDetail)
 async def update_recipe(
     recipe_id: str,
     recipe_data: RecipeDetail,
@@ -112,7 +112,7 @@ async def update_recipe(
     return update_recipe_internal(recipe_id, recipe_data, current_user, db)
 
 
-@router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{recipe_id}/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_recipe(
     recipe_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -160,7 +160,7 @@ async def list_recipes(
     )
 
 
-@router.get("/user/{user_id}", response_model=RecipeList)
+@router.get("/user/{user_id}/", response_model=RecipeList)
 async def list_recipes_for_user(
     user_id: str,
     page: int = Query(1, ge=1, description="Page number for pagination"),
@@ -188,7 +188,7 @@ async def list_recipes_for_user(
 
 
 @router.post(
-    "/{recipe_id}/permissions",
+    "/{recipe_id}/permissions/",
     response_model=RecipePermissionDetail,
     status_code=status.HTTP_201_CREATED,
 )
@@ -223,7 +223,7 @@ async def grant_recipe_permission(
 
 
 @router.delete(
-    "/{recipe_id}/permissions/{user_id}", status_code=status.HTTP_204_NO_CONTENT
+    "/{recipe_id}/permissions/{user_id}/", status_code=status.HTTP_204_NO_CONTENT
 )
 async def revoke_recipe_permission(
     recipe_id: str,
@@ -249,7 +249,7 @@ async def revoke_recipe_permission(
     )
 
 
-@router.get("/{recipe_id}/permissions", response_model=List[RecipePermissionDetail])
+@router.get("/{recipe_id}/permissions/", response_model=List[RecipePermissionDetail])
 async def list_recipe_permissions(
     recipe_id: str,
     current_user: User = Depends(get_current_active_user),
