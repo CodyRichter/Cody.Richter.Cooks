@@ -13,13 +13,14 @@ import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkelet
 import { ApiErrorAlert } from "@/components/error-handling";
 import { titleize } from "@/utils/recipeUtils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useRecipe } from "@/hooks/useRecipes";
 import { useUserRecipePermissions } from "@/hooks/useRecipePermissions";
 
 export default function ViewRecipe() {
   const auth = useAuth();
+  const router = useRouter();
   const params = useParams();
   const recipe_id = params?.recipe_id as string;
 
@@ -33,6 +34,19 @@ export default function ViewRecipe() {
 
   const handleEditClick = () => {
     navigateToRecipeEdit(recipe_id, recipe);
+  };
+
+  const handleDescriptionClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    const link = target.closest('a');
+
+    if (link && link.href) {
+      const url = new URL(link.href, window.location.origin);
+      if (url.origin === window.location.origin) {
+        event.preventDefault();
+        router.push(url.pathname + url.search + url.hash);
+      }
+    }
   };
 
   if (isLoading) {
@@ -198,11 +212,13 @@ export default function ViewRecipe() {
               <Box>
                 <div
                   dangerouslySetInnerHTML={{ __html: recipe.description }}
+                  onClick={handleDescriptionClick}
                   style={{
                     lineHeight: 1.6,
                     fontSize: "16px",
                     fontFamily: "inherit",
                     fontWeight: 400,
+                    cursor: "auto", // Ensure standard cursor behavior unless hovering over links
                   }}
                 />
               </Box>
