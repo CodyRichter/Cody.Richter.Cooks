@@ -130,7 +130,19 @@ export class ApiClient {
 
   async request<T>(endpoint: string, options: RequestInit & { skipAuth?: boolean } = {}): Promise<T> {
     const { skipAuth, ...fetchOptions } = options
-    const url = `${this.baseUrl}${endpoint}`
+
+    // Ensure endpoint starts with / and ends with / (unless it's empty or already has it)
+    let processedEndpoint = endpoint
+    if (!processedEndpoint.startsWith('/')) {
+      processedEndpoint = `/${processedEndpoint}`
+    }
+
+    // Split query params to handle trailing slash on the path part
+    const [path, query] = processedEndpoint.split('?')
+    const finalPath = path.endsWith('/') ? path : `${path}/`
+    const finalEndpoint = query ? `${finalPath}?${query}` : finalPath
+
+    const url = `${this.baseUrl}${finalEndpoint}`
 
     let response = await fetch(url, {
       ...fetchOptions,
