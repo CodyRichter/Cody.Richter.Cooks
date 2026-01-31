@@ -28,11 +28,15 @@ Run these commands from the `frontend/` directory:
 
 ```bash
 npm run dev      # Start dev server on localhost:3000
-npm run build    # Production build check
-npm run lint     # Run ESLint to catch errors
+npm run build    # Production build check (MANDATORY before commit)
+npm run lint     # Run ESLint (MANDATORY before commit)
 ```
 
 ### Best Practices
+
+> [!IMPORTANT]
+> You MUST ensure `npm run build` and `npm run lint` pass without errors before considering a task complete. This prevents broken builds and maintains code quality.
+
 1.  **Server Components vs Client Components**:
     - Default to **Server Components** (`page.tsx`, `layout.tsx`) for fetching and layout.
     - Use **Client Components** (`'use client'`) only when you need interactivity (onClick, useState, hooks).

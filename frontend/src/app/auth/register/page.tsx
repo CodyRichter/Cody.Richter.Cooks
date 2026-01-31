@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Alert,
   Button,
   Card,
   Container,
@@ -17,7 +16,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const { register, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const { register, isLoading, clearError, isAuthenticated } = useAuth();
   const router = useRouter();
 
   // Redirect authenticated users away from register page

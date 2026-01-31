@@ -16,14 +16,11 @@ This repository hosts the "Cody Richter Cooks" application, a full-stack web pla
 ## 2. Global Workflow Rules
 1.  **Script Priority**: ALWAYS use the scripts in `scripts/` (e.g., `dev-start.sh`, `test.sh`) instead of raw commands like `docker-compose up` or `pytest`. These scripts handle environment setup and cleanup correctly.
 2.  **Conventional Commits**: All commit messages MUST follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
-    - `feat(scope): ...`
-    - `fix(scope): ...`
-    - `refactor(scope): ...`
-    - `docs(scope): ...`
-    - `test(scope): ...`
-3.  **Clean Code**:
-    - **Linting**: Ensure `npm run lint` (frontend) and `flake8 .` (backend) pass before requesting review.
-    - **Formatting**: We use `prettier` (frontend) and `black` (backend).
+3.  **Verification Before Review**: Before requesting a review or completing a task, you MUST:
+    - **Frontend**: Run `npm run build` AND `npm run lint`. Both must pass with zero errors.
+    - **Backend**: Run `flake8 .` (linting) and ensure `pytest` passes.
+    - **Linter Ignores**: Using `eslint-disable` or equivalent linter ignores is STICKLY DISCOURAGED. You must find the root cause and fix it properly. Only use ignores as a last resort for third-party code inconsistencies, and explain why in your PR/comment.
+4.  **Clean Code**:
     - **No Dead Code**: Do NOT leave commented-out code blocks in your changes. Delete unused code instead of commenting it out.
     - **Minimal Comments**: Avoid redundant or obvious comments (e.g., `// Increment i`). Only use comments for complex or non-obvious logic that cannot be made clear through better naming.
 

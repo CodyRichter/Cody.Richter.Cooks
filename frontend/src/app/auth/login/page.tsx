@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Alert,
   Button,
   Card,
   Container,
@@ -14,14 +13,12 @@ import {
   Loader,
   Center,
 } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
-import { IconCheck } from "@tabler/icons-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginForm() {
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const { login, isLoading, clearError, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isRegistered = searchParams.get('registered') === 'true';

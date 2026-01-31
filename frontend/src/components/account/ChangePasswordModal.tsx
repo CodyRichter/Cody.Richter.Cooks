@@ -24,7 +24,6 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [validationError, setValidationError] = useState("");
 
   const changePasswordMutation = useChangePassword();
 
@@ -32,16 +31,12 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setValidationError("");
     changePasswordMutation.reset();
     close();
   }
 
   async function handleChangePassword() {
-    setValidationError("");
-
     if (newPassword !== confirmPassword) {
-      setValidationError("New password and confirmation do not match.");
       return;
     }
 

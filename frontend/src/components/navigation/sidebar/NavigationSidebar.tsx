@@ -20,11 +20,10 @@ import {
 } from "@tabler/icons-react";
 import React, { useEffect, useRef, useState } from "react";
 
-import { getOperatingSystem } from "@/utils/deviceUtils";
-import { recipeApi } from "@/services/apiServices";
-import { useFocusWithin, useDebouncedValue } from "@mantine/hooks";
 import { useRouter, usePathname } from "next/navigation";
 import { RecipeListItem } from "@/types/Recipe";
+import { useRecipes } from "@/hooks/useRecipes";
+import { useFocusWithin, useDebouncedValue, useOs } from "@mantine/hooks";
 
 
 
@@ -36,13 +35,13 @@ interface NavigationSidebarProps {
 }
 
 function SearchShortcutText({ os }: { os: string }) {
-  if (os === "macOS") {
+  if (os === "macos") {
     return (
       <div dir="ltr">
         <Kbd>⌘</Kbd>+<Kbd>K</Kbd>
       </div>
     );
-  } else if (os === "Windows" || os === "Linux") {
+  } else if (os === "windows" || os === "linux") {
     return (
       <div dir="ltr">
         <Kbd>Ctrl</Kbd>+<Kbd>K</Kbd>
@@ -59,64 +58,38 @@ export default function NavigationSidebar({
 }: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [os, setOs] = useState<string>("Unknown");
-
-  useEffect(() => {
-    setOs(getOperatingSystem());
-  }, []);
+  const os = useOs();
 
   const searchbarRef = useRef<HTMLInputElement>(null);
   const { focused: searchbarFocused } = useFocusWithin();
   const [searchText, setSearchText] = React.useState<string>("");
   const [debouncedSearchText] = useDebouncedValue(searchText, 300);
 
-  const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalResults, setTotalResults] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [hasPrevPage, setHasPrevPage] = useState(false);
 
-  // Reset to page 1 when search text changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchText]);
+  // Load recipes using react-query hook
+  const {
+    data: recipesResponse,
+    isLoading,
+    error: queryError
+  } = useRecipes({
+    page: currentPage,
+    limit: 10,
+    q: debouncedSearchText || undefined
+  });
 
-  useEffect(() => {
-    const loadRecipes = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await recipeApi.getRecipes({
-          page: currentPage,
-          limit: 10,
-          q: debouncedSearchText || undefined
-        });
-
-        // Response is now a paginated response with metadata
-        setRecipes(response.items);
-        setTotalResults(response.total);
-        setHasNextPage(response.has_next);
-        setHasPrevPage(response.has_prev);
-      } catch (err: unknown) {
-        console.error('Failed to load recipes:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load recipes');
-        setRecipes([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadRecipes();
-  }, [currentPage, debouncedSearchText]);
+  const recipes = recipesResponse?.items || [];
+  const totalResults = recipesResponse?.total || 0;
+  const hasNextPage = recipesResponse?.has_next || false;
+  const hasPrevPage = recipesResponse?.has_prev || false;
+  const error = queryError ? (queryError as Error).message : null;
 
   // Handle Focus Searchbar on Cmd/Ctrl + K
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        (os === "macOS" && event.metaKey && event.key === "k") ||
-        ((os === "Windows" || os === "Linux") &&
+        (os === "macos" && event.metaKey && event.key === "k") ||
+        ((os === "windows" || os === "linux") &&
           event.ctrlKey &&
           event.key === "k")
       ) {
@@ -172,7 +145,7 @@ export default function NavigationSidebar({
               <SearchShortcutText os={os} />
             )
           }
-          rightSectionWidth={searchText ? 35 : (os === "macOS" ? 65 : 80)}
+          rightSectionWidth={searchText ? 35 : (os === "macos" ? 65 : 80)}
           variant="filled"
           ref={searchbarRef}
           value={searchText}

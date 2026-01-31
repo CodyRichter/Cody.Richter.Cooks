@@ -203,7 +203,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'AUTH_START' })
 
     try {
-      const tokenResponse = await authApi.register(userData)
+      await authApi.register(userData)
       // We don't dispatch AUTH_SUCCESS anymore because we want the user to login manually after registration
       dispatch({ type: 'AUTH_FINISH_LOADING' })
       notifications.show({
