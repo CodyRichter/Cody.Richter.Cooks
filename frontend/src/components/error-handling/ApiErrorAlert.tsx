@@ -94,7 +94,7 @@ export default function ApiErrorAlert({
                     {message}
                 </Text>
 
-                {process.env.NODE_ENV === 'development' && apiError?.details && (
+                {process.env.NODE_ENV === 'development' && !!apiError?.details && (
                     <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
                         Status: {status} | Details: {JSON.stringify(apiError.details, null, 2)}
                     </Text>
