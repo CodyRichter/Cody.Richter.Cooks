@@ -42,7 +42,7 @@ async def create_recipe(
     return create_recipe_internal(recipe_data, current_user, db)
 
 
-@router.get("/my-recipes", response_model=RecipeList)
+@router.get("/my-recipes/", response_model=RecipeList)
 async def get_my_recipes(
     current_user: User = Depends(get_current_active_user),
     page: int = Query(1, ge=1, description="Page number for pagination"),

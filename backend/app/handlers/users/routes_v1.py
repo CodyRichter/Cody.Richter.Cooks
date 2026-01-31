@@ -33,7 +33,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.post(
-    "/register", response_model=UserResponseSchema, status_code=status.HTTP_201_CREATED
+    "/register/", response_model=UserResponseSchema, status_code=status.HTTP_201_CREATED
 )
 async def register_user(
     user_data: UserCreateSchema, request: Request, db: Session = Depends(get_db)
@@ -55,7 +55,7 @@ async def register_user(
     return register_user_internal(user_data, request, db)
 
 
-@router.post("/login", response_model=AuthTokenResponse)
+@router.post("/login/", response_model=AuthTokenResponse)
 async def login_user(
     login_data: UserLogin, request: Request, db: Session = Depends(get_db)
 ):
@@ -76,7 +76,7 @@ async def login_user(
     return login_user_internal(login_data, request, db)
 
 
-@router.get("/profile", response_model=UserResponseSchema)
+@router.get("/profile/", response_model=UserResponseSchema)
 async def get_user_profile(current_user: User = Depends(get_current_active_user)):
     """
     Get current user's profile information.
@@ -90,7 +90,7 @@ async def get_user_profile(current_user: User = Depends(get_current_active_user)
     return get_user_profile_internal(current_user)
 
 
-@router.put("/profile", response_model=UserResponseSchema)
+@router.put("/profile/", response_model=UserResponseSchema)
 async def update_user_profile(
     profile_data: UserSchema,
     request: Request,
@@ -115,7 +115,7 @@ async def update_user_profile(
     return update_user_profile_internal(profile_data, request, current_user, db)
 
 
-@router.post("/change-password", response_model=UserResponseSchema)
+@router.post("/change-password/", response_model=UserResponseSchema)
 async def change_password(
     change_password_data: UserChangePassword,
     request: Request,
@@ -140,7 +140,7 @@ async def change_password(
     return change_password_internal(change_password_data, request, current_user, db)
 
 
-@router.post("/refresh", response_model=AuthTokenRefreshResponse)
+@router.post("/refresh/", response_model=AuthTokenRefreshResponse)
 async def refresh_token(
     refresh_data: AuthTokenRefreshRequest,
     request: Request,
