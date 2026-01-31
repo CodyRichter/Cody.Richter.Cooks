@@ -10,6 +10,7 @@ This repository hosts the "Cody Richter Cooks" application, a full-stack web pla
 - **`frontend/`**: Next.js application (App Router). See [frontend/AGENTS.md](frontend/AGENTS.md).
 - **`backend/`**: FastAPI (Python) web server. See [backend/AGENTS.md](backend/AGENTS.md).
 - **`scripts/`**: Automation scripts for devops/maintenance. See [scripts/AGENTS.md](scripts/AGENTS.md).
+- **`infrastructure/`**: Cloud Run and database configuration. See [infrastructure/AGENTS.md](infrastructure/AGENTS.md).
 - **`.github/`**: CI/CD and Issue templates.
 
 ## 2. Global Workflow Rules
@@ -24,6 +25,7 @@ This repository hosts the "Cody Richter Cooks" application, a full-stack web pla
     - **Linting**: Ensure `npm run lint` (frontend) and `flake8 .` (backend) pass before requesting review.
     - **Formatting**: We use `prettier` (frontend) and `black` (backend).
     - **No Dead Code**: Do NOT leave commented-out code blocks in your changes. Delete unused code instead of commenting it out.
+    - **Minimal Comments**: Avoid redundant or obvious comments (e.g., `// Increment i`). Only use comments for complex or non-obvious logic that cannot be made clear through better naming.
 
 ## 3. Pull Request / Contribution Expectations
 When creating changes for the user:
@@ -34,4 +36,5 @@ When creating changes for the user:
 ## 4. Quick Links
 - [Frontend Documentation](frontend/AGENTS.md)
 - [Backend Documentation](backend/AGENTS.md)
+- [Infrastructure Documentation](infrastructure/AGENTS.md)
 - [Scripts & Automation](scripts/AGENTS.md)

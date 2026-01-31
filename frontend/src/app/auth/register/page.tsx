@@ -12,7 +12,6 @@ import {
   Title,
   Anchor,
 } from "@mantine/core";
-import { IconAlertTriangle } from "@tabler/icons-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -27,6 +26,7 @@ export default function RegisterPage() {
       router.push('/');
     }
   }, [isAuthenticated, router]);
+
 
   const [formData, setFormData] = useState({
     username: "",
@@ -96,7 +96,7 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
       });
-      router.push('/');
+      router.push('/auth/login?registered=true');
     } catch {
       // Error is handled by the register hook
     }
@@ -162,19 +162,6 @@ export default function RegisterPage() {
             onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
             error={formErrors.confirmPassword}
           />
-
-          {error && (
-            <Alert
-              variant="light"
-              color="red"
-              icon={<IconAlertTriangle size={20} />}
-              mb="md"
-            >
-              <Text c="red" size="sm">
-                {error}
-              </Text>
-            </Alert>
-          )}
 
           <Button
             type="submit"

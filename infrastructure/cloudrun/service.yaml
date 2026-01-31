@@ -1,0 +1,67 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: cooking-backend
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        # Scale to zero when not in use (free tier friendly)
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+        # Startup CPU boost for faster cold starts
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - image: gcr.io/PROJECT_ID/cooking-backend:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: "1"
+          env:
+            # Non-sensitive environment variables
+            - name: DEBUG
+              value: "false"
+            - name: APP_NAME
+              value: "Cody Richter Cooks API"
+            - name: CORS_ORIGINS
+              # Use comma-separated string for simplicity
+              value: "https://your-frontend-domain.vercel.app"
+            # Sensitive variables - set via Cloud Run Console or Secret Manager
+            # ---------------------------------------------------------
+            # TIP: To fix "Forbidden" error, add "allUsers" with "roles/run.invoker"
+            # in the Cloud Run service "Security" or "IAM" tab in GCP Console.
+            # ---------------------------------------------------------
+            # - name: DATABASE_URL
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: database-url
+            #       key: latest
+            # - name: SECRET_KEY
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: jwt-secret-key
+            #       key: latest
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 15
+  traffic:
+    - percent: 100
+      latestRevision: true

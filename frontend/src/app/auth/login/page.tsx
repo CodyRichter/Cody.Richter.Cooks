@@ -12,14 +12,17 @@ import {
   Title,
   Anchor,
 } from "@mantine/core";
-import { IconAlertTriangle } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconCheck } from "@tabler/icons-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRegistered = searchParams.get('registered') === 'true';
 
   // Redirect authenticated users away from login page
   useEffect(() => {
@@ -27,6 +30,14 @@ export default function LoginPage() {
       router.push('/');
     }
   }, [isAuthenticated, router]);
+
+  // Show registration success notification
+  useEffect(() => {
+    if (isRegistered) {
+      // Clear the query param to avoid confusion, notification is now handled by AuthContext during the registration action
+      router.replace('/auth/login', { scroll: false });
+    }
+  }, [isRegistered, router]);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -96,19 +107,6 @@ export default function LoginPage() {
             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
             error={formErrors.password}
           />
-
-          {error && (
-            <Alert
-              variant="light"
-              color="red"
-              icon={<IconAlertTriangle size={20} />}
-              mb="md"
-            >
-              <Text c="red" size="sm">
-                {error}
-              </Text>
-            </Alert>
-          )}
 
           <Button
             type="submit"

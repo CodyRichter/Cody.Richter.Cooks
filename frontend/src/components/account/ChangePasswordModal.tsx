@@ -1,5 +1,4 @@
 import {
-  Alert,
   Button,
   Group,
   List,
@@ -56,9 +55,31 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
             color: "green",
           });
           resetAndClose();
+        },
+        onError: (error) => {
+          notifications.show({
+            title: "Error Changing Password",
+            message: getErrorMessage(error),
+            color: "red",
+            icon: <IconAlertTriangle size={20} />,
+          });
         }
       }
     );
+  }
+
+  function handleValidationAndSubmit() {
+    if (newPassword !== confirmPassword) {
+      notifications.show({
+        title: "Validation Error",
+        message: "New password and confirmation do not match.",
+        color: "red",
+        icon: <IconAlertTriangle size={20} />,
+      });
+      return;
+    }
+
+    handleChangePassword();
   }
 
   return (
@@ -112,25 +133,14 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
         required
       />
 
-      {(validationError || changePasswordMutation.error) && (
-        <Alert
-          variant="light"
-          color="red"
-          icon={<IconAlertTriangle size={20} />}
-          mt="md"
-        >
-          <Text c="red" size="sm">
-            {validationError || getErrorMessage(changePasswordMutation.error)}
-          </Text>
-        </Alert>
-      )}
+
 
       <Group justify="flex-end" mt="md">
         <Button variant="default" onClick={resetAndClose}>
           Cancel
         </Button>
         <Button
-          onClick={handleChangePassword}
+          onClick={handleValidationAndSubmit}
           disabled={
             currentPassword === "" ||
             newPassword === "" ||

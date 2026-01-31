@@ -26,7 +26,20 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> List[str]:
-        """Convert CORS origins string to list."""
+        """Convert CORS origins string or JSON list to list."""
+        if not self.cors_origins:
+            return []
+
+        # Handle JSON format like ["http://..."]
+        if self.cors_origins.startswith("[") and self.cors_origins.endswith("]"):
+            try:
+                import json
+
+                return json.loads(self.cors_origins)
+            except Exception:
+                pass
+
+        # Handle comma-separated format
         return [origin.strip() for origin in self.cors_origins.split(",")]
 
     # Security settings

@@ -166,14 +166,41 @@ npm run test  # (when implemented)
 
 ## Deployment
 
-### Backend
-- Configured for Docker deployment
-- Environment variables for production settings
-- Database migrations handled via Alembic
+### Production Architecture
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│     Vercel      │────▶│    Cloud Run    │────▶│    Supabase     │
+│   (Frontend)    │     │    (Backend)    │     │  (PostgreSQL)   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
 
-### Frontend
+### Backend (Google Cloud Run)
+
+**First-time setup:**
+```bash
+# 1. Install gcloud CLI: https://cloud.google.com/sdk/docs/install
+# 2. Authenticate
+gcloud auth login
+
+# 3. Run setup script (enables required APIs)
+./scripts/setup-gcp.sh --project YOUR_PROJECT_ID
+```
+
+**Deploy:**
+```bash
+./scripts/deploy-cloudrun.sh --project YOUR_PROJECT_ID
+```
+
+**Environment Variables (set in Cloud Run Console):**
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | Supabase PostgreSQL connection string |
+| `SECRET_KEY` | JWT secret (256-bit hex) |
+| `CORS_ORIGINS` | Allowed origins, e.g., `["https://your-app.vercel.app"]` |
+
+### Frontend (Vercel)
 - Optimized for Vercel deployment
-- Environment-based configuration
+- Set `NEXT_PUBLIC_API_BASE_URL` to your Cloud Run URL
 - Bundle optimization and code splitting
 
 ## Troubleshooting

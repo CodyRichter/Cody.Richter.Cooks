@@ -52,3 +52,9 @@ pip install -r requirements.txt
 - **Coverage**: target 80%+.
 - **Fixtures**: Use `conftest.py` for DB sessions and test data.
 - **Mocking**: Mock external APIs (Email, S3, etc.) to keep tests fast and deterministic.
+
+## 7. Production Deployment (Cloud Run)
+- **Deploy**: `../scripts/deploy-cloudrun.sh --project YOUR_PROJECT_ID`
+- **First-time Setup**: `../scripts/setup-gcp.sh --project YOUR_PROJECT_ID`
+- **Config**: See `infrastructure/cloudrun/` for Cloud Build and service configuration
+- **Secrets**: Set `DATABASE_URL`, `SECRET_KEY`, `CORS_ORIGINS` in Cloud Run Console

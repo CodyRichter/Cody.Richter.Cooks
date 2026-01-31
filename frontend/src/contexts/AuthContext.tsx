@@ -2,6 +2,8 @@ import React, { createContext, useContext, useReducer, ReactNode, useCallback, u
 import { User, UserRegistration, TokenResponse } from '@/types/User'
 import { authApi } from '@/services/apiServices'
 import { tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
+import { notifications } from '@mantine/notifications'
+import { IconCheck, IconX } from '@tabler/icons-react'
 
 // Authentication state interface
 interface AuthState {
@@ -17,6 +19,7 @@ type AuthAction =
   | { type: 'AUTH_SUCCESS'; payload: { user: User; tokens: TokenResponse } }
   | { type: 'AUTH_ERROR'; payload: { error: string } }
   | { type: 'AUTH_LOGOUT' }
+  | { type: 'AUTH_FINISH_LOADING' }
   | { type: 'CLEAR_ERROR' }
   | { type: 'AUTH_RESTORE'; payload: { user: User } }
 
@@ -89,6 +92,13 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         user: null,
         isAuthenticated: false,
+        isLoading: false,
+        error: null
+      }
+
+    case 'AUTH_FINISH_LOADING':
+      return {
+        ...state,
         isLoading: false,
         error: null
       }
@@ -168,10 +178,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           tokens: tokenResponse
         }
       })
+      notifications.show({
+        title: 'Welcome back!',
+        message: `It's great to see you again, ${tokenResponse.user.username}.`,
+        color: 'green',
+        icon: <IconCheck size={18} />,
+      })
     } catch (error: unknown) {
       const err = error as { message?: string; details?: { detail?: string } };
       const errorMessage = err?.message || err?.details?.detail || 'Login failed'
       dispatch({ type: 'AUTH_ERROR', payload: { error: errorMessage } })
+      notifications.show({
+        title: 'Login issue',
+        message: errorMessage,
+        color: 'red',
+        icon: <IconX size={18} />,
+      })
       throw error
     }
   }, [])
@@ -182,17 +204,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const tokenResponse = await authApi.register(userData)
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: {
-          user: tokenResponse.user,
-          tokens: tokenResponse
-        }
+      // We don't dispatch AUTH_SUCCESS anymore because we want the user to login manually after registration
+      dispatch({ type: 'AUTH_FINISH_LOADING' })
+      notifications.show({
+        title: 'Welcome to the Kitchen!',
+        message: 'Your account has been created. Grab your apron and log in!',
+        color: 'green',
+        icon: <IconCheck size={18} />,
       })
     } catch (error: unknown) {
       const err = error as { message?: string; details?: { detail?: string } };
       const errorMessage = err?.message || err?.details?.detail || 'Registration failed'
       dispatch({ type: 'AUTH_ERROR', payload: { error: errorMessage } })
+      notifications.show({
+        title: 'Account setup issue',
+        message: errorMessage,
+        color: 'red',
+        icon: <IconX size={18} />,
+      })
       throw error
     }
   }, [])
@@ -208,6 +237,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.warn(`Server logout failed: ${errorMessage}`, error)
     } finally {
       dispatch({ type: 'AUTH_LOGOUT' })
+      notifications.show({
+        title: 'See you next time!',
+        message: 'You have been successfully logged out.',
+        color: 'blue',
+        icon: <IconCheck size={18} />,
+      })
     }
   }, [])
 

@@ -7,6 +7,7 @@
 - **Framework**: [Next.js 16 (App Router)](https://nextjs.org/docs)
 - **UI System**: [Mantine UI v8](https://mantine.dev/)
   - Use `@mantine/core`, `@mantine/hooks` for everything.
+  - **Notifications**: Prefer `notifications.show()` from `@mantine/notifications` for user feedback (success/error/info) instead of creating custom state-managed boxes or alert components.
   - **Avoid** raw CSS or Tailwind unless absolutely necessary. Prefer Mantine's style props or `style` object.
 - **State Management**: [React Query](https://tanstack.com/query/latest) (`@tanstack/react-query`)
   - **Rule**: All server data fetching MUST use React Query. Do not use `useEffect` + `fetch` manually.

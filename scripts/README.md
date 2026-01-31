@@ -135,6 +135,38 @@ Cleans up Docker resources (containers, images, volumes, networks).
 ./scripts/cleanup.sh --volumes       # Remove volumes (with confirmation)
 ```
 
+### `deploy-cloudrun.sh`
+Deploys the backend to Google Cloud Run.
+
+```bash
+./scripts/deploy-cloudrun.sh [OPTIONS]
+```
+
+**Options:**
+- `--project PROJECT`: GCP project ID (required if not set via gcloud config)
+- `--region REGION`: Cloud Run region (default: us-central1)
+- `--dry-run`: Show what would be deployed without deploying
+- `--help`: Show help message
+
+**Examples:**
+```bash
+./scripts/deploy-cloudrun.sh --project my-cooking-app
+./scripts/deploy-cloudrun.sh --project my-cooking-app --region us-west1
+./scripts/deploy-cloudrun.sh --dry-run  # Preview deployment
+```
+
+### `setup-gcp.sh`
+One-time GCP project setup for Cloud Run deployment.
+
+```bash
+./scripts/setup-gcp.sh --project PROJECT_ID
+```
+
+**Features:**
+- Enables required APIs (Cloud Run, Cloud Build, Container Registry)
+- Configures gcloud defaults
+- Provides next steps guidance
+
 ## Security Setup
 
 ### JWT Secret Key Configuration
