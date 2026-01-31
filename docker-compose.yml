@@ -26,6 +26,7 @@ services:
     container_name: recipe-backend
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://recipe_user:recipe_password@database:5432/recipe_db}
+      SECRET_KEY: ${SECRET_KEY:-}
       CORS_ORIGINS: "http://localhost:3000,http://frontend:3000"
     ports:
       - "8000:8000"

@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.handlers.system import router as system_router
 from app.handlers.users import router as users_router
 from app.handlers.recipes import router as recipes_router
+from app.middleware.security_headers import SecurityHeadersMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -60,6 +61,9 @@ app.add_middleware(
     allow_methods=settings.cors_allow_methods,
     allow_headers=settings.cors_allow_headers,
 )
+
+# Configure Security Headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Include routers
 app.include_router(system_router)

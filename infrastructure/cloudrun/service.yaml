@@ -33,8 +33,8 @@ spec:
             - name: APP_NAME
               value: "Cody Richter Cooks API"
             - name: CORS_ORIGINS
-              # Use comma-separated string for simplicity
-              value: "https://your-frontend-domain.vercel.app"
+              # Production frontend domain
+              value: "https://cooking.cody.richter.codes"
             # Sensitive variables - set via Cloud Run Console or Secret Manager
             # ---------------------------------------------------------
             # TIP: To fix "Forbidden" error, add "allUsers" with "roles/run.invoker"
