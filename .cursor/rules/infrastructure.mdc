@@ -1,0 +1,9 @@
+---
+description: For infrastructure updates, AWS changes, or any new
+alwaysApply: false
+---
+
+- The app is hosted on AWS in the free tier, and extreme effort should be made not to violate this and incur a cost
+- The app is designed to be serverless
+- Cognito is used for all authenciation and authorization
+- Github Pages is used to deploy the frontend, and should not need to be changed.

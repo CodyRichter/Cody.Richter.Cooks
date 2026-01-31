@@ -1,0 +1,25 @@
+- Follow Black code formatting
+- Use isort for import sorting
+- Follow PEP 8 naming conventions:
+  - snake_case for functions and variables
+  - PascalCase for classes
+  - UPPER_CASE for constants
+- Maximum line length of 120 characters
+- Use absolute imports over relative imports
+- Use type hints for all function parameters and returns
+- Import types from `typing` module
+- Use `Optional[Type]` instead of `Type | None`
+- Use pytest for testing
+- Create custom exception classes
+- Use proper try-except blocks
+- Implement proper logging
+- Return proper error responses
+- Handle edge cases properly
+- Use proper error messages
+- All unit tests are written in the tests directory
+- The handlers for each function are defined in the src directory
+- The handlers should only handle parsing and routing of requests. All specific logic should be handled in the methods directory
+- The utilities directory contains helper functions that are shared across methods
+- All data models in the backend live in the data directory and must be kept in sync with frontend data models
+- The network directory contains HTTP responses that must be used by the handlers when responding
+- No unit tests are needed for infrastructure code changes in the CDK

@@ -1,0 +1,53 @@
+# Python backend
+**/*.pyc
+**/__pycache__/
+.env
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.pylint.d/
+.coverage
+.cdk.staging/
+cdk.out/
+.aws-sam/
+.serverless/
+.DS_Store
+
+# AWS CDK
+cdk.out/
+.cdk.staging/
+.env
+
+# Node/React frontend
+node_modules/
+.next/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+.DS_Store
+
+# Build output
+build/
+dist/
+coverage/
+.turbo/
+.vercel/
+.cache/
+.eslintcache
+
+# Editor/OS files
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
