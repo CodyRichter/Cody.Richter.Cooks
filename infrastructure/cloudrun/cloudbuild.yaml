@@ -48,6 +48,9 @@ steps:
       - '10'
       - '--set-env-vars'
       - 'DEBUG=false,APP_NAME=Cody Richter Cooks API'
+      - '--update-secrets'
+      - 'SECRET_KEY=SECRET_KEY:latest,DATABASE_URL=DATABASE_URL:latest'
+
 
 # Store images in Container Registry
 images:

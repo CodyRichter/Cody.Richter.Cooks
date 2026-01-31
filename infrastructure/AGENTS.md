@@ -24,21 +24,23 @@ For a project with 200-300 requests/day, we MUST maintain a minimal footprint:
 
 ## 4. Security & Secret Management
 **UTMOST CONCERN**: No credentials or secret keys should EVER be pushed to the repository.
+
 1. **Environment Variables**: Use `.env` files for local development (ensure they are in `.gitignore`).
-2. **Cloud Run Secrets & Variables**:
-   - **Environment Variables**: For non-sensitive data or free tier setups, use standard environment variables in the Cloud Run console.
-   - **Secret Manager**: For sensitive data (DB passwords, API keys), use the [Secret Manager](https://cloud.google.com/secret-manager) integration in `service.yaml`.
-   - Example syntax in `service.yaml`:
-     ```yaml
-     - name: DATABASE_URL
-       valueFrom:
-         secretKeyRef:
-           name: DB_URL_SECRET
-           key: latest
-     ```
-3. **IAM Roles & Public Access**:
-   - Use the principle of least privilege for the service account.
-   - **Public Access (Fix for "Forbidden" error)**: To make an API public, add the `allUsers` principal with the `Cloud Run Invoker` role in the GCP Console.
+
+2. **Cloud Run Secret Manager Integration** (CURRENT SETUP):
+   - **Secrets Used**: `SECRET_KEY` and `DATABASE_URL` are stored in Google Cloud Secret Manager
+   - **Automatic Mounting**: Cloud Run automatically mounts these secrets as environment variables
+   - **Backend Agnostic**: The application code reads from standard env vars with no cloud-specific logic
+
+3. **One-Time Setup** (Already Configured):
+   ```bash
+   # Grant Secret Manager permissions to Cloud Run service account
+   ./scripts/setup-secret-permissions.sh --project PROJECT_ID
+   ```
+
+4. **IAM Roles & Public Access**:
+   - Service account requires `roles/secretmanager.secretAccessor` for each secret
+   - **Public Access (Fix for "Forbidden" error)**: Add the `allUsers` principal with the `Cloud Run Invoker` role in GCP Console
 
 ## 5. Development Workflow
 - **Local Dev**: Use `docker-compose.yml` in the root directory for a consistent environment.
