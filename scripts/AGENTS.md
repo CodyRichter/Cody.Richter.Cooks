@@ -2,30 +2,31 @@
 
 > [!IMPORTANT]
 > The scripts in this directory are the **AUTHORITATIVE** way to manage the development lifecycle.
-> AI Agents MUST prefer these scripts over raw commands (like `docker-compose` or `alembic`) to ensure consistent environments.
+> AI Agents MUST prefer these scripts over raw commands to ensure consistent environments.
 
-## 1. Environment Control
+## 1. Local Development (`scripts/local/`)
 | Script | Description |
 | :--- | :--- |
-| **`./dev-start.sh`** | **Boot the system**. Starts Postgres and Backend containers. (Frontend runs separately via `npm run dev`). |
-| **`./dev-stop.sh`** | **Shutdown**. Stops containers. Use `--cleanup` to remove containers, `--volumes` to wipe data. |
-| **`./cleanup.sh`** | **Reset**. Removes Docker artifacts to fix "weird" states. Use this if the environment is behaving erratically. |
-| **`./build.sh`** | **Rebuild**. Re-runs `docker build`. Required after changing `requirements.txt` or `Dockerfile`. |
+| **`./start.sh`** | **Boot the system**. Starts Postgres and Backend containers. |
+| **`./stop.sh`** | **Shutdown**. Stops containers. Use `--cleanup` to remove containers, `--volumes` to wipe data. |
+| **`./build.sh`** | **Rebuild**. Re-runs `docker build`. Required after changing dependencies. |
+| **`./migrate.sh`** | **Apply Local Migrations**. Runs migrations against the local database. |
+| **`./migrate-create.sh "msg"`** | **New Migration**. Generates a new migration version file. |
+| **`./test.sh`** | **Run Tests**. Runs pytest inside the container. |
+| **`./cleanup.sh`** | **Reset**. Removes Docker artifacts to fix erratic states. |
+| **`./create-test-recipes.sh`** | **Seed Data**. Populates the local database with test recipes. |
 
-## 2. Database Management
+## 2. Production & Deployment (`scripts/prod/`)
 | Script | Description |
 | :--- | :--- |
-| **`./migrate.sh`** | **Apply Changes**. Runs `alembic upgrade head` inside the container. Run this after pulling code. |
-| **`./migrate-create.sh "msg"`** | **New Migration**. Generates a new version file in `backend/alembic/versions`. |
+| **`./deploy.sh`** | **Deploy to Cloud Run**. Builds and pushes image, then deploys. |
+| **`./migrate.sh`** | **Apply Production Migrations**. Runs migrations against remote DB. **USE WITH CAUTION**. |
+| **`./setup-gcp.sh`** | **GCP Initialization**. Sets up project, APIs, and basic infra. |
+| **`./setup-secret-permissions.sh`** | **IAM Secrets**. Configures Secret Manager access for the service account. |
 
-## 3. Testing & Verification
-| Script | Description |
-| :--- | :--- |
-| **`./test.sh`** | **Run Backend Tests**. Runs pytest inside the container. |
-| | `test.sh -t unit` : Run only unit tests (faster). |
-| | `test.sh -c` : Generate coverage report. |
-
-## 4. Usage Rules
-1.  **Always Check Output**: When running a script, verify it exited with code 0.
-2.  **No `cd` Required**: These scripts are designed to be run from the root or `scripts/` dir, but for Agents, assuming `cwd` is root is safest.
-    - Example: `bash scripts/test.sh`
+## 3. Usage Rules
+1.  **Safety First**: Never use `scripts/prod/` scripts unless you are explicitly performing deployment or production maintenance.
+2.  **Context**: Scripts are designed to be run from the project root.
+    - Correct: `bash scripts/local/test.sh`
+    - Incorrect: `cd scripts/local && ./test.sh`
+3.  **Verification**: Always verify script exit codes (should be 0).
