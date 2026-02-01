@@ -127,7 +127,7 @@ export default function ViewRecipe() {
 
                   {/* Row 2: Portioning */}
                   {recipe.serving_size && (
-                    <Group gap="xs" align="center" c="dimmed" wrap="nowrap">
+                    <Group gap="xs" align="center" c="dimmed" wrap={isMobile ? "wrap" : "nowrap"}>
                       <Group gap="4px" style={{ minWidth: '85px', flexShrink: 0 }}>
                         <IconUsers size="0.9rem" stroke={1.5} />
                         <Text size="xs" fw={600} style={{ tabularNums: true }}>
@@ -135,12 +135,13 @@ export default function ViewRecipe() {
                         </Text>
                       </Group>
 
-                      <Text size="xs" c="gray.4" fw={700}>•</Text>
+                      {!isMobile && <Text size="xs" c="gray.4" fw={700}>•</Text>}
 
-                      <Group gap="xs" align="center" wrap="nowrap">
+                      <Group gap="xs" align="center" wrap="nowrap" style={{ flex: isMobile ? '1 1 100%' : 'unset' }}>
                         <Text size="xs" fw={600} style={{ flexShrink: 0 }}>Scale:</Text>
 
                         <SegmentedControl
+                          fullWidth={isMobile}
                           size={isMobile ? "sm" : "xs"}
                           value={scaleFactor.toString()}
                           onChange={(val) => setScaleFactor(Number(val))}
