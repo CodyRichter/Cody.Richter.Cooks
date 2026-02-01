@@ -80,9 +80,11 @@ export const useDeleteRecipe = () => {
 
   return useMutation({
     mutationFn: (id: string) => recipeApi.deleteRecipe(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
       queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
+      queryClient.invalidateQueries({ queryKey: ['search'] })
+      queryClient.removeQueries({ queryKey: ['recipe', id] })
     }
   })
 }

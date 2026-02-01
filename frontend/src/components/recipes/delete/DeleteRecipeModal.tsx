@@ -19,7 +19,7 @@ export default function DeleteRecipeModal({
   const [timeUntilDeletionEnabled, setTimeUntilDeletionEnabled] = useState(0);
   const router = useRouter();
 
-  const { mutate: deleteRecipe, isPending, error } = useDeleteRecipe();
+  const { mutateAsync: deleteRecipe, isPending, error } = useDeleteRecipe();
 
   useEffect(() => {
     const intervalId = setInterval(() => {

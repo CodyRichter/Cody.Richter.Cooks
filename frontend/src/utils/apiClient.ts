@@ -61,7 +61,7 @@ class TokenManager {
       throw new Error('No refresh token available')
     }
 
-    const response = await fetch(`${apiBaseUrl}/api/v1/users/refresh`, {
+    const response = await fetch(`${apiBaseUrl}/api/v1/users/refresh/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken })
@@ -180,6 +180,11 @@ export class ApiClient {
 
     if (!response.ok) {
       throw await this.createApiError(response)
+    }
+
+    // Handle 204 No Content
+    if (response.status === 204) {
+      return {} as T
     }
 
     return response.json()
