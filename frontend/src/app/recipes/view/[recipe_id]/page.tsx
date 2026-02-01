@@ -88,9 +88,9 @@ export default function ViewRecipe() {
         >
           <Stack gap="lg">
             {/* Header Section */}
-            <Group justify="space-between" align="flex-start">
-              <Stack gap="sm" style={{ flex: 1 }}>
-                <Title order={2} fw={700}>{recipe.title}</Title>
+            <Group justify="space-between" align="flex-start" wrap="nowrap" style={{ alignItems: isMobile ? 'center' : 'flex-start' }}>
+              <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+                <Title order={isMobile ? 3 : 2} fw={700} style={{ wordBreak: 'break-word' }}>{recipe.title}</Title>
 
                 {/* Recipe metadata */}
                 <Stack gap="6px">
@@ -125,37 +125,36 @@ export default function ViewRecipe() {
                     </Text>
                   </Group>
 
-                  {/* Row 2: Portioning */}
                   {recipe.serving_size && (
                     <Group gap="xs" align="center" c="dimmed" wrap={isMobile ? "wrap" : "nowrap"}>
-                      <Group gap="4px" style={{ minWidth: '85px', flexShrink: 0 }}>
+                      <Group gap="4px" style={{ flexShrink: 0, minWidth: isMobile ? 'unset' : '95px' }}>
                         <IconUsers size="0.9rem" stroke={1.5} />
-                        <Text size="xs" fw={600} style={{ tabularNums: true }}>
+                        <Text size="xs" fw={600} style={{ fontVariantNumeric: 'tabular-nums' }}>
                           {Math.round(recipe.serving_size * scaleFactor)} servings
                         </Text>
                       </Group>
 
                       {!isMobile && <Text size="xs" c="gray.4" fw={700}>•</Text>}
 
-                      <Group gap="xs" align="center" wrap="nowrap" style={{ flex: isMobile ? '1 1 100%' : 'unset' }}>
+                      <Group gap="xs" align="center" wrap="nowrap" style={{ flex: isMobile ? '1 1 100%' : 'unset', minWidth: 0 }}>
                         <Text size="xs" fw={600} style={{ flexShrink: 0 }}>Scale:</Text>
-
                         <SegmentedControl
                           fullWidth={isMobile}
-                          size={isMobile ? "sm" : "xs"}
+                          size={isMobile ? "xs" : "xs"}
                           value={scaleFactor.toString()}
                           onChange={(val) => setScaleFactor(Number(val))}
                           data={[
-                            { label: <Box px="xs">1x</Box>, value: '1' },
-                            { label: <Box px="xs">2x</Box>, value: '2' },
-                            { label: <Box px="xs">3x</Box>, value: '3' },
-                            { label: <Box px="xs">4x</Box>, value: '4' },
-                            { label: <Box px="xs">5x</Box>, value: '5' },
+                            { label: '1x', value: '1' },
+                            { label: '2x', value: '2' },
+                            { label: '3x', value: '3' },
+                            { label: '4x', value: '4' },
+                            { label: '5x', value: '5' },
                           ]}
                           color="orange"
                           radius="md"
                           variant="default"
                           transitionDuration={200}
+                          style={{ flex: isMobile ? 1 : 'unset' }}
                         />
                       </Group>
                     </Group>
