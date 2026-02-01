@@ -9,6 +9,7 @@ import EditRecipe from "@/components/recipes/edit/EditRecipe";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { isRecipeValid } from "@/utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
+import { formatNotificationError } from "@/utils/notificationUtils";
 import { useRouter } from "next/navigation";
 import { useCreateRecipe } from "@/hooks/useRecipes";
 import { RecipeCreate, RecipeDetail } from "@/types/Recipe";
@@ -85,7 +86,7 @@ export default function CreateRecipe() {
       onError: (err) => {
         notifications.show({
           title: "Error Creating Recipe",
-          message: err?.message || "Failed to create recipe. Please try again.",
+          message: formatNotificationError(err),
           color: "red",
         });
       }

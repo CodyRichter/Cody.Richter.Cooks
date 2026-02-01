@@ -99,8 +99,17 @@ export class ApiClient {
 
     try {
       const errorData = await response.json()
-      message = errorData.message || errorData.detail || message
       details = errorData
+
+      // Try to extract a meaningful string message
+      if (typeof errorData.message === 'string') {
+        message = errorData.message
+      } else if (typeof errorData.detail === 'string') {
+        message = errorData.detail
+      } else if (errorData.detail && typeof errorData.detail === 'object') {
+        // Handle nested detail object (e.g. { detail: { message: "..." } })
+        message = errorData.detail.message || errorData.detail.error || message
+      }
     } catch {
       message = response.statusText || message
     }

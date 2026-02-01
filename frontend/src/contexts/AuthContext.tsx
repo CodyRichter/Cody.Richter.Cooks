@@ -4,6 +4,7 @@ import { authApi } from '@/services/apiServices'
 import { tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
 import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
+import { formatNotificationError } from '@/utils/notificationUtils'
 
 // Authentication state interface
 interface AuthState {
@@ -185,8 +186,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         icon: <IconCheck size={18} />,
       })
     } catch (error: unknown) {
-      const err = error as { message?: string; details?: { detail?: string } };
-      const errorMessage = err?.message || err?.details?.detail || 'Login failed'
+      const errorMessage = formatNotificationError(error)
       dispatch({ type: 'AUTH_ERROR', payload: { error: errorMessage } })
       notifications.show({
         title: 'Login issue',
@@ -213,8 +213,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         icon: <IconCheck size={18} />,
       })
     } catch (error: unknown) {
-      const err = error as { message?: string; details?: { detail?: string } };
-      const errorMessage = err?.message || err?.details?.detail || 'Registration failed'
+      const errorMessage = formatNotificationError(error)
       dispatch({ type: 'AUTH_ERROR', payload: { error: errorMessage } })
       notifications.show({
         title: 'Account setup issue',

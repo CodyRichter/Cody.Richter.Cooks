@@ -11,7 +11,7 @@ import { notifications } from "@mantine/notifications";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 import { useChangePassword } from "@/hooks/useAuthMutations";
-import { getErrorMessage } from "@/utils/errorUtils";
+import { formatNotificationError } from "@/utils/notificationUtils";
 
 interface ChangePasswordModalProps {
   opened: boolean;
@@ -54,7 +54,7 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
         onError: (error) => {
           notifications.show({
             title: "Error Changing Password",
-            message: getErrorMessage(error),
+            message: formatNotificationError(error),
             color: "red",
             icon: <IconAlertTriangle size={20} />,
           });

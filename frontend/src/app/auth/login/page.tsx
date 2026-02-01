@@ -39,21 +39,25 @@ function LoginForm() {
   }, [isRegistered, router]);
 
   const [formData, setFormData] = useState({
-    username: "",
+    identifier: "",
     password: "",
   });
   const [formErrors, setFormErrors] = useState({
-    username: "",
+    identifier: "",
     password: "",
   });
 
   const validateForm = () => {
     const errors = {
-      username: !formData.username ? "Username is required" : "",
+      identifier: !formData.identifier
+        ? "Email or Username is required"
+        : formData.identifier.length < 3
+          ? "Must be at least 3 characters"
+          : "",
       password: !formData.password ? "Password is required" : "",
     };
     setFormErrors(errors);
-    return !errors.username && !errors.password;
+    return !errors.identifier && !errors.password;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +68,7 @@ function LoginForm() {
     clearError();
 
     try {
-      await login(formData.username, formData.password);
+      await login(formData.identifier, formData.password);
       router.push('/');
     } catch {
       // Error is handled by the login hook
@@ -88,13 +92,13 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit}>
           <TextInput
-            label="Username"
-            placeholder="Enter your username"
+            label="Email or Username"
+            placeholder="Enter your email or username"
             required
             mb="md"
-            value={formData.username}
-            onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-            error={formErrors.username}
+            value={formData.identifier}
+            onChange={(e) => setFormData(prev => ({ ...prev, identifier: e.target.value }))}
+            error={formErrors.identifier}
           />
 
           <PasswordInput
@@ -111,13 +115,15 @@ function LoginForm() {
             type="submit"
             fullWidth
             loading={isLoading}
-            disabled={!formData.username || !formData.password}
+            disabled={!formData.identifier || !formData.password}
             mb="md"
           >
             Sign In
           </Button>
 
           <Group justify="center">
+
+
             <Text size="sm" c="dimmed">
               Don&apos;t have an account?{" "}
               <Anchor

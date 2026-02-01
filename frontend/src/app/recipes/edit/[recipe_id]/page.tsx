@@ -11,6 +11,7 @@ import { RecipeDetail, RecipeUpdate } from "@/types/Recipe";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
 import { isRecipeValid } from '@/utils/recipeUtils';
 import { notifications } from "@mantine/notifications";
+import { formatNotificationError } from "@/utils/notificationUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
@@ -120,7 +121,7 @@ export default function EditRecipePage() {
       onError: (err) => {
         notifications.show({
           title: "Error Updating Recipe",
-          message: err?.message || "Failed to update recipe. Please try again.",
+          message: formatNotificationError(err),
           color: "red",
         });
       }
