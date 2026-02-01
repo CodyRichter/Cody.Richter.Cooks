@@ -47,13 +47,13 @@ export default function EditRecipeIngredients({
       {ingredients.length > 0 && !isMobile && (
         <Grid gutter="xs" px="lg" mb="xs" style={{ paddingLeft: '64px', paddingRight: '120px' }}>
           <Grid.Col span={2}>
-            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Qty</Text>
+            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Qty <Text span c="red" inherit>*</Text></Text>
           </Grid.Col>
           <Grid.Col span={3}>
-            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Unit</Text>
+            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Unit <Text span c="red" inherit>*</Text></Text>
           </Grid.Col>
           <Grid.Col span={7}>
-            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Ingredient Name</Text>
+            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Ingredient Name <Text span c="red" inherit>*</Text></Text>
           </Grid.Col>
         </Grid>
       )}

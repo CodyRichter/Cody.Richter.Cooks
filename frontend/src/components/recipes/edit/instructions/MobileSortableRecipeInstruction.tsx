@@ -81,7 +81,7 @@ export default function MobileSortableRecipeInstruction({
 
         <Stack gap="xs" style={{ flex: 1 }}>
           <TextInput
-            placeholder="Step Title"
+            placeholder="Step Title *"
             size="sm"
             radius="md"
             variant="unstyled"
@@ -92,7 +92,7 @@ export default function MobileSortableRecipeInstruction({
           />
 
           <Textarea
-            placeholder="Step description..."
+            placeholder="Step description... *"
             withAsterisk
             autosize
             size="sm"

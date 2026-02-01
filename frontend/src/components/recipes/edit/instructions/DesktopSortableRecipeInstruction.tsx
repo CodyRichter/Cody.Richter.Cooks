@@ -82,7 +82,7 @@ export default function DesktopSortableRecipeInstruction({
 
         <Stack gap="xs" style={{ flex: 1 }}>
           <TextInput
-            placeholder="Step Title (e.g. Sautéing the aromatics)"
+            placeholder="Step Title (e.g. Sautéing the aromatics) *"
             size="md"
             radius="md"
             variant="unstyled"
@@ -93,7 +93,7 @@ export default function DesktopSortableRecipeInstruction({
           />
 
           <Textarea
-            placeholder="Tell us what to do in this step..."
+            placeholder="Tell us what to do in this step... *"
             withAsterisk
             autosize
             size="sm"

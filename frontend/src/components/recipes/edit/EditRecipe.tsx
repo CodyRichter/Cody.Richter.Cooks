@@ -10,6 +10,8 @@ import {
   Grid,
   Tabs,
   Box,
+  Indicator,
+  Text,
 } from "@mantine/core";
 import EditRecipeIngredients from "@/components/recipes/edit/ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "@/components/recipes/edit/instructions/EditRecipeInstructions";
@@ -68,7 +70,16 @@ export default function EditRecipe({ form }: EditRecipeProps) {
                 })}
               />
 
-              <Divider label="Short Description" labelPosition="left" />
+
+              <Divider
+                label={
+                  <Group gap={4}>
+                    <Text size="xs" fw={500} c="dimmed">Short Description</Text>
+                    <Text size="xs" c="red">*</Text>
+                  </Group>
+                }
+                labelPosition="left"
+              />
 
               <Box>
                 <TipTapEditorWrapper
@@ -83,10 +94,34 @@ export default function EditRecipe({ form }: EditRecipeProps) {
             <Paper shadow="sm" radius="md" withBorder p="md">
               <Stack gap="md">
                 <Tabs.List grow>
-                  <Tabs.Tab value="ingredients" leftSection={<IconCarrot size="1.2rem" />}>
+                  <Tabs.Tab
+                    value="ingredients"
+                    leftSection={
+                      <Indicator
+                        color="red"
+                        size={10}
+                        offset={-2}
+                        disabled={form.getValues().ingredients.length > 0}
+                      >
+                        <IconCarrot size="1.2rem" />
+                      </Indicator>
+                    }
+                  >
                     Ingredients
                   </Tabs.Tab>
-                  <Tabs.Tab value="instructions" leftSection={<IconToolsKitchen size="1.2rem" />}>
+                  <Tabs.Tab
+                    value="instructions"
+                    leftSection={
+                      <Indicator
+                        color="red"
+                        size={10}
+                        offset={-2}
+                        disabled={form.getValues().instructions.length > 0}
+                      >
+                        <IconToolsKitchen size="1.2rem" />
+                      </Indicator>
+                    }
+                  >
                     Instructions
                   </Tabs.Tab>
                 </Tabs.List>
@@ -177,6 +212,7 @@ export default function EditRecipe({ form }: EditRecipeProps) {
                 leftSection={<IconClock size="1.1rem" />}
                 variant="filled"
                 radius="md"
+                withAsterisk
               />
 
               <NumberInput
@@ -190,6 +226,7 @@ export default function EditRecipe({ form }: EditRecipeProps) {
                 leftSection={<IconUsers size="1.1rem" />}
                 variant="filled"
                 radius="md"
+                withAsterisk
               />
 
               <Box>
