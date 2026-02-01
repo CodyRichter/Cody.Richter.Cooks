@@ -27,7 +27,7 @@ PROJECT=""
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -45,7 +45,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "Usage: ./scripts/deploy-cloudrun.sh [OPTIONS]"
+            echo "Usage: ./scripts/prod/deploy.sh [OPTIONS]"
             echo ""
             echo "Deploy the backend to Google Cloud Run."
             echo ""
@@ -60,14 +60,14 @@ while [[ $# -gt 0 ]]; do
             echo "     - SECRET_KEY (JWT secret key, 256-bit hex)"
             echo "     - DATABASE_URL (PostgreSQL connection string)"
             echo "  2. Configure IAM permissions:"
-            echo "     ./scripts/setup-secret-permissions.sh --project PROJECT_ID"
+            echo "     ./scripts/prod/setup-secret-permissions.sh --project PROJECT_ID"
             echo ""
             echo "Environment Variables:"
             echo "  CORS_ORIGINS        Allowed CORS origins (set in cloudbuild.yaml)"
             echo ""
             echo "Example:"
-            echo "  ./scripts/deploy-cloudrun.sh --project my-gcp-project"
-            echo "  ./scripts/deploy-cloudrun.sh --project my-gcp-project --region us-west1"
+            echo "  ./scripts/prod/deploy.sh --project my-gcp-project"
+            echo "  ./scripts/prod/deploy.sh --project my-gcp-project --region us-west1"
             exit 0
             ;;
         *)

@@ -2,68 +2,25 @@ import {
   ActionIcon,
   Checkbox,
   CopyButton,
-  Divider,
   Group,
-  SegmentedControl,
   Stack,
   Text,
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconClipboardCheck, IconCopy } from "@tabler/icons-react";
+import { IconClipboardCheck, IconCopy } from "@tabler/icons-react";
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 
 import { Ingredient } from "@/types/Ingredient";
 import { convertToFractionalRepresentation } from "@/utils/recipeUtils";
-import { useMediaQuery } from "@mantine/hooks";
+
 
 interface RecipeIngredientCardProps {
   ingredients: Ingredient[];
   scaleFactor?: number;
-  setScaleFactor?: (scaleFactor: number) => void;
 }
 
-interface ScaleFactorSelectorProps {
-  scaleFactor: number;
-  setScaleFactor?: (scaleFactor: number) => void;
-  setIsEditingScaleFactor: (isEditingScaleFactor: boolean) => void;
-  isMobile: boolean;
-}
-
-function ScaleFactorSelector({
-  scaleFactor,
-  setScaleFactor,
-  setIsEditingScaleFactor,
-  isMobile,
-}: ScaleFactorSelectorProps) {
-  return (
-    <Group gap="xs" key="scale-selector-group">
-      <SegmentedControl
-        value={scaleFactor.toString()}
-        onChange={(value) => setScaleFactor?.(parseFloat(value))}
-        color="blue"
-        size="sm"
-        data={[
-          { label: isMobile ? "1" : "1x", value: "1" },
-          { label: isMobile ? "2" : "2x", value: "2" },
-          { label: isMobile ? "3" : "3x", value: "3" },
-          { label: isMobile ? "4" : "4x", value: "4" },
-          { label: isMobile ? "5" : "5x", value: "5" },
-        ]}
-      />
-
-      <Divider orientation="vertical" />
-
-      <ActionIcon
-        onClick={() => setIsEditingScaleFactor(false)}
-        variant="subtle"
-      >
-        <IconCheck size={16} />
-      </ActionIcon>
-    </Group>
-  );
-}
 
 const formatIngredient = (ingredient: Ingredient, scaleFactor: number) => {
   const quantity = convertToFractionalRepresentation(
@@ -77,11 +34,7 @@ const formatIngredient = (ingredient: Ingredient, scaleFactor: number) => {
 export default function RecipeIngredientCard({
   ingredients,
   scaleFactor = 1,
-  setScaleFactor,
 }: RecipeIngredientCardProps) {
-  const [isEditingScaleFactor, setIsEditingScaleFactor] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
   const [checkedIngredientIds, setCheckedIngredientIds] = useState<Set<string>>(
     new Set()
   );
@@ -180,51 +133,33 @@ export default function RecipeIngredientCard({
     <>
       <Group gap="xs" mb="sm">
         <Title order={4}>Ingredients</Title>
-        {isEditingScaleFactor && setScaleFactor ? (
-          <ScaleFactorSelector
-            scaleFactor={scaleFactor}
-            setScaleFactor={setScaleFactor}
-            setIsEditingScaleFactor={setIsEditingScaleFactor}
-            isMobile={!!isMobile}
-          />
-        ) : (
-          <Group gap="xs">
-            <CopyButton value={formattedIngredientsAsString} timeout={2000}>
-              {({ copied, copy }) => (
-                <Tooltip
-                  label={
-                    copied
-                      ? "Ingredients Copied to Clipboard!"
-                      : "Copy Ingredients"
-                  }
-                  withArrow
-                  position="right"
-                >
-                  <ActionIcon
-                    color={copied ? "teal" : "gray"}
-                    variant="subtle"
-                    onClick={copy}
-                  >
-                    {copied ? (
-                      <IconClipboardCheck size={16} />
-                    ) : (
-                      <IconCopy size={16} />
-                    )}
-                  </ActionIcon>
-                </Tooltip>
-              )}
-            </CopyButton>
-            {setScaleFactor && (
-              <ActionIcon
-                onClick={() => setIsEditingScaleFactor(true)}
-                variant="subtle"
-                color="gray"
+        <Group gap="xs">
+          <CopyButton value={formattedIngredientsAsString} timeout={2000}>
+            {({ copied, copy }) => (
+              <Tooltip
+                label={
+                  copied
+                    ? "Ingredients Copied to Clipboard!"
+                    : "Copy Ingredients"
+                }
+                withArrow
+                position="right"
               >
-                {scaleFactor}x
-              </ActionIcon>
+                <ActionIcon
+                  color={copied ? "teal" : "gray"}
+                  variant="subtle"
+                  onClick={copy}
+                >
+                  {copied ? (
+                    <IconClipboardCheck size={16} />
+                  ) : (
+                    <IconCopy size={16} />
+                  )}
+                </ActionIcon>
+              </Tooltip>
             )}
-          </Group>
-        )}
+          </CopyButton>
+        </Group>
       </Group>
 
       <Stack

@@ -23,11 +23,16 @@ MIGRATION_MESSAGE="$1"
 
 echo "📝 Creating new database migration: \"$MIGRATION_MESSAGE\""
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+cd "$PROJECT_ROOT"
+
 # Check if backend container is running
 if ! docker-compose ps backend | grep -q "Up"; then
     echo "❌ Error: Backend service is not running."
     echo "   Please start the development environment first:"
-    echo "   ./scripts/dev-start.sh"
+    echo "   ./scripts/local/start.sh"
     exit 1
 fi
 
@@ -55,7 +60,7 @@ if [ $? -eq 0 ]; then
     echo "📋 Next steps:"
     echo "1. Review the generated migration file in backend/alembic/versions/"
     echo "2. Edit the migration if needed to add custom logic"
-    echo "3. Apply the migration with: ./scripts/migrate.sh"
+    echo "3. Apply the migration with: ./scripts/local/migrate.sh"
 
 else
     echo "❌ Failed to create migration"

@@ -17,7 +17,7 @@ from app.handlers.recipes.impl_v1 import (
 from app.models.user import User
 from app.schemas.recipe import RecipeCreate, RecipeDetail, RecipeList
 from app.schemas.recipe_permission import RecipePermissionDetail, GrantPermissionRequest
-from app.utils.auth import get_current_active_user
+from app.utils.auth import get_current_active_user, get_current_user_optional
 
 router = APIRouter(prefix="/api/v1/recipes", tags=["recipes"])
 
@@ -252,7 +252,7 @@ async def revoke_recipe_permission(
 @router.get("/{recipe_id}/permissions/", response_model=List[RecipePermissionDetail])
 async def list_recipe_permissions(
     recipe_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """

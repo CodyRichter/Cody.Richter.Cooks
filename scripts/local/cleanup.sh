@@ -96,6 +96,11 @@ if [ "$VOLUMES" = true ] && [ "$FORCE" = false ]; then
     fi
 fi
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+cd "$PROJECT_ROOT"
+
 echo "🔍 Analyzing Docker resources..."
 
 # Stop recipe-related containers first
@@ -180,7 +185,7 @@ echo "   Images:     $(docker images -q | wc -l)"
 echo "   Volumes:    $(docker volume ls -q | wc -l)"
 echo "   Networks:   $(docker network ls -q | wc -l)"
 
-# Show disk space saved
+# Show Disk space saved
 echo ""
 echo "💾 Docker disk usage:"
 docker system df
@@ -189,5 +194,5 @@ echo ""
 echo "✅ Cleanup completed successfully"
 echo ""
 echo "💡 To start fresh:"
-echo "   ./scripts/build.sh --force"
-echo "   ./scripts/dev-start.sh"
+echo "   ./scripts/local/build.sh --force"
+echo "   ./scripts/local/start.sh"

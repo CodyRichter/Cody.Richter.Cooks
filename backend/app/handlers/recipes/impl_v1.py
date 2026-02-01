@@ -198,26 +198,47 @@ def list_recipes_internal(
     )
 
 
-def list_recipe_permissions_internal(recipe_id: str, user: User, db: Session):
-    # Check if user has permission to view this recipe
-    enforce_recipe_permissions(
-        db, user, recipe_id, [PermissionRole.OWNER, PermissionRole.EDITOR]
-    )
+def list_recipe_permissions_internal(recipe_id: str, user: Optional[User], db: Session):
+    # Check if recipe exists
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
 
-    # Get all permissions for this recipe with user details
-    permissions = (
+    # Determine caller's role for this recipe (None if anonymous or no specific role)
+    caller_permission = (
+        get_user_recipe_permission(db, user.id, recipe_id) if user else None
+    )
+    is_privileged = caller_permission and caller_permission.role in [
+        PermissionRole.OWNER,
+        PermissionRole.EDITOR,
+    ]
+
+    # Get permissions for this recipe with user details
+    query = (
         db.query(RecipePermission)
         .join(User, RecipePermission.user_id == User.id)
         .filter(RecipePermission.recipe_id == recipe_id)
-        .all()
     )
+
+    # If not privileged (owner/editor), only return the owner(s)
+    if not is_privileged:
+        query = query.filter(RecipePermission.role == PermissionRole.OWNER)
+
+    permissions = query.all()
 
     # Build response with user details
     responses = []
     for permission in permissions:
         response = RecipePermissionDetail.model_validate(permission)
         response.user_username = permission.user.username
-        response.user_email = permission.user.email
+        # Only expose email to owners/editors
+        if is_privileged:
+            response.user_email = permission.user.email
+        else:
+            response.user_email = None
+
         responses.append(response.model_dump())
 
     return responses

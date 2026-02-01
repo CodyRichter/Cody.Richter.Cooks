@@ -144,7 +144,7 @@ print_next_steps() {
     echo "  Next steps:"
     echo ""
     echo "  1. Deploy your backend:"
-    echo "     ./scripts/deploy-cloudrun.sh"
+    echo "     ./scripts/prod/deploy.sh"
     echo ""
     echo "  2. After deployment, set environment variables in Cloud Run Console:"
     echo "     https://console.cloud.google.com/run?project=$PROJECT"

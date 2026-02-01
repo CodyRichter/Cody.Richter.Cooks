@@ -39,6 +39,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+cd "$PROJECT_ROOT"
+
 # Stop services
 echo "⏹️  Stopping services..."
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml stop

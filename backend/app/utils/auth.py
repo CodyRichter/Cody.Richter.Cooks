@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 # JWT token security scheme
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -232,3 +233,43 @@ def get_current_active_user(current_user: "User" = Depends(get_current_user)) ->
     # For now, all users are considered active
     # This can be extended to check user.is_active if we add that field
     return current_user
+
+
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    db: Session = Depends(get_db),
+) -> Optional["User"]:
+    """
+    Dependency to get the current authenticated user from JWT token if available.
+    Does not raise exception if token is missing or invalid.
+
+    Args:
+        credentials: HTTP authorization credentials containing the JWT token
+        db: Database session
+
+    Returns:
+        Current authenticated user if token is valid, None otherwise
+    """
+    if credentials is None:
+        return None
+
+    try:
+        payload = verify_token(credentials.credentials)
+        if payload is None:
+            return None
+
+        # Ensure this is an access token (not a refresh token)
+        if payload.get("type") != "access":
+            return None
+
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+
+    except JWTError:
+        return None
+
+    from app.models.user import User
+
+    user = db.query(User).filter(User.username == username).first()
+    return user

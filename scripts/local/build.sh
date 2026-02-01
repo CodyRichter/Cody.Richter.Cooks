@@ -51,6 +51,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+cd "$PROJECT_ROOT"
+
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
     echo "❌ Error: Docker is not running. Please start Docker and try again."
@@ -95,12 +100,12 @@ DANGLING_IMAGES=$(docker images -f "dangling=true" -q)
 if [ -n "$DANGLING_IMAGES" ]; then
     echo ""
     echo "🧹 Found dangling images. Clean them up with:"
-    echo "   ./scripts/cleanup.sh --images"
+    echo "   ./scripts/local/cleanup.sh --images"
 fi
 
 echo ""
 echo "✅ Build completed successfully"
 echo ""
 echo "💡 Next steps:"
-echo "   - Start development environment: ./scripts/dev-start.sh"
-echo "   - Run cleanup if needed: ./scripts/cleanup.sh"
+echo "   - Start development environment: ./scripts/local/start.sh"
+echo "   - Run cleanup if needed: ./scripts/local/cleanup.sh"

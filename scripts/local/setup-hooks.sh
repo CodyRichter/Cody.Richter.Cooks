@@ -23,6 +23,11 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+cd "$PROJECT_ROOT"
+
 # Check if pre-commit is installed
 if ! command -v pre-commit &> /dev/null; then
     print_warning "pre-commit not found. Attempting to install..."

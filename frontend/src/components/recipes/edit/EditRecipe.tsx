@@ -177,7 +177,7 @@ export default function EditRecipe({ form }: EditRecipeProps) {
                           });
                         }}
                       >
-                        Add Step
+                        Add Instruction Step
                       </Button>
                     </Group>
                     <EditRecipeInstructions form={form} />

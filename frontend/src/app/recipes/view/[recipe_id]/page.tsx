@@ -1,9 +1,9 @@
 'use client';
 
-import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, Menu, ActionIcon, Box } from "@mantine/core";
-import { IconEdit, IconTrash, IconClock, IconUsers, IconShieldLock, IconDots } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
-import { useState } from "react";
+import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, Menu, ActionIcon, Box, Tooltip, SegmentedControl } from "@mantine/core";
+import { IconEdit, IconTrash, IconClock, IconUsers, IconShieldLock, IconDots, IconChefHat, IconScale } from "@tabler/icons-react";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { useState, useMemo } from "react";
 
 import { Button } from "@mantine/core";
 import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useRecipe } from "@/hooks/useRecipes";
-import { useUserRecipePermissions } from "@/hooks/useRecipePermissions";
+import { useUserRecipePermissions, useRecipePermissions } from "@/hooks/useRecipePermissions";
 
 export default function ViewRecipe() {
   const auth = useAuth();
@@ -27,10 +27,18 @@ export default function ViewRecipe() {
   const { navigateToRecipeEdit } = useAppNavigation();
   const [deleteModalOpened, { open, close }] = useDisclosure(false);
   const [scaleFactor, setScaleFactor] = useState(1);
+  const isMobile = useMediaQuery('(max-width: 768px)', false, { getInitialValueInEffect: true });
 
   const { data: recipe, isLoading, error, refetch } = useRecipe(recipe_id);
 
   const { canEdit, canDelete } = useUserRecipePermissions(recipe_id);
+  const { data: permissions } = useRecipePermissions(recipe_id);
+
+  const authorName = useMemo(() => {
+    if (!permissions || !Array.isArray(permissions)) return null;
+    const owner = permissions.find(p => p.role === 'owner');
+    return owner ? owner.user_username : null;
+  }, [permissions]);
 
   const handleEditClick = () => {
     navigateToRecipeEdit(recipe_id, recipe);
@@ -85,40 +93,73 @@ export default function ViewRecipe() {
                 <Title order={2} fw={700}>{recipe.title}</Title>
 
                 {/* Recipe metadata */}
-                <Group gap="xs" c="dimmed">
-                  {recipe.cooking_time && (
-                    <Group gap="4px">
-                      <IconClock size="0.9rem" stroke={1.5} />
-                      <Text size="xs" fw={600}>
-                        {recipe.cooking_time}m
-                      </Text>
-                    </Group>
-                  )}
-
-                  {(recipe.cooking_time || recipe.serving_size) && (
-                    <Text size="xs" c="gray.4" fw={700}>•</Text>
-                  )}
-
-                  {recipe.serving_size && (
-                    <Group gap="4px">
-                      <IconUsers size="0.9rem" stroke={1.5} />
-                      <Text size="xs" fw={600}>
-                        {Math.round(recipe.serving_size * scaleFactor)} servings
-                        {scaleFactor !== 1 && (
-                          <Text component="span" size="xs" c="dimmed" ml="4px">
-                            (x{scaleFactor})
+                <Stack gap="6px">
+                  {/* Row 1: General Info */}
+                  <Group gap="xs" c="dimmed">
+                    {authorName && (
+                      <>
+                        <Group gap="4px">
+                          <IconChefHat size="0.9rem" stroke={1.5} />
+                          <Text size="xs" fw={600}>
+                            By {authorName}
                           </Text>
-                        )}
-                      </Text>
+                        </Group>
+                        <Text size="xs" c="gray.4" fw={700}>•</Text>
+                      </>
+                    )}
+
+                    {recipe.cooking_time && (
+                      <>
+                        <Group gap="4px">
+                          <IconClock size="0.9rem" stroke={1.5} />
+                          <Text size="xs" fw={600}>
+                            {recipe.cooking_time}m
+                          </Text>
+                        </Group>
+                        <Text size="xs" c="gray.4" fw={700}>•</Text>
+                      </>
+                    )}
+
+                    <Text size="xs" fw={600}>
+                      {new Date(recipe.created_at).toLocaleDateString()}
+                    </Text>
+                  </Group>
+
+                  {/* Row 2: Portioning */}
+                  {recipe.serving_size && (
+                    <Group gap="xs" align="center" c="dimmed" wrap="nowrap">
+                      <Group gap="4px" style={{ minWidth: '85px', flexShrink: 0 }}>
+                        <IconUsers size="0.9rem" stroke={1.5} />
+                        <Text size="xs" fw={600} style={{ tabularNums: true }}>
+                          {Math.round(recipe.serving_size * scaleFactor)} servings
+                        </Text>
+                      </Group>
+
+                      <Text size="xs" c="gray.4" fw={700}>•</Text>
+
+                      <Group gap="xs" align="center" wrap="nowrap">
+                        <Text size="xs" fw={600} style={{ flexShrink: 0 }}>Scale:</Text>
+
+                        <SegmentedControl
+                          size={isMobile ? "lg" : "xs"}
+                          value={scaleFactor.toString()}
+                          onChange={(val) => setScaleFactor(Number(val))}
+                          data={[
+                            { label: <Box px="xs">1x</Box>, value: '1' },
+                            { label: <Box px="xs">2x</Box>, value: '2' },
+                            { label: <Box px="xs">3x</Box>, value: '3' },
+                            { label: <Box px="xs">4x</Box>, value: '4' },
+                            { label: <Box px="xs">5x</Box>, value: '5' },
+                          ]}
+                          color="orange"
+                          radius="md"
+                          variant="default"
+                          transitionDuration={200}
+                        />
+                      </Group>
                     </Group>
                   )}
-
-                  <Text size="xs" c="gray.4" fw={700}>•</Text>
-
-                  <Text size="xs" fw={600}>
-                    {new Date(recipe.created_at).toLocaleDateString()}
-                  </Text>
-                </Group>
+                </Stack>
 
                 {/* Tags */}
                 {recipe.tags && recipe.tags.length > 0 && (
@@ -180,7 +221,7 @@ export default function ViewRecipe() {
                         {canEdit && (
                           <Menu.Item
                             leftSection={<IconShieldLock size="1rem" />}
-                            onClick={() => {}} // No-op for now
+                            onClick={() => { }} // No-op for now
                           >
                             Manage Access
                           </Menu.Item>
@@ -228,7 +269,6 @@ export default function ViewRecipe() {
             <RecipeIngredientCard
               ingredients={recipe.ingredients || []}
               scaleFactor={scaleFactor}
-              setScaleFactor={setScaleFactor}
             />
 
             {/* Instructions Section */}

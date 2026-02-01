@@ -7,6 +7,11 @@ set -e
 
 echo "🏠 Running Local Database Migrations..."
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+cd "$PROJECT_ROOT"
+
 # Load environment variables from .env if it exists
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)

@@ -472,6 +472,43 @@ class TestRecipeAPI(APITestBase):
         )
         assert permission is None
 
+    def test_recipe_permissions_visibility_levels(
+        self,
+        client: TestClient,
+        test_recipe: Recipe,
+        test_user: User,  # Owner
+        test_user2: User,  # Regular user (no permission yet)
+        auth_headers: dict,  # Owner headers
+        auth_headers_user2: dict,  # Regular user headers
+    ):
+        """Test that different users see different levels of permission details."""
+        # 1. Test as Owner (should see self and any editors, with emails)
+        response = client.get(
+            f"/api/v1/recipes/{test_recipe.id}/permissions/", headers=auth_headers
+        )
+        data = self.assert_success_response(response)
+        assert any(p["user_id"] == test_user.id for p in data)
+        assert all("user_email" in p and p["user_email"] is not None for p in data)
+
+        # 2. Test as Regular User (no permission)
+        # Should only see the owner, and email should be hidden
+        response = client.get(
+            f"/api/v1/recipes/{test_recipe.id}/permissions/", headers=auth_headers_user2
+        )
+        data = self.assert_success_response(response)
+        assert len(data) == 1
+        assert data[0]["role"] == "owner"
+        assert data[0]["user_username"] == test_user.username
+        assert data[0]["user_email"] is None
+
+        # 3. Test as Anonymous User
+        # Should only see the owner, and email should be hidden
+        response = client.get(f"/api/v1/recipes/{test_recipe.id}/permissions/")
+        data = self.assert_success_response(response)
+        assert len(data) == 1
+        assert data[0]["role"] == "owner"
+        assert data[0]["user_email"] is None
+
     @pytest.mark.parametrize(
         "endpoint_scenario", [("nonexistent_recipe", 404), ("invalid_recipe_id", 404)]
     )

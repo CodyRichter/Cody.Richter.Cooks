@@ -24,6 +24,11 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+cd "$PROJECT_ROOT"
+
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
     print_error "Docker is not running. Please start Docker first."
@@ -32,12 +37,12 @@ fi
 
 # Check if Docker Compose files exist
 if [ ! -f "docker-compose.yml" ]; then
-    print_error "docker-compose.yml not found in current directory"
+    print_error "docker-compose.yml not found in $PROJECT_ROOT"
     exit 1
 fi
 
 if [ ! -f "docker-compose.dev.yml" ]; then
-    print_error "docker-compose.dev.yml not found in current directory"
+    print_error "docker-compose.dev.yml not found in $PROJECT_ROOT"
     exit 1
 fi
 

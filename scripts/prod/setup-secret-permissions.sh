@@ -26,7 +26,7 @@ SECRETS=("SECRET_KEY" "DATABASE_URL")
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -40,7 +40,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --help|-h)
-            echo "Usage: ./scripts/setup-secret-permissions.sh [OPTIONS]"
+            echo "Usage: ./scripts/prod/setup-secret-permissions.sh [OPTIONS]"
             echo ""
             echo "Configure IAM permissions for Secret Manager secrets."
             echo ""
@@ -55,8 +55,8 @@ while [[ $# -gt 0 ]]; do
             echo "  - DATABASE_URL"
             echo ""
             echo "Example:"
-            echo "  ./scripts/setup-secret-permissions.sh --project my-gcp-project"
-            echo "  ./scripts/setup-secret-permissions.sh --project my-gcp-project --service-account my-sa@project.iam.gserviceaccount.com"
+            echo "  ./scripts/prod/setup-secret-permissions.sh --project my-gcp-project"
+            echo "  ./scripts/prod/setup-secret-permissions.sh --project my-gcp-project --service-account my-sa@project.iam.gserviceaccount.com"
             exit 0
             ;;
         *)
@@ -199,7 +199,7 @@ display_summary() {
     done
     echo ""
     echo "  Next steps:"
-    echo "  1. Deploy your application: ./scripts/deploy-cloudrun.sh --project $PROJECT"
+    echo "  1. Deploy your application: ./scripts/prod/deploy.sh --project $PROJECT"
     echo "  2. Verify secrets are loaded: Check Cloud Run logs after deployment"
     echo ""
     echo "  To verify permissions:"
