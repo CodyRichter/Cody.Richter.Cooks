@@ -14,7 +14,7 @@ import {
 import EditRecipeIngredients from "@/components/recipes/edit/ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "@/components/recipes/edit/instructions/EditRecipeInstructions";
 import EditRecipeTags from "@/components/recipes/edit/tags/EditRecipeTags";
-import { IconPlus, IconClock, IconUsers, IconChefHat, IconListDetails, IconSettings } from "@tabler/icons-react";
+import { IconPlus, IconClock, IconUsers, IconCarrot, IconToolsKitchen } from "@tabler/icons-react";
 import { RecipeDetail } from "@/types/Recipe";
 import { useCallback } from "react";
 import { UseFormReturnType } from "@mantine/form";
@@ -83,10 +83,10 @@ export default function EditRecipe({ form }: EditRecipeProps) {
             <Paper shadow="sm" radius="md" withBorder p="md">
               <Stack gap="md">
                 <Tabs.List grow>
-                  <Tabs.Tab value="ingredients" leftSection={<IconListDetails size="1.2rem" />}>
+                  <Tabs.Tab value="ingredients" leftSection={<IconCarrot size="1.2rem" />}>
                     Ingredients
                   </Tabs.Tab>
-                  <Tabs.Tab value="instructions" leftSection={<IconChefHat size="1.2rem" />}>
+                  <Tabs.Tab value="instructions" leftSection={<IconToolsKitchen size="1.2rem" />}>
                     Instructions
                   </Tabs.Tab>
                 </Tabs.List>
@@ -160,7 +160,6 @@ export default function EditRecipe({ form }: EditRecipeProps) {
           <Paper shadow="sm" p="xl" radius="md" withBorder style={{ borderTop: '4px solid orange' }}>
             <Stack gap="lg">
               <Group gap="xs" align="center">
-                <IconSettings size="1.2rem" style={{ color: 'gray' }} />
                 <Title order={3} size="h4" fw={600}>Recipe Details</Title>
               </Group>
 
