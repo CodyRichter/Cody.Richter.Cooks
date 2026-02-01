@@ -22,7 +22,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useRouter, usePathname } from "next/navigation";
 import { RecipeListItem } from "@/types/Recipe";
-import { useRecipes } from "@/hooks/useRecipes";
+import { useRecipes, useRecipe } from "@/hooks/useRecipes";
 import { useFocusWithin, useDebouncedValue, useOs } from "@mantine/hooks";
 
 
@@ -83,6 +83,35 @@ export default function NavigationSidebar({
   const hasNextPage = recipesResponse?.has_next || false;
   const hasPrevPage = recipesResponse?.has_prev || false;
   const error = queryError ? (queryError as Error).message : null;
+
+  const activeRecipeMatch = pathname.match(/^\/recipes\/view\/([^/]+)/);
+  const activeRecipeId = activeRecipeMatch ? activeRecipeMatch[1] : null;
+
+  const isActiveRecipeInList = recipes.some((r) => r.id === activeRecipeId);
+  const isSearchActive = !!debouncedSearchText;
+
+  const shouldFetchActiveRecipe =
+    !!activeRecipeId && !isActiveRecipeInList && !isSearchActive;
+
+  const { data: activeRecipeData } = useRecipe(activeRecipeId || "", {
+    enabled: shouldFetchActiveRecipe,
+  });
+
+  const displayRecipes = [...recipes];
+  let injectedRecipeId: string | null = null;
+
+  if (shouldFetchActiveRecipe && activeRecipeData) {
+    if (!displayRecipes.some((r) => r.id === activeRecipeData.id)) {
+      displayRecipes.unshift({
+        id: activeRecipeData.id,
+        title: activeRecipeData.title,
+        cooking_time: activeRecipeData.cooking_time,
+        serving_size: activeRecipeData.serving_size,
+        created_at: activeRecipeData.created_at,
+      });
+      injectedRecipeId = activeRecipeData.id;
+    }
+  }
 
   // Handle Focus Searchbar on Cmd/Ctrl + K
   useEffect(() => {
@@ -177,8 +206,13 @@ export default function NavigationSidebar({
              {error}
            </div>
         ) : (
-          recipes.map((recipe: RecipeListItem) => (
+          displayRecipes.map((recipe: RecipeListItem) => (
             <React.Fragment key={`sidebar-recipe-${recipe.id}`}>
+              {injectedRecipeId === recipe.id && (
+                <Text size="xs" c="dimmed" fw={700} ml="xs" mt="xs" mb={4} style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  Currently Viewing
+                </Text>
+              )}
               <NavLink
                 w="100%"
                 miw="44px"
@@ -198,7 +232,12 @@ export default function NavigationSidebar({
                     ? "activeSidebarRecipe"
                     : "sidebarRecipe"
                 }
+                style={injectedRecipeId === recipe.id ? {
+                  borderLeft: '3px solid var(--mantine-color-orange-4)',
+                  backgroundColor: 'var(--mantine-color-orange-0)',
+                } : undefined}
               />
+              {injectedRecipeId === recipe.id && <Divider my="xs" variant="dotted" />}
             </React.Fragment>
           ))
         )}
