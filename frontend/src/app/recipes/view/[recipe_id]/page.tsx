@@ -141,7 +141,7 @@ export default function ViewRecipe() {
                         <Text size="xs" fw={600} style={{ flexShrink: 0 }}>Scale:</Text>
 
                         <SegmentedControl
-                          size={isMobile ? "lg" : "xs"}
+                          size={isMobile ? "sm" : "xs"}
                           value={scaleFactor.toString()}
                           onChange={(val) => setScaleFactor(Number(val))}
                           data={[
