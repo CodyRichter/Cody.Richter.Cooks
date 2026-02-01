@@ -10,52 +10,15 @@ import {
   TextInput,
   Title,
   Anchor,
-  Progress,
-  Popover,
-  rem,
 } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-function PasswordRequirement({ meets, label }: { meets: boolean; label: string }) {
-  return (
-    <Text component="div" c={meets ? 'teal' : 'red'} mt={5} size="xs">
-      <Group gap={5}>
-        {meets ? <IconCheck style={{ width: rem(14), height: rem(14) }} /> : <IconX style={{ width: rem(14), height: rem(14) }} />}
-        <span>{label}</span>
-      </Group>
-    </Text>
-  );
-}
-
-const requirements = [
-  { re: /[0-9]/, label: 'Includes number' },
-  { re: /[a-z]/, label: 'Includes lowercase letter' },
-  { re: /[A-Z]/, label: 'Includes uppercase letter' },
-  { re: /[$&+,:;=?@#|'<>.^*()%!-]/, label: 'Includes special symbol' },
-];
-
-function getStrength(password: string) {
-  let strength = 0;
-  if (password.length >= 8) {
-    strength += 1;
-  }
-
-  requirements.forEach((requirement) => {
-    if (requirement.re.test(password)) {
-      strength += 1;
-    }
-  });
-
-  return strength;
-}
-
 export default function RegisterPage() {
   const { register, isLoading, clearError, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [popoverOpened, setPopoverOpened] = useState(false);
 
   // Redirect authenticated users away from register page
   useEffect(() => {
@@ -163,7 +126,7 @@ export default function RegisterPage() {
             required
             mb="md"
             value={formData.username}
-            onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+            onChange={(e) => setFormData((prev) => ({ ...prev, username: e.target.value }))}
             error={formErrors.username}
           />
 
@@ -174,32 +137,18 @@ export default function RegisterPage() {
             required
             mb="md"
             value={formData.email}
-            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
             error={formErrors.email}
           />
 
-          <Popover opened={popoverOpened && getStrength(formData.password) < 5} position="bottom" width="target" transitionProps={{ transition: 'pop' }}>
-            <Popover.Target>
-              <div onFocusCapture={() => setPopoverOpened(true)} onBlurCapture={() => setPopoverOpened(false)}>
-                <PasswordInput
-                  label="Password"
-                  placeholder="Create a strong password"
-                  required
-                  mb="md"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  error={formErrors.password}
-                />
-              </div>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Progress color={getStrength(formData.password) === 5 ? 'teal' : 'blue'} value={getStrength(formData.password) * 20} size={5} mb="xs" />
-              <PasswordRequirement meets={formData.password.length > 7} label="At least 8 characters" />
-              {requirements.map((requirement, index) => (
-                <PasswordRequirement key={index} meets={requirement.re.test(formData.password)} label={requirement.label} />
-              ))}
-            </Popover.Dropdown>
-          </Popover>
+          <PasswordStrength
+            label="Password"
+            placeholder="Create a strong password"
+            mb="md"
+            value={formData.password}
+            onChange={(val) => setFormData((prev) => ({ ...prev, password: val }))}
+            error={formErrors.password}
+          />
 
           <PasswordInput
             label="Confirm Password"
@@ -207,7 +156,7 @@ export default function RegisterPage() {
             required
             mb="md"
             value={formData.confirmPassword}
-            onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+            onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
             error={formErrors.confirmPassword}
           />
 

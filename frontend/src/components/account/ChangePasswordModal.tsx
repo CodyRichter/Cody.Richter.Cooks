@@ -1,10 +1,8 @@
 import {
   Button,
   Group,
-  List,
   Modal,
   PasswordInput,
-  Text,
 } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
@@ -12,6 +10,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 import { useChangePassword } from "@/hooks/useAuthMutations";
 import { formatNotificationError } from "@/utils/notificationUtils";
+import { PasswordStrength, getPasswordStrength } from "@/components/auth/PasswordStrength";
 
 interface ChangePasswordModalProps {
   opened: boolean;
@@ -74,6 +73,16 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
       return;
     }
 
+    if (getPasswordStrength(newPassword) < 5) {
+      notifications.show({
+        title: "Validation Error",
+        message: "Password does not meet complexity requirements.",
+        color: "red",
+        icon: <IconAlertTriangle size={20} />,
+      });
+      return;
+    }
+
     handleChangePassword();
   }
 
@@ -86,19 +95,6 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
       size="lg"
       fullScreen={isMobile}
     >
-      <Text size="sm">
-        Please enter your new password below. The password that you enter must
-        be match the following criteria:
-      </Text>
-
-      <List size="sm" withPadding mb="md">
-        <List.Item>Minimum of 8 characters</List.Item>
-        <List.Item>At least one uppercase letter</List.Item>
-        <List.Item>At least one lowercase letter</List.Item>
-        <List.Item>At least one number</List.Item>
-        <List.Item>At least one special character (e.g., !@#$%^&*)</List.Item>
-      </List>
-
       <PasswordInput
         data-autofocus
         label="Current Password"
@@ -110,13 +106,14 @@ export default function ChangePasswordModal({ opened, close }: ChangePasswordMod
         value={currentPassword}
         required
       />
-      <PasswordInput
+      <PasswordStrength
         label="New Password"
         name="new-password"
         autoComplete="new-password"
         placeholder="************"
-        onChange={(e) => setNewPassword(e.currentTarget.value)}
-        required
+        value={newPassword}
+        onChange={setNewPassword}
+        mb="md"
       />
       <PasswordInput
         label="Confirm New Password"
