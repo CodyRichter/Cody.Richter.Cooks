@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.sql import func
 
 from app.core.config import settings
 from app.models.ingredient import Ingredient
@@ -253,7 +254,11 @@ def grant_recipe_permission_internal(
 ):
     enforce_recipe_permissions(db, current_user, recipe_id, [PermissionRole.OWNER])
 
-    target_user: User = db.query(User).filter(User.username == target_username).first()
+    target_user: User = (
+        db.query(User)
+        .filter(func.lower(User.username) == func.lower(target_username))
+        .first()
+    )
     if not target_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"

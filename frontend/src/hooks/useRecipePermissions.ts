@@ -31,7 +31,8 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
       return {
         canEdit: false,
         canDelete: false,
-        userRole: null
+        userRole: null,
+        isOwner: false
       }
     }
 
@@ -40,7 +41,8 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
       return {
         canEdit: false,
         canDelete: false,
-        userRole: null
+        userRole: null,
+        isOwner: false
       }
     }
 
@@ -53,7 +55,8 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
       return {
         canEdit: false,
         canDelete: false,
-        userRole: null
+        userRole: null,
+        isOwner: false
       }
     }
 
@@ -63,7 +66,8 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
     return {
       canEdit: isOwner || isEditor,
       canDelete: isOwner, // Only owners can delete
-      userRole: userPermission.role
+      userRole: userPermission.role,
+      isOwner: isOwner
     }
   }, [auth.isAuthenticated, auth.user, permissions, isLoading, error])
 }

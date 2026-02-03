@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from app.models.security_audit_log import SecurityEventType
 from app.models.user import User
@@ -34,9 +35,11 @@ def register_user_internal(
     audit_logger = get_audit_logger(db)
 
     try:
-        # Check if username already exists
+        # Check if username already exists (case-insensitive)
         existing_user = (
-            db.query(User).filter(User.username == user_data.username).first()
+            db.query(User)
+            .filter(func.lower(User.username) == func.lower(user_data.username))
+            .first()
         )
         if existing_user:
             # Log failed registration attempt
@@ -52,8 +55,12 @@ def register_user_internal(
                 detail="Username already registered",
             )
 
-        # Check if email already exists
-        existing_email = db.query(User).filter(User.email == user_data.email).first()
+        # Check if email already exists (case-insensitive)
+        existing_email = (
+            db.query(User)
+            .filter(func.lower(User.email) == func.lower(user_data.email))
+            .first()
+        )
         if existing_email:
             # Log failed registration attempt
             audit_logger.log_authentication_event(
@@ -185,11 +192,14 @@ def update_user_profile_internal(
     audit_logger = get_audit_logger(db)
     changes = {}
 
-    # Check if username is being updated and if it already exists
+    # Check if username is being updated and if it already exists (case-insensitive)
     if profile_data.username and profile_data.username != current_user.username:
         existing_user = (
             db.query(User)
-            .filter(User.username == profile_data.username, User.id != current_user.id)
+            .filter(
+                func.lower(User.username) == func.lower(profile_data.username),
+                User.id != current_user.id,
+            )
             .first()
         )
         if existing_user:
@@ -202,11 +212,14 @@ def update_user_profile_internal(
         }
         current_user.username = profile_data.username
 
-    # Check if email is being updated and if it already exists
+    # Check if email is being updated and if it already exists (case-insensitive)
     if profile_data.email and profile_data.email != current_user.email:
         existing_email = (
             db.query(User)
-            .filter(User.email == profile_data.email, User.id != current_user.id)
+            .filter(
+                func.lower(User.email) == func.lower(profile_data.email),
+                User.id != current_user.id,
+            )
             .first()
         )
         if existing_email:

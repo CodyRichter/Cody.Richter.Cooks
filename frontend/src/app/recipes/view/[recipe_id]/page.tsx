@@ -1,12 +1,13 @@
 'use client';
 
-import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, Menu, ActionIcon, Box, Tooltip, SegmentedControl } from "@mantine/core";
-import { IconEdit, IconTrash, IconClock, IconUsers, IconShieldLock, IconDots, IconChefHat, IconScale } from "@tabler/icons-react";
+import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, ActionIcon, Box, Tooltip, SegmentedControl, Button } from "@mantine/core";
+import { IconEdit, IconTrash, IconClock, IconUsers, IconChefHat, IconUserPlus } from "@tabler/icons-react";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useState, useMemo } from "react";
 
-import { Button } from "@mantine/core";
+
 import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
+import ShareRecipeModal from "@/components/recipes/share/ShareRecipeModal";
 import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
@@ -25,13 +26,14 @@ export default function ViewRecipe() {
   const recipe_id = params?.recipe_id as string;
 
   const { navigateToRecipeEdit } = useAppNavigation();
-  const [deleteModalOpened, { open, close }] = useDisclosure(false);
+  const [deleteModalOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+  const [shareModalOpened, { open: openShare, close: closeShare }] = useDisclosure(false);
   const [scaleFactor, setScaleFactor] = useState(1);
   const isMobile = useMediaQuery('(max-width: 768px)', false, { getInitialValueInEffect: true });
 
   const { data: recipe, isLoading, error, refetch } = useRecipe(recipe_id);
 
-  const { canEdit, canDelete } = useUserRecipePermissions(recipe_id);
+  const { canEdit, canDelete, isOwner } = useUserRecipePermissions(recipe_id);
   const { data: permissions } = useRecipePermissions(recipe_id);
 
   const authorName = useMemo(() => {
@@ -185,62 +187,105 @@ export default function ViewRecipe() {
               </Stack>
 
               {/* Action Buttons */}
-              {auth.isAuthenticated && (canEdit || canDelete) && (
+              {auth.isAuthenticated && (
                 <Group gap="xs" style={{ flexShrink: 0 }}>
                   {canEdit && (
-                    <Button
-                      variant="filled"
-                      color="blue"
-                      size="sm"
-                      radius="xl"
-                      leftSection={<IconEdit size="1rem" stroke={1.5} />}
-                      onClick={handleEditClick}
-                      style={{
-                        transition: "all 0.2s ease",
-                        fontWeight: 600,
-                        boxShadow: '0 4px 12px rgba(34, 139, 230, 0.15)',
-                      }}
-                    >
-                      Edit
-                    </Button>
+                    <>
+                      {isMobile ? (
+                        <Tooltip label="Edit">
+                          <ActionIcon
+                            variant="filled"
+                            color="blue"
+                            size="lg"
+                            radius="xl"
+                            onClick={handleEditClick}
+                            style={{ transition: "all 0.2s ease" }}
+                          >
+                            <IconEdit size="1.2rem" stroke={1.5} />
+                          </ActionIcon>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          variant="filled"
+                          color="blue"
+                          size="sm"
+                          radius="xl"
+                          leftSection={<IconEdit size="1rem" stroke={1.5} />}
+                          onClick={handleEditClick}
+                          style={{
+                            transition: "all 0.2s ease",
+                            fontWeight: 600,
+                            boxShadow: '0 4px 12px rgba(34, 139, 230, 0.15)',
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      )}
+
+                      {isMobile ? (
+                        <Tooltip label="Share">
+                          <ActionIcon
+                            variant="filled"
+                            color="teal"
+                            size="lg"
+                            radius="xl"
+                            onClick={openShare}
+                            style={{ transition: "all 0.2s ease" }}
+                          >
+                            <IconUserPlus size="1.2rem" stroke={1.5} />
+                          </ActionIcon>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          variant="filled"
+                          color="teal"
+                          size="sm"
+                          radius="xl"
+                          leftSection={<IconUserPlus size="1rem" stroke={1.5} />}
+                          onClick={openShare}
+                          style={{
+                            transition: "all 0.2s ease",
+                            fontWeight: 600,
+                            boxShadow: '0 4px 12px rgba(22, 184, 153, 0.15)',
+                          }}
+                        >
+                          Share
+                        </Button>
+                      )}
+                    </>
                   )}
 
-                  {(canEdit || canDelete) && (
-                    <Menu position="bottom-end" shadow="md" width={180} radius="md">
-                      <Menu.Target>
+                  {canDelete && (
+                    isMobile ? (
+                      <Tooltip label="Delete">
                         <ActionIcon
-                          variant="light"
-                          color="gray"
+                          variant="filled"
+                          color="red"
                           size="lg"
                           radius="xl"
+                          onClick={openDelete}
+                          style={{ transition: "all 0.2s ease" }}
                         >
-                          <IconDots size="1.2rem" stroke={1.5} />
+                          <IconTrash size="1.2rem" stroke={1.5} />
                         </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        {canEdit && (
-                          <Menu.Item
-                            leftSection={<IconShieldLock size="1rem" />}
-                            onClick={() => { }} // No-op for now
-                          >
-                            Manage Access
-                          </Menu.Item>
-                        )}
-
-                        {canDelete && (
-                          <>
-                            {canEdit && <Menu.Divider />}
-                            <Menu.Item
-                              color="red"
-                              leftSection={<IconTrash size="1rem" />}
-                              onClick={open}
-                            >
-                              Delete Recipe
-                            </Menu.Item>
-                          </>
-                        )}
-                      </Menu.Dropdown>
-                    </Menu>
+                      </Tooltip>
+                    ) : (
+                      <Button
+                        variant="filled"
+                        color="red"
+                        size="sm"
+                        radius="xl"
+                        leftSection={<IconTrash size="1rem" stroke={1.5} />}
+                        onClick={openDelete}
+                        style={{
+                          transition: "all 0.2s ease",
+                          fontWeight: 600,
+                          boxShadow: '0 4px 12px rgba(250, 82, 82, 0.15)',
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    )
                   )}
                 </Group>
               )}
@@ -281,7 +326,14 @@ export default function ViewRecipe() {
         recipeTitle={recipe.title}
         recipeId={recipe.id}
         opened={deleteModalOpened}
-        close={close}
+        close={closeDelete}
+      />
+
+      <ShareRecipeModal
+        recipeId={recipe.id}
+        isOwner={isOwner}
+        opened={shareModalOpened}
+        close={closeShare}
       />
     </Container>
   );

@@ -57,4 +57,5 @@ export interface UserRecipePermissions {
   canEdit: boolean
   canDelete: boolean
   userRole: PermissionRole | null
+  isOwner: boolean
 }
