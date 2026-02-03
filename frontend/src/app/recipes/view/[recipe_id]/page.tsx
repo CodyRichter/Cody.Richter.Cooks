@@ -136,7 +136,7 @@ export default function ViewRecipe() {
                         </Text>
                       </Group>
 
-                      {!isMobile && <Text size="xs" c="gray.4" fw={700}>•</Text>}
+                      <Text size="xs" c="gray.4" fw={700} visibleFrom="sm">•</Text>
 
                       <Group gap="xs" align="center" wrap="nowrap" style={{ flex: isMobile ? '1 1 100%' : 'unset', minWidth: 0 }}>
                         <Text size="xs" fw={600} style={{ flexShrink: 0 }}>Scale:</Text>
@@ -188,10 +188,11 @@ export default function ViewRecipe() {
 
               {/* Action Buttons */}
               {auth.isAuthenticated && (
-                <Group gap="xs" style={{ flexShrink: 0 }}>
-                  {canEdit && (
-                    <>
-                      {isMobile ? (
+                <Box style={{ flexShrink: 0 }}>
+                  {/* Mobile Actions (Stack) */}
+                  <Stack gap="xs" hiddenFrom="sm">
+                    {canEdit && (
+                      <>
                         <Tooltip label="Edit">
                           <ActionIcon
                             variant="filled"
@@ -204,7 +205,42 @@ export default function ViewRecipe() {
                             <IconEdit size="1.2rem" stroke={1.5} />
                           </ActionIcon>
                         </Tooltip>
-                      ) : (
+
+                        <Tooltip label="Share">
+                          <ActionIcon
+                            variant="filled"
+                            color="teal"
+                            size="lg"
+                            radius="xl"
+                            onClick={openShare}
+                            style={{ transition: "all 0.2s ease" }}
+                          >
+                            <IconUserPlus size="1.2rem" stroke={1.5} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </>
+                    )}
+
+                    {canDelete && (
+                      <Tooltip label="Delete">
+                        <ActionIcon
+                          variant="filled"
+                          color="red"
+                          size="lg"
+                          radius="xl"
+                          onClick={openDelete}
+                          style={{ transition: "all 0.2s ease" }}
+                        >
+                          <IconTrash size="1.2rem" stroke={1.5} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                  </Stack>
+
+                  {/* Desktop Actions (Group) */}
+                  <Group gap="xs" visibleFrom="sm">
+                    {canEdit && (
+                      <>
                         <Button
                           variant="filled"
                           color="blue"
@@ -220,22 +256,6 @@ export default function ViewRecipe() {
                         >
                           Edit
                         </Button>
-                      )}
-
-                      {isMobile ? (
-                        <Tooltip label="Share">
-                          <ActionIcon
-                            variant="filled"
-                            color="teal"
-                            size="lg"
-                            radius="xl"
-                            onClick={openShare}
-                            style={{ transition: "all 0.2s ease" }}
-                          >
-                            <IconUserPlus size="1.2rem" stroke={1.5} />
-                          </ActionIcon>
-                        </Tooltip>
-                      ) : (
                         <Button
                           variant="filled"
                           color="teal"
@@ -251,25 +271,10 @@ export default function ViewRecipe() {
                         >
                           Share
                         </Button>
-                      )}
-                    </>
-                  )}
+                      </>
+                    )}
 
-                  {canDelete && (
-                    isMobile ? (
-                      <Tooltip label="Delete">
-                        <ActionIcon
-                          variant="filled"
-                          color="red"
-                          size="lg"
-                          radius="xl"
-                          onClick={openDelete}
-                          style={{ transition: "all 0.2s ease" }}
-                        >
-                          <IconTrash size="1.2rem" stroke={1.5} />
-                        </ActionIcon>
-                      </Tooltip>
-                    ) : (
+                    {canDelete && (
                       <Button
                         variant="filled"
                         color="red"
@@ -285,9 +290,9 @@ export default function ViewRecipe() {
                       >
                         Delete
                       </Button>
-                    )
-                  )}
-                </Group>
+                    )}
+                  </Group>
+                </Box>
               )}
             </Group>
 
