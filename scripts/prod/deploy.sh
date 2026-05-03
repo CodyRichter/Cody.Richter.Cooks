@@ -59,6 +59,8 @@ while [[ $# -gt 0 ]]; do
             echo "  1. Create secrets in Secret Manager:"
             echo "     - SECRET_KEY (JWT secret key, 256-bit hex)"
             echo "     - DATABASE_URL (PostgreSQL connection string)"
+            echo "     - RESEND_API_KEY (Resend email API key)"
+            echo "     - TURNSTILE_SECRET_KEY (Cloudflare Turnstile secret key)"
             echo "  2. Configure IAM permissions:"
             echo "     ./scripts/prod/setup-secret-permissions.sh --project PROJECT_ID"
             echo ""
@@ -140,6 +142,8 @@ deploy() {
         echo "  gcloud builds submit --config=infrastructure/cloudrun/cloudbuild.yaml \\"
         echo "    --substitutions=_REGION=$REGION \\"
         echo "    --project=$PROJECT"
+
+        cleanup_untagged_images
         return
     fi
 
@@ -154,6 +158,8 @@ deploy() {
 
     print_success "Deployment complete!"
     echo ""
+
+    cleanup_untagged_images
 
     # Get service URL
     SERVICE_URL=$(gcloud run services describe cooking-backend \
@@ -172,6 +178,8 @@ deploy() {
         echo "  Secrets are loaded from Secret Manager:"
         echo "    ✓ SECRET_KEY (from Secret Manager)"
         echo "    ✓ DATABASE_URL (from Secret Manager)"
+        echo "    ✓ RESEND_API_KEY (from Secret Manager)"
+        echo "    ✓ TURNSTILE_SECRET_KEY (from Secret Manager)"
         echo ""
         echo "  Next steps:"
         echo "  1. Verify application health: curl $SERVICE_URL/health"
@@ -181,6 +189,42 @@ deploy() {
         echo "  2. Update your frontend's NEXT_PUBLIC_API_BASE_URL to: $SERVICE_URL"
         echo ""
     fi
+}
+
+# Clean up untagged images
+cleanup_untagged_images() {
+    print_step "Cleaning up untagged images in Artifact Registry..."
+
+    # Get the image repository path
+    IMAGE_REPO="gcr.io/$PROJECT/cooking-backend"
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+        print_warning "DRY RUN MODE - Would check for untagged images in $IMAGE_REPO"
+        return
+    fi
+
+    # Find untagged images
+    UNTAGGED_DIGESTS=$(gcloud container images list-tags "$IMAGE_REPO" \
+        --filter="-tags:*" \
+        --format="get(digest)" \
+        --project="$PROJECT" 2>/dev/null || echo "")
+
+    if [[ -z "$UNTAGGED_DIGESTS" ]]; then
+        print_success "No untagged images found. Registry is clean."
+        return
+    fi
+
+    # Count how many we are deleting
+    COUNT=$(echo "$UNTAGGED_DIGESTS" | wc -w | tr -d ' ')
+    echo "  Found $COUNT untagged image(s) to delete."
+
+    # Delete them
+    for digest in $UNTAGGED_DIGESTS; do
+        echo "  Deleting $digest..."
+        gcloud container images delete "${IMAGE_REPO}@${digest}" --force-delete-tags --quiet --project="$PROJECT" || print_warning "Failed to delete $digest"
+    done
+
+    print_success "Cleaned up $COUNT untagged image(s)."
 }
 
 # Main execution

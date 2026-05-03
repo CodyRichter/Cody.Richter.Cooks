@@ -47,9 +47,9 @@ steps:
       - '--max-instances'
       - '10'
       - '--set-env-vars'
-      - 'DEBUG=false,APP_NAME=Cody Richter Cooks API'
+      - 'DEBUG=false,APP_NAME=Cody Richter Cooks API,FRONTEND_URL=https://cooking.cody.richter.codes,EMAIL_FROM_ADDRESS=support@cooking.cody.richter.codes'
       - '--update-secrets'
-      - 'SECRET_KEY=SECRET_KEY:latest,DATABASE_URL=DATABASE_URL:latest'
+      - 'SECRET_KEY=SECRET_KEY:latest,DATABASE_URL=DATABASE_URL:latest,RESEND_API_KEY=RESEND_API_KEY:latest,TURNSTILE_SECRET_KEY=TURNSTILE_SECRET_KEY:latest'
 
 
 # Store images in Container Registry

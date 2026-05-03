@@ -22,7 +22,7 @@ NC='\033[0m' # No Color
 # Default values
 PROJECT=""
 SERVICE_ACCOUNT=""
-SECRETS=("SECRET_KEY" "DATABASE_URL")
+SECRETS=("SECRET_KEY" "DATABASE_URL" "RESEND_API_KEY" "TURNSTILE_SECRET_KEY")
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Request, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
@@ -9,6 +10,8 @@ from app.schemas.auth import (
     AuthTokenResponse,
     AuthTokenRefreshRequest,
     AuthTokenRefreshResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.schemas.user import (
     UserCreateSchema,
@@ -23,7 +26,11 @@ from app.utils.auth import (
     create_access_token,
     create_refresh_token,
     refresh_access_token,
+    create_password_reset_token,
+    verify_password_reset_token,
 )
+from app.utils.captcha import verify_turnstile_token
+from app.utils.email import EmailService
 from app.utils.password_security import PasswordSecurity
 from jose import jwt, JWTError
 from app.core.config import settings
@@ -375,3 +382,105 @@ def refresh_token_internal(
     )
 
     return AuthTokenRefreshResponse(access_token=new_access_token, token_type="bearer")
+
+
+async def forgot_password_internal(
+    request_data: ForgotPasswordRequest, request: Request, db: Session
+) -> dict:
+    audit_logger = get_audit_logger(db)
+
+    # 1. Verify captcha
+    is_valid_captcha = await verify_turnstile_token(request_data.captcha_token)
+    if not is_valid_captcha:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid captcha token"
+        )
+
+    # 2. Look up user
+    user = (
+        db.query(User)
+        .filter(func.lower(User.email) == func.lower(request_data.email))
+        .first()
+    )
+
+    if user:
+        # 3. Create token
+        token = create_password_reset_token(user.id, user.password_hash)
+        reset_link = f"{settings.frontend_url}/auth/reset-password?token={token}"
+
+        # 4. Send email (synchronous call wrapped in threadpool to avoid blocking)
+        await run_in_threadpool(
+            EmailService.send_password_reset_email, user.email, reset_link
+        )
+
+        audit_logger.log_event(
+            event_type=SecurityEventType.PASSWORD_CHANGED,  # Maybe better to have a generic event
+            request=request,
+            user=user,
+            success=True,
+            details={"action": "password_reset_requested"},
+        )
+    else:
+        # Don't log missing user emails directly for privacy, or log generically
+        pass
+
+    # Always return success message to avoid enumeration
+    return {
+        "message": "If an account with that email exists, we have sent a password reset link."
+    }
+
+
+def reset_password_internal(
+    request_data: ResetPasswordRequest, request: Request, db: Session
+) -> dict:
+    audit_logger = get_audit_logger(db)
+
+    # 1. Verify token
+    payload = verify_password_reset_token(request_data.token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token",
+        )
+
+    user_id = payload.get("sub")
+    token_hash = payload.get("hash")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token",
+        )
+
+    # 2. Check if token was already used (hash mismatch)
+    if user.password_hash != token_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token",
+        )
+
+    # 3. Validate new password strength
+    PasswordSecurity.validate_password_strength_strict(request_data.new_password)
+
+    # 4. Hash and update
+    user.password_hash = PasswordSecurity.hash_password(request_data.new_password)
+
+    try:
+        db.commit()
+        db.refresh(user)
+
+        audit_logger.log_event(
+            event_type=SecurityEventType.PASSWORD_CHANGED,
+            request=request,
+            user=user,
+            success=True,
+            details={"changed_via": "password_reset_flow"},
+        )
+        return {"message": "Password has been reset successfully"}
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to change password. Internal error.",
+        )

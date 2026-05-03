@@ -13,12 +13,16 @@ from app.handlers.users.impl_v1 import (
     register_user_internal,
     update_user_profile_internal,
     change_password_internal,
+    forgot_password_internal,
+    reset_password_internal,
 )
 from app.models.user import User
 from app.schemas.auth import (
     AuthTokenResponse,
     AuthTokenRefreshRequest,
     AuthTokenRefreshResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.schemas.user import (
     UserCreateSchema,
@@ -161,3 +165,26 @@ async def refresh_token(
         HTTPException: If refresh token is invalid or expired
     """
     return refresh_token_internal(refresh_data, request, db)
+
+
+@router.post("/forgot-password/")
+async def forgot_password(
+    request_data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)
+):
+    """
+    Handle forgot password requests.
+    Sends a password reset email if the user exists.
+    Always returns a success message to prevent user enumeration.
+    """
+    return await forgot_password_internal(request_data, request, db)
+
+
+@router.post("/reset-password/")
+async def reset_password(
+    request_data: ResetPasswordRequest, request: Request, db: Session = Depends(get_db)
+):
+    """
+    Handle password reset requests.
+    Validates the token and updates the user's password.
+    """
+    return reset_password_internal(request_data, request, db)

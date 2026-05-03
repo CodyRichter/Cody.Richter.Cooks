@@ -23,3 +23,17 @@ class AuthTokenRefreshResponse(BaseModel):
 
     access_token: str = Field(..., description="New JWT access token")
     token_type: str = Field(default="bearer", description="Token type")
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Schema for forgot password requests."""
+
+    email: str = Field(..., description="User's email address")
+    captcha_token: str = Field(..., description="Cloudflare Turnstile token")
+
+
+class ResetPasswordRequest(BaseModel):
+    """Schema for reset password requests."""
+
+    token: str = Field(..., description="Password reset JWT token")
+    new_password: str = Field(..., description="New password")

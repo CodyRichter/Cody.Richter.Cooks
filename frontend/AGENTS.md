@@ -68,4 +68,5 @@ npm run lint     # Run ESLint (MANDATORY before commit)
 
 ## 5. Security & SEO
 - **SEO**: Export `metadata` object from `page.tsx` or `layout.tsx`.
-- **Secrets**: NEVER hardcode API keys. Use `process.env.NEXT_PUBLIC_...` for public keys, and kept private keys server-side.
+- **Secrets**: NEVER hardcode API keys. Use `process.env.NEXT_PUBLIC_...` for public keys (like `NEXT_PUBLIC_TURNSTILE_SITE_KEY`), and keep private keys server-side.
+- **Bot Protection**: Use `@marsidev/react-turnstile` for CAPTCHA protection on sensitive forms (like forgot password).

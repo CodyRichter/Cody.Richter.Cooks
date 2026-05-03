@@ -273,3 +273,33 @@ def get_current_user_optional(
 
     user = db.query(User).filter(User.username == username).first()
     return user
+
+
+def create_password_reset_token(user_id: str, password_hash: str) -> str:
+    """
+    Create a stateless JWT token for password reset.
+    The token encodes the current password_hash so it is instantly invalidated
+    if the password is changed.
+    """
+    expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode = {"sub": user_id, "hash": password_hash, "exp": expire, "type": "reset"}
+    encoded_jwt = jwt.encode(
+        to_encode, settings.secret_key, algorithm=settings.algorithm
+    )
+    return encoded_jwt
+
+
+def verify_password_reset_token(token: str) -> Optional[dict]:
+    """
+    Verify and decode a password reset token.
+    Returns the payload if valid and type is 'reset', None otherwise.
+    """
+    try:
+        payload = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
+        )
+        if payload.get("type") != "reset":
+            return None
+        return payload
+    except JWTError:
+        return None

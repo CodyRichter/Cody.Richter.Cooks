@@ -105,11 +105,21 @@ function LoginForm() {
             label="Password"
             placeholder="Enter your password"
             required
-            mb="md"
+            mb="xs"
             value={formData.password}
             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
             error={formErrors.password}
           />
+
+          <Group justify="flex-end" mb="md">
+            <Anchor
+              size="sm"
+              onClick={() => router.push('/auth/forgot-password')}
+              style={{ cursor: "pointer" }}
+            >
+              Forgot your password?
+            </Anchor>
+          </Group>
 
           <Button
             type="submit"

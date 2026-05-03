@@ -62,6 +62,14 @@ class Settings(BaseSettings):
 
     max_recipes_per_page: int = 20
 
+    # External Integrations
+    frontend_url: str = "http://localhost:3000"
+    resend_api_key: str = ""
+    email_from_address: str = "noreply@cooking.cody.richter.codes"
+    turnstile_secret_key: str = (
+        "1x0000000000000000000000000000000AA"  # Default test key
+    )
+
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 

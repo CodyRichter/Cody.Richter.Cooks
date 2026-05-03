@@ -28,7 +28,7 @@ For a project with 200-300 requests/day, we MUST maintain a minimal footprint:
 1. **Environment Variables**: Use `.env` files for local development (ensure they are in `.gitignore`).
 
 2. **Cloud Run Secret Manager Integration** (CURRENT SETUP):
-   - **Secrets Used**: `SECRET_KEY` and `DATABASE_URL` are stored in Google Cloud Secret Manager
+   - **Secrets Used**: `SECRET_KEY`, `DATABASE_URL`, `RESEND_API_KEY`, and `TURNSTILE_SECRET_KEY` are stored in Google Cloud Secret Manager
    - **Automatic Mounting**: Cloud Run automatically mounts these secrets as environment variables
    - **Backend Agnostic**: The application code reads from standard env vars with no cloud-specific logic
 

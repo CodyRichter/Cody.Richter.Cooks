@@ -57,4 +57,4 @@ pip install -r requirements.txt
 - **Deploy**: `../scripts/deploy-cloudrun.sh --project YOUR_PROJECT_ID`
 - **First-time Setup**: `../scripts/setup-gcp.sh --project YOUR_PROJECT_ID`
 - **Config**: See `infrastructure/cloudrun/` for Cloud Build and service configuration
-- **Secrets**: Set `DATABASE_URL`, `SECRET_KEY`, `CORS_ORIGINS` in Cloud Run Console
+- **Secrets**: Ensure `DATABASE_URL`, `SECRET_KEY`, `RESEND_API_KEY`, and `TURNSTILE_SECRET_KEY` are configured in Secret Manager and passed in `cloudbuild.yaml`.
