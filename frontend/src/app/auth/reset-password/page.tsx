@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button, Card, Container, Text, TextInput, PasswordInput, Title, Anchor, Group, Center, Loader } from '@mantine/core';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
@@ -15,10 +15,10 @@ function ResetPasswordForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(!!token);
 
   // Verify token and fetch username on mount
-  useState(() => {
+  useEffect(() => {
     if (token) {
       apiClient.get<{ username: string }>(`/api/v1/users/reset-password/verify?token=${token}`, false)
         .then(data => {
@@ -27,12 +27,9 @@ function ResetPasswordForm() {
         })
         .catch(() => {
           setIsVerifying(false);
-          // Error will be handled by the lack of token/username in the UI
         });
-    } else {
-      setIsVerifying(false);
     }
-  });
+  }, [token]);
 
   const mutation = useMutation({
     mutationFn: async (data: { token: string; new_password: string }) => {
