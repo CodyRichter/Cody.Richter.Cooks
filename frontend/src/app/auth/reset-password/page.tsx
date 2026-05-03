@@ -17,7 +17,7 @@ function ResetPasswordForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: { token: string; new_password: string }) => {
-      const response = await apiClient.post('/api/v1/users/reset-password/', data, false);
+      const response = await apiClient.post<{ message: string }>('/api/v1/users/reset-password/', data, false);
       return response;
     },
     onSuccess: () => {
