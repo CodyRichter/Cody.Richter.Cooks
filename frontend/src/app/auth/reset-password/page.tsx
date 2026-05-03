@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { Button, Card, Container, Text, PasswordInput, Title, Anchor, Group, Center, Loader } from '@mantine/core';
+import { Button, Card, Container, Text, TextInput, PasswordInput, Title, Anchor, Group, Center, Loader } from '@mantine/core';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
 import { useMutation } from '@tanstack/react-query';
@@ -14,6 +14,25 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  // Verify token and fetch username on mount
+  useState(() => {
+    if (token) {
+      apiClient.get<{ username: string }>(`/api/v1/users/reset-password/verify?token=${token}`, false)
+        .then(data => {
+          setUsername(data.username);
+          setIsVerifying(false);
+        })
+        .catch(() => {
+          setIsVerifying(false);
+          // Error will be handled by the lack of token/username in the UI
+        });
+    } else {
+      setIsVerifying(false);
+    }
+  });
 
   const mutation = useMutation({
     mutationFn: async (data: { token: string; new_password: string }) => {
@@ -58,7 +77,17 @@ function ResetPasswordForm() {
     mutation.mutate({ token, new_password: password });
   };
 
-  if (!token) {
+  if (isVerifying) {
+    return (
+      <Container size="xs" mt="xl">
+        <Center>
+          <Loader size="xl" />
+        </Center>
+      </Container>
+    );
+  }
+
+  if (!token || (!username && !isVerifying)) {
     return (
       <Container size="xs" mt="xl">
         <Card shadow="md" padding="xl" radius="md" withBorder>
@@ -87,10 +116,36 @@ function ResetPasswordForm() {
         </Text>
 
         <form onSubmit={handleSubmit}>
+          {/* Hidden username field for password managers */}
+          <input
+            type="text"
+            name="username"
+            value={username || ''}
+            readOnly
+            autoComplete="username"
+            style={{ display: 'none' }}
+          />
+
+          <TextInput
+            label="Account Username"
+            value={username || ''}
+            readOnly
+            disabled
+            mb="md"
+            variant="filled"
+            styles={{
+              input: {
+                fontWeight: 600,
+                color: 'var(--mantine-color-blue-filled)',
+              }
+            }}
+          />
+
           <PasswordInput
             label="New Password"
             placeholder="Enter new password"
             required
+            autoComplete="new-password"
             mb="md"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -100,6 +155,7 @@ function ResetPasswordForm() {
             label="Confirm New Password"
             placeholder="Confirm new password"
             required
+            autoComplete="new-password"
             mb="xl"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

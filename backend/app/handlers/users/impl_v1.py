@@ -147,7 +147,11 @@ def login_user_internal(
 
     # If username authentication fails, try with email
     if not user:
-        user_by_email = db.query(User).filter(User.email == login_data.username).first()
+        user_by_email = (
+            db.query(User)
+            .filter(func.lower(User.email) == func.lower(login_data.username))
+            .first()
+        )
         if user_by_email:
             user = authenticate_user(db, user_by_email.username, login_data.password)
 
@@ -484,3 +488,27 @@ def reset_password_internal(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unable to change password. Internal error.",
         )
+
+
+def verify_reset_token_internal(token: str, db: Session) -> dict:
+    """
+    Verifies a password reset token and returns the associated username.
+    """
+    payload = verify_password_reset_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token",
+        )
+
+    user_id = payload.get("sub")
+    token_hash = payload.get("hash")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or user.password_hash != token_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token",
+        )
+
+    return {"username": user.username}

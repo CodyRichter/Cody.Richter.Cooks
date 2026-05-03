@@ -15,6 +15,7 @@ from app.handlers.users.impl_v1 import (
     change_password_internal,
     forgot_password_internal,
     reset_password_internal,
+    verify_reset_token_internal,
 )
 from app.models.user import User
 from app.schemas.auth import (
@@ -188,3 +189,12 @@ async def reset_password(
     Validates the token and updates the user's password.
     """
     return reset_password_internal(request_data, request, db)
+
+
+@router.get("/reset-password/verify")
+async def verify_reset_password_token(token: str, db: Session = Depends(get_db)):
+    """
+    Verify a password reset token and return user details (username).
+    Used to pre-fill the reset form and satisfy password managers.
+    """
+    return verify_reset_token_internal(token, db)

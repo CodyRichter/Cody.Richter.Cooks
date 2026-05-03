@@ -8,6 +8,7 @@ from typing import Optional, TYPE_CHECKING
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -131,7 +132,9 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional["Us
     """
     from app.models.user import User
 
-    user = db.query(User).filter(User.username == username).first()
+    user = (
+        db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
+    )
     if not user:
         return None
     if not PasswordSecurity.verify_password(password, user.password_hash):
@@ -180,7 +183,9 @@ def get_current_user(
 
     from app.models.user import User
 
-    user = db.query(User).filter(User.username == username).first()
+    user = (
+        db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
+    )
     if user is None:
         raise credentials_exception
 
@@ -208,7 +213,9 @@ def refresh_access_token(refresh_token: str, db: Session) -> Optional[str]:
 
     from app.models.user import User
 
-    user = db.query(User).filter(User.username == username).first()
+    user = (
+        db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
+    )
     if user is None:
         return None
 
@@ -271,7 +278,9 @@ def get_current_user_optional(
 
     from app.models.user import User
 
-    user = db.query(User).filter(User.username == username).first()
+    user = (
+        db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
+    )
     return user
 
 

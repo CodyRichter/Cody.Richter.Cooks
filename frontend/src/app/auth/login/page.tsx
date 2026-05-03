@@ -102,24 +102,25 @@ function LoginForm() {
           />
 
           <PasswordInput
-            label="Password"
+            label={
+              <Group justify="space-between" style={{ width: '100%' }}>
+                <Text size="sm" fw={500}>Password</Text>
+                <Anchor
+                  size="xs"
+                  onClick={() => router.push('/auth/forgot-password')}
+                  style={{ cursor: "pointer" }}
+                >
+                  Forgot your password?
+                </Anchor>
+              </Group>
+            }
             placeholder="Enter your password"
             required
-            mb="xs"
+            mb="md"
             value={formData.password}
             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
             error={formErrors.password}
           />
-
-          <Group justify="flex-end" mb="md">
-            <Anchor
-              size="sm"
-              onClick={() => router.push('/auth/forgot-password')}
-              style={{ cursor: "pointer" }}
-            >
-              Forgot your password?
-            </Anchor>
-          </Group>
 
           <Button
             type="submit"
