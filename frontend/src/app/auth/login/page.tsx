@@ -103,12 +103,14 @@ function LoginForm() {
 
           <PasswordInput
             label={
-              <Group justify="space-between" style={{ width: '100%' }}>
-                <Text size="sm" fw={500}>Password</Text>
+              <Group justify="space-between" style={{ width: '100%', marginBottom: 2 }}>
+                <Text size="sm" fw={500}>
+                  Password <span style={{ color: 'var(--mantine-color-red-6)' }}>*</span>
+                </Text>
                 <Anchor
                   size="xs"
                   onClick={() => router.push('/auth/forgot-password')}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", fontWeight: 400 }}
                 >
                   Forgot your password?
                 </Anchor>
@@ -116,6 +118,7 @@ function LoginForm() {
             }
             placeholder="Enter your password"
             required
+            withAsterisk={false}
             mb="md"
             value={formData.password}
             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
