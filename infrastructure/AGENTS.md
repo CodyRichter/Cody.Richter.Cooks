@@ -35,7 +35,7 @@ For a project with 200-300 requests/day, we MUST maintain a minimal footprint:
 3. **One-Time Setup** (Already Configured):
    ```bash
    # Grant Secret Manager permissions to Cloud Run service account
-   ./scripts/setup-secret-permissions.sh --project PROJECT_ID
+   ./scripts/prod/setup-secret-permissions.sh --project PROJECT_ID
    ```
 
 4. **IAM Roles & Public Access**:
@@ -44,5 +44,5 @@ For a project with 200-300 requests/day, we MUST maintain a minimal footprint:
 
 ## 5. Development Workflow
 - **Local Dev**: Use `docker-compose.yml` in the root directory for a consistent environment.
-- **Deploying**: Prefer `scripts/deploy-cloudrun.sh` for production deployments.
+- **Deploying**: Prefer `scripts/prod/deploy.sh` for production deployments.
 - **Verification**: Always check logs in Google Cloud Console after deploying changes to infrastructure.

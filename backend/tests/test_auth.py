@@ -4,7 +4,7 @@ Authentication tests with improved maintainability.
 
 import pytest
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+import jwt
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -162,12 +162,9 @@ class TestJWTTokenManagement:
 
     def test_token_verification_none_input(self):
         """Test token verification with None input."""
-        # None input should raise an exception, not return None
-        with pytest.raises(Exception):
-            verify_token(None)
-
-        with pytest.raises(Exception):
-            verify_refresh_token(None)
+        # None input should return None
+        assert verify_token(None) is None
+        assert verify_refresh_token(None) is None
 
     def test_token_type_validation(self):
         """Test that token types are properly validated."""

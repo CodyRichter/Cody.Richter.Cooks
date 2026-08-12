@@ -21,11 +21,11 @@
 ## 3. Development Workflow
 **CRITICAL**: Do NOT run `uvicorn` or `pytest` directly on the host machine unless you are 100% sure the environment is set up. Prefer the scripts in `scripts/`.
 
-- **Start Server**: `../scripts/dev-start.sh` (Runs Dockerized backend)
-- **Run Tests**: `../scripts/test.sh`
+- **Start Server**: `../scripts/local/start.sh` (Runs Dockerized backend)
+- **Run Tests**: `../scripts/local/test.sh`
 - **Database Migrations**:
-  - Create: `../scripts/migrate-create.sh "description"`
-  - Apply: `../scripts/migrate.sh`
+  - Create: `../scripts/local/migrate-create.sh "description"`
+  - Apply: `../scripts/local/migrate.sh`
 
 ### Local Setup (If working outside Docker)
 If you MUST run locally (e.g., for IDE support):
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 - **Mocking**: Mock external APIs (Email, S3, etc.) to keep tests fast and deterministic.
 
 ## 7. Production Deployment (Cloud Run)
-- **Deploy**: `../scripts/deploy-cloudrun.sh --project YOUR_PROJECT_ID`
-- **First-time Setup**: `../scripts/setup-gcp.sh --project YOUR_PROJECT_ID`
+- **Deploy**: `../scripts/prod/deploy.sh --project YOUR_PROJECT_ID`
+- **First-time Setup**: `../scripts/prod/setup-gcp.sh --project YOUR_PROJECT_ID`
 - **Config**: See `infrastructure/cloudrun/` for Cloud Build and service configuration
 - **Secrets**: Ensure `DATABASE_URL`, `SECRET_KEY`, `RESEND_API_KEY`, and `TURNSTILE_SECRET_KEY` are configured in Secret Manager and passed in `cloudbuild.yaml`.

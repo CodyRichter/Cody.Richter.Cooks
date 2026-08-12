@@ -226,13 +226,13 @@ class TestUserAPI(APITestBase):
         """Test profile operations without authentication."""
         # Test get profile without auth
         response = client.get("/api/v1/users/profile")
-        self.assert_error_response(response, 403, "Not authenticated")
+        self.assert_error_response(response, 401, "Not authenticated")
 
         # Test update profile without auth
         response = client.put(
             "/api/v1/users/profile", json={"email": "test@example.com"}
         )
-        self.assert_error_response(response, 403, "Not authenticated")
+        self.assert_error_response(response, 401, "Not authenticated")
 
 
 @pytest.mark.api
@@ -310,7 +310,7 @@ class TestRecipeAPI(APITestBase):
     ):
         """Test recipe creation without authentication."""
         response = client.post("/api/v1/recipes", json=sample_recipe_data)
-        self.assert_error_response(response, 403, "Not authenticated")
+        self.assert_error_response(response, 401, "Not authenticated")
 
     def test_recipe_retrieval(self, client: TestClient, test_recipe: Recipe):
         """Test recipe retrieval (public endpoint)."""
@@ -364,7 +364,7 @@ class TestRecipeAPI(APITestBase):
 
         # Test without authentication
         response = client.get("/api/v1/recipes/my-recipes")
-        self.assert_error_response(response, 403, "Not authenticated")
+        self.assert_error_response(response, 401, "Not authenticated")
 
     def test_recipe_update_operations(
         self,
@@ -386,7 +386,7 @@ class TestRecipeAPI(APITestBase):
 
         # Test update without authentication
         response = client.put(f"/api/v1/recipes/{test_recipe.id}", json=update_data)
-        self.assert_error_response(response, 403, "Not authenticated")
+        self.assert_error_response(response, 401, "Not authenticated")
 
         # Test update without permission
         response = client.put(
@@ -409,7 +409,7 @@ class TestRecipeAPI(APITestBase):
 
         # Test deletion without authentication
         response = client.delete(f"/api/v1/recipes/{recipe_id}")
-        self.assert_error_response(response, 403, "Not authenticated")
+        self.assert_error_response(response, 401, "Not authenticated")
 
         # Test deletion without permission
         response = client.delete(

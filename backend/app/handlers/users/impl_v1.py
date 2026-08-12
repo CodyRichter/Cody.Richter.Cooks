@@ -32,7 +32,8 @@ from app.utils.auth import (
 from app.utils.captcha import verify_turnstile_token
 from app.utils.email import EmailService
 from app.utils.password_security import PasswordSecurity
-from jose import jwt, JWTError
+import jwt
+from jwt import PyJWTError as JWTError
 from app.core.config import settings
 
 

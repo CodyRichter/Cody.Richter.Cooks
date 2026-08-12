@@ -7,7 +7,8 @@ from typing import Optional, TYPE_CHECKING
 
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError as JWTError
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
