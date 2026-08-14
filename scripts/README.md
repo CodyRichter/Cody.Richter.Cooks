@@ -159,13 +159,36 @@ Deploys the backend to Google Cloud Run.
 One-time GCP project setup for Cloud Run deployment.
 
 ```bash
-./scripts/setup-gcp.sh --project PROJECT_ID
+./scripts/prod/setup-gcp.sh --project PROJECT_ID
 ```
 
 **Features:**
 - Enables required APIs (Cloud Run, Cloud Build, Container Registry)
 - Configures gcloud defaults
 - Provides next steps guidance
+
+### `logs.sh`
+Views or tails production logs from Google Cloud Run for local debugging.
+
+```bash
+./scripts/prod/logs.sh [OPTIONS]
+```
+
+**Options:**
+- `-f, --follow, --tail`: Stream/tail live logs in real time
+- `-n, --limit LIMIT`: Number of recent log entries to show (default: 50)
+- `--service SERVICE`: Cloud Run service name (default: cooking-backend)
+- `--region REGION`: Cloud Run region (default: us-central1)
+- `--project PROJECT`: GCP project ID (defaults to active gcloud project)
+- `--help`: Show help message
+
+**Examples:**
+```bash
+./scripts/prod/logs.sh                   # View last 50 log entries
+./scripts/prod/logs.sh -f                # Stream logs in real-time
+./scripts/prod/logs.sh --limit 100       # View last 100 log entries
+./scripts/prod/logs.sh -f --project my-p # Stream logs from specific project
+```
 
 ## Security Setup
 

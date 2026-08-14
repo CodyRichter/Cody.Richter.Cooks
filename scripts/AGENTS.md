@@ -23,6 +23,7 @@
 | **`./migrate.sh`** | **Apply Production Migrations**. Runs migrations against remote DB. **USE WITH CAUTION**. |
 | **`./setup-gcp.sh`** | **GCP Initialization**. Sets up project, APIs, and basic infra. |
 | **`./setup-secret-permissions.sh`** | **IAM Secrets**. Configures Secret Manager access for the service account. |
+| **`./logs.sh`** | **Production Logs**. View or tail live logs from GCP Cloud Run. |
 
 ## 3. Usage Rules
 1.  **Safety First**: Never use `scripts/prod/` scripts unless you are explicitly performing deployment or production maintenance.

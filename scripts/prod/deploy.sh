@@ -184,9 +184,9 @@ deploy() {
         echo "  Next steps:"
         echo "  1. Verify application health: curl $SERVICE_URL/health"
         echo "  2. Check logs for any startup errors:"
-        echo "     gcloud run services logs read cooking-backend --region=$REGION --project=$PROJECT"
+        echo "     ./scripts/prod/logs.sh -f --project=$PROJECT"
         echo ""
-        echo "  2. Update your frontend's NEXT_PUBLIC_API_BASE_URL to: $SERVICE_URL"
+        echo "  3. Update your frontend's NEXT_PUBLIC_API_BASE_URL to: $SERVICE_URL"
         echo ""
     fi
 }
