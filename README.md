@@ -14,7 +14,7 @@ A modern full-stack recipe management application built with FastAPI (backend) a
 ### Prerequisites
 
 - Docker and Docker Compose
-- Node.js v26.x (LTS) — use `nvm use` to select from `.nvmrc`
+- Node.js v24.x (LTS) — use `nvm use` to select from `.nvmrc`
 - npm (>= 10.0.0) or yarn
 
 ### 1. Backend Setup

@@ -4,7 +4,7 @@ A modern NextJS frontend application for recipe management, integrated with a Fa
 
 ## Prerequisites
 
-- Node.js `v26.x` (LTS recommended) — run `nvm use` to load version from `.nvmrc`
+- Node.js `v24.x` (LTS recommended) — run `nvm use` to load version from `.nvmrc`
 - npm (>= 10.0.0) or yarn package manager
 - Running FastAPI backend server (see backend README for setup)
 

@@ -24,7 +24,7 @@
 - `lib/`: Utilities, API clients (Axios/Fetch wrappers), Zod schemas.
 
 ## 3. Development Workflow
-Ensure Node 26 is active (run `nvm use` in repository root or `frontend/`). Run these commands from the `frontend/` directory:
+Ensure Node 24 is active (run `nvm use` in repository root or `frontend/`). Run these commands from the `frontend/` directory:
 
 ```bash
 npm run dev      # Start dev server on localhost:3000
