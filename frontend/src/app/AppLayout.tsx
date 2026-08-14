@@ -20,6 +20,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
         }}
         padding="md"
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--mantine-color-body)",
+        }}
       >
         <AppShell.Header className="navigationHeader">
           <NavigationHeader
@@ -29,7 +33,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <AppShell.Navbar className="navigationSidebarContainer">
           <NavigationSidebar {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }} />
         </AppShell.Navbar>
-        <AppShell.Main>
+        <AppShell.Main style={{ backgroundColor: "var(--mantine-color-body)", minHeight: "calc(100vh - 65px)" }}>
           {children}
         </AppShell.Main>
       </AppShell>

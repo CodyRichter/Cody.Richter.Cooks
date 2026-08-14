@@ -11,7 +11,7 @@ export default function RecipeLoadingSkeleton() {
         radius="md"
         withBorder
         mb="md"
-        style={{ borderLeft: "6px solid #e2a478", minHeight: "400px" }}
+        style={{ borderLeft: "6px solid var(--mantine-color-orange-4)", minHeight: "400px" }}
         w="100%"
       >
         <Skeleton height={10} mt={6} width="50%" radius="xl" />

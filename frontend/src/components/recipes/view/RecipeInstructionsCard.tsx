@@ -1,19 +1,20 @@
-import { Group, Stack, Text, Title } from "@mantine/core";
-
+import { Group, Stack, Text, Title, ThemeIcon, Box } from "@mantine/core";
 import { InstructionStep } from "@/types/InstructionStep";
 import React from "react";
+import parse from "html-react-parser";
 
 export default function RecipeInstructionsCard({
   instructions,
 }: {
   instructions: InstructionStep[];
 }) {
-  // Guard against undefined instructions
   if (!instructions || instructions.length === 0) {
     return (
       <Stack gap="sm">
         <Title order={4}>Instructions</Title>
-        <Text c="dimmed" size="sm">No instructions added yet.</Text>
+        <Text c="dimmed" size="sm">
+          No instructions added yet.
+        </Text>
       </Stack>
     );
   }
@@ -24,30 +25,30 @@ export default function RecipeInstructionsCard({
       <Stack mt="sm">
         {instructions.map((instructionStep, stepIndex) => (
           <div key={`instructionStep-${instructionStep.id}`}>
-            <Group>
-              <div
-                style={{
-                  backgroundColor: "#f1f3f5",
-                  borderRadius: "5px",
-                  width: "25px",
-                  height: "30px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+            <Group align="flex-start" wrap="nowrap" gap="sm">
+              <ThemeIcon
+                size={28}
+                radius="md"
+                variant="light"
+                color="orange"
+                style={{ fontWeight: 700, flexShrink: 0, marginTop: 2 }}
               >
-                <Text size="sm" fw="bolder">
-                  {stepIndex + 1}
-                </Text>
-              </div>
+                {stepIndex + 1}
+              </ThemeIcon>
 
-              <Text size="lg" w="80%">
-                {instructionStep.title}
-              </Text>
+              <Stack gap="xs" style={{ flex: 1 }}>
+                <Text size="lg" fw={600}>
+                  {instructionStep.title}
+                </Text>
+                {instructionStep.description && (
+                  <Box c="dimmed" style={{ lineHeight: 1.6, fontSize: "0.95rem" }}>
+                    {typeof instructionStep.description === "string"
+                      ? parse(instructionStep.description)
+                      : instructionStep.description}
+                  </Box>
+                )}
+              </Stack>
             </Group>
-            <Text size="sm" mt="sm" w="85%">
-              {instructionStep.description}
-            </Text>
           </div>
         ))}
       </Stack>

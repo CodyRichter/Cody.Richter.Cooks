@@ -183,6 +183,7 @@ export default function RecipeIngredientCard({
               }}
             >
               <Checkbox
+                color="orange"
                 checked={isChecked}
                 onChange={() => toggleIngredient(ingredient.id)}
                 label={

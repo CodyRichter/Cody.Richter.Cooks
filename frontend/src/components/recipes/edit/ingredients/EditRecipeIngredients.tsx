@@ -45,7 +45,7 @@ export default function EditRecipeIngredients({
   return (
     <Box>
       {ingredients.length > 0 && !isMobile && (
-        <Grid gutter="xs" px="lg" mb="xs" style={{ paddingLeft: '64px', paddingRight: '120px' }}>
+        <Grid gap="xs" px="lg" mb="xs" style={{ paddingLeft: '64px', paddingRight: '120px' }}>
           <Grid.Col span={2}>
             <Text size="xs" fw={700} c="dimmed" tt="uppercase">Qty <Text span c="red" inherit>*</Text></Text>
           </Grid.Col>

@@ -168,7 +168,7 @@ export default function TextEditorImageUploader({
         size="sm"
         onClick={() => setModalOpened(true)}
         aria-label="Insert image"
-        color="#485057"
+        color="gray"
         pl={8}
         pr={8}
         className="tiptap-editor-button"

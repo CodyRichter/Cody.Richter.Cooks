@@ -1,9 +1,10 @@
-import { MantineThemeOverride } from "@mantine/core";
+import { createTheme } from "@mantine/core";
 
-export default function getCodyRichterCooksTheme(
-  fontFamily: string
-): MantineThemeOverride {
-  return {
-    fontFamily: fontFamily,
-  };
-}
+export const theme = createTheme({
+  primaryColor: "orange",
+  defaultRadius: "md",
+  fontFamily: "var(--font-inter), sans-serif",
+  headings: {
+    fontFamily: "var(--font-inter), sans-serif",
+  },
+});

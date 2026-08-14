@@ -85,7 +85,6 @@ export default function ViewRecipe() {
           withBorder
           style={{
             borderLeft: "4px solid var(--mantine-color-orange-4)",
-            backgroundColor: "var(--mantine-color-white)",
           }}
         >
           <Stack gap="lg">
@@ -154,7 +153,6 @@ export default function ViewRecipe() {
                           ]}
                           color="orange"
                           radius="md"
-                          variant="default"
                           transitionDuration={200}
                           style={{ flex: isMobile ? 1 : 'unset' }}
                         />
@@ -169,14 +167,13 @@ export default function ViewRecipe() {
                     {recipe.tags.map((tag) => (
                       <Badge
                         key={tag}
-                        variant="outline"
-                        color="orange.8"
-                        radius="sm"
+                        variant="light"
+                        color="orange"
+                        radius="md"
                         size="sm"
                         style={{
                           textTransform: "none",
-                          fontWeight: 500,
-                          borderWidth: "1px",
+                          fontWeight: 600,
                         }}
                       >
                         {titleize(tag)}

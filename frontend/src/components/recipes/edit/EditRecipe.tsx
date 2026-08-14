@@ -37,7 +37,7 @@ export default function EditRecipe({ form }: EditRecipeProps) {
   const initialDescription = form.getValues().description || '';
 
   return (
-    <Grid gutter="xl">
+    <Grid gap="xl">
       {/* Main Content Column */}
       <Grid.Col span={{ base: 12, md: 8 }}>
         <Stack gap="xl">
@@ -51,23 +51,21 @@ export default function EditRecipe({ form }: EditRecipeProps) {
                 key={form.key('title')}
                 {...form.getInputProps('title')}
                 withAsterisk
-                styles={(theme) => ({
+                styles={{
                   input: {
                     fontSize: '2.5rem',
                     fontWeight: 800,
                     padding: 0,
-                    '&::placeholder': {
-                      color: theme.colors.gray[4],
-                    }
+                    color: 'var(--mantine-color-text)',
                   },
                   label: {
-                    fontSize: theme.fontSizes.sm,
+                    fontSize: 'var(--mantine-font-size-sm)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
-                    color: theme.colors.gray[5],
+                    color: 'var(--mantine-color-dimmed)',
                     marginBottom: 4,
-                  }
-                })}
+                  },
+                }}
               />
 
 
@@ -237,10 +235,18 @@ export default function EditRecipe({ form }: EditRecipeProps) {
           </Paper>
 
           {/* Desktop/Tablet Action Indicator or Help text */}
-          <Paper p="md" radius="md" bg="gray.0" withBorder style={{ borderStyle: 'dashed' }}>
+          <Paper
+            p="md"
+            radius="md"
+            withBorder
+            style={{
+              borderStyle: 'dashed',
+              backgroundColor: 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
+            }}
+          >
             <Stack gap="xs">
-              <Title order={6} c="gray.7">Quick Tips</Title>
-              <Box size="sm" c="gray.6" component="div" m={0} style={{ fontSize: '0.85rem' }}>
+              <Title order={6} fw={600}>Quick Tips</Title>
+              <Box size="sm" c="dimmed" component="div" m={0} style={{ fontSize: '0.85rem' }}>
                 Use the tabs to switch between ingredients and instructions. Drag and drop items to reorder them easily.
               </Box>
             </Stack>

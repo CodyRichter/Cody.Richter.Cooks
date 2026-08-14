@@ -158,9 +158,9 @@ export default function ShareRecipeModal({
                                         p="sm"
                                         style={{
                                             borderRadius: 'var(--mantine-radius-md)',
-                                            border: '1px solid var(--mantine-color-gray-3)',
+                                            border: '1px solid var(--mantine-color-default-border)',
                                             backgroundColor: isCurrentUser
-                                                ? 'var(--mantine-color-gray-0)'
+                                                ? 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))'
                                                 : 'transparent',
                                         }}
                                     >

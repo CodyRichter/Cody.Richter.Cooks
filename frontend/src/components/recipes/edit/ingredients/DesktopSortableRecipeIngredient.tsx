@@ -56,7 +56,7 @@ export default function DesktopSortableRecipeIngredient({
           transform ? { ...transform, x: 0 } : null
         ),
         transition: transition,
-        backgroundColor: isDragging ? 'var(--mantine-color-orange-0)' : 'var(--mantine-color-gray-0)',
+        backgroundColor: isDragging ? 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))' : 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
         zIndex: isDragging ? 100 : 1,
         opacity: isDragging ? 0.8 : 1,
         border: isDragging ? '1px solid var(--mantine-color-orange-4)' : undefined,
@@ -76,7 +76,7 @@ export default function DesktopSortableRecipeIngredient({
           <IconGripVertical size={20} />
         </ActionIcon>
 
-        <Grid gutter="xs" style={{ flex: 1 }} align="center">
+        <Grid gap="xs" style={{ flex: 1 }} align="center">
           <Grid.Col span={2}>
             <NumberInput
               placeholder="0"

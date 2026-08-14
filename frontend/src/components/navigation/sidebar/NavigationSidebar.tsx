@@ -181,13 +181,13 @@ export default function NavigationSidebar({
           onChange={(event) => setSearchText(event.currentTarget.value)}
         />
 
-        <Collapse in={searchbarFocused} mt="sm">
+        <Collapse expanded={searchbarFocused} mt="sm">
           <Button fullWidth disabled={searchText.length === 0}>
             Search
           </Button>
         </Collapse>
 
-        <Divider mt="md" mb="sm" color="#eee" />
+        <Divider mt="md" mb="sm" />
 
         {isLoading ? (
           <Stack gap="md" mt="md">
@@ -220,7 +220,7 @@ export default function NavigationSidebar({
                 label={recipe.title}
                 rightSection={
                   isRecipeActive(recipe.id) ? (
-                    <IconChefHatFilled size={20} color="#e2a478" />
+                    <IconChefHatFilled size={20} color="var(--mantine-color-orange-4)" />
                   ) : (
                     <IconArrowNarrowRight size={20} color="gray" />
                   )
@@ -234,7 +234,7 @@ export default function NavigationSidebar({
                 }
                 style={injectedRecipeId === recipe.id ? {
                   borderLeft: '3px solid var(--mantine-color-orange-4)',
-                  backgroundColor: 'var(--mantine-color-orange-0)',
+                  backgroundColor: 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))',
                 } : undefined}
               />
               {injectedRecipeId === recipe.id && <Divider my="xs" variant="dotted" />}
@@ -243,7 +243,7 @@ export default function NavigationSidebar({
         )}
       </Stack>
       <div>
-        <Divider mb="md" color="#eee" />
+        <Divider mb="md" />
         <Group justify="center" gap="sm" mb="xl" mt="xs">
           <ActionIcon
             variant="light"

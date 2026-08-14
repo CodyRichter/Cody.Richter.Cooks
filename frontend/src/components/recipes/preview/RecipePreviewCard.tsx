@@ -38,7 +38,7 @@ const RecipePreviewCard = memo<RecipePreviewCardProps>(({
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+        e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "translateY(0)";

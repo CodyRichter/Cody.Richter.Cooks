@@ -1,9 +1,31 @@
+:root {
+  color-scheme: light dark;
+}
+
+[data-mantine-color-scheme="dark"] {
+  color-scheme: dark;
+}
+
+[data-mantine-color-scheme="light"] {
+  color-scheme: light;
+}
+
+html,
 body {
   margin: 0;
+  padding: 0;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #fcfafa;
+  background-color: var(--mantine-color-body);
+  color: var(--mantine-color-text);
   cursor: default;
+}
+
+[data-mantine-color-scheme="dark"] html,
+[data-mantine-color-scheme="dark"] body {
+  background-color: var(--mantine-color-body) !important;
+  color: var(--mantine-color-text) !important;
 }
 
 code {
@@ -11,17 +33,73 @@ code {
     monospace;
 }
 
+.mantine-AppShell-root,
+.mantine-AppShell-main,
+.mantine-AppShell-navbar,
+.mantine-AppShell-header {
+  background-color: var(--mantine-color-body);
+}
+
+[data-mantine-color-scheme="dark"] .mantine-AppShell-root,
+[data-mantine-color-scheme="dark"] .mantine-AppShell-main,
+[data-mantine-color-scheme="dark"] .mantine-AppShell-navbar,
+[data-mantine-color-scheme="dark"] .mantine-AppShell-header {
+  background-color: var(--mantine-color-body) !important;
+}
+
+@property --switch-thumb-start {
+  syntax: "<length-percentage>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+.mantine-Switch-track {
+  transition: background-color 150ms ease, border-color 150ms ease !important;
+}
+
+.mantine-Switch-thumb {
+  transition: inset-inline-start 150ms ease, left 150ms ease, right 150ms ease !important;
+}
+
+.mantine-Switch-input:checked + .mantine-Switch-track .mantine-Switch-thumb,
+.mantine-Switch-input:checked + * > .mantine-Switch-thumb,
+.mantine-Switch-input[data-checked="true"] + * > .mantine-Switch-thumb {
+  inset-inline-start: calc(100% - var(--switch-thumb-size) - var(--switch-track-label-padding)) !important;
+}
+
+.mantine-Switch-input:not(:checked) + .mantine-Switch-track .mantine-Switch-thumb,
+.mantine-Switch-input:not(:checked) + * > .mantine-Switch-thumb {
+  inset-inline-start: var(--switch-track-label-padding) !important;
+}
+
+.mantine-Switch-trackLabel {
+  transition: margin 150ms ease, margin-inline-start 150ms ease, margin-inline-end 150ms ease !important;
+}
+
+.mantine-Switch-input:checked + .mantine-Switch-track .mantine-Switch-trackLabel,
+.mantine-Switch-input:checked + * > .mantine-Switch-trackLabel,
+.mantine-Switch-input[data-checked="true"] + * > .mantine-Switch-trackLabel {
+  margin-inline-start: 0 !important;
+  margin-inline-end: calc(var(--switch-thumb-size) + var(--switch-track-label-padding)) !important;
+}
+
+.mantine-Switch-input:not(:checked) + .mantine-Switch-track .mantine-Switch-trackLabel,
+.mantine-Switch-input:not(:checked) + * > .mantine-Switch-trackLabel {
+  margin-inline-start: calc(var(--switch-thumb-size) + var(--switch-track-label-padding)) !important;
+  margin-inline-end: 0 !important;
+}
+
 .navigationSidebarContainer {
-  background: #fcfcfc;
-  border-right: 1.5px solid #eee;
   margin-right: 5px;
-  box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.03);
   border-top-right-radius: 12px;
   border-bottom-right-radius: 12px;
+  background-color: var(--mantine-color-body) !important;
+  border-right: 1.5px solid var(--mantine-color-default-border) !important;
+  box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.04);
 }
 
 .sortableMoveIcon {
-  border-right: 2px solid #e0e0e0;
+  border-right: 2px solid var(--mantine-color-default-border);
   user-select: none;
 }
 
@@ -39,7 +117,7 @@ code {
 
 .verifyEmailButton {
   margin-left: 10px;
-  border-left: 2px solid #e0e0e0;
+  border-left: 2px solid var(--mantine-color-default-border);
   border-radius: 0px;
 }
 
@@ -48,7 +126,7 @@ code {
   padding-top: 0.5rem;
   padding-bottom: 0.65rem;
   letter-spacing: 0.01em;
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   will-change: transform, background-color, border-left-color;
   backface-visibility: hidden;
 }
@@ -56,24 +134,43 @@ code {
 .sidebarRecipe {
   border-left: 6px solid transparent;
   font-weight: 500;
+  color: var(--mantine-color-text);
   background: transparent;
   transition: all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.sidebarRecipe:hover,
-.sidebarRecipe:focus-visible {
+[data-mantine-color-scheme="light"] .sidebarRecipe:hover,
+[data-mantine-color-scheme="light"] .sidebarRecipe:focus-visible {
   background: #f5ede6;
+  color: #222;
   cursor: pointer;
   transform: translateX(1px);
 }
 
-.activeSidebarRecipe,
-.activeSidebarRecipe[data-active="true"],
-.activeSidebarRecipe:focus,
-.activeSidebarRecipe:active {
+[data-mantine-color-scheme="dark"] .sidebarRecipe:hover,
+[data-mantine-color-scheme="dark"] .sidebarRecipe:focus-visible {
+  background: var(--mantine-color-dark-6);
+  color: var(--mantine-color-dark-0);
+  cursor: pointer;
+  transform: translateX(1px);
+}
+
+[data-mantine-color-scheme="light"] .activeSidebarRecipe,
+[data-mantine-color-scheme="light"] .activeSidebarRecipe[data-active="true"] {
   background: #f7ede6;
   color: #222;
-  border-left: 6px solid #e2a478;
+  border-left: 6px solid var(--mantine-color-orange-5);
+  font-weight: 700;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  transform: translateX(2px);
+}
+
+[data-mantine-color-scheme="dark"] .activeSidebarRecipe,
+[data-mantine-color-scheme="dark"] .activeSidebarRecipe[data-active="true"] {
+  background: rgba(247, 103, 7, 0.15);
+  color: var(--mantine-color-orange-2);
+  border-left: 6px solid var(--mantine-color-orange-5);
   font-weight: 700;
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
@@ -97,11 +194,9 @@ code {
   opacity: 1;
 }
 
-/* TipTap Editor specific image styles */
-
 .tiptap-editor-button:hover {
-  background-color: #f1f3f5 !important;
-  color: #000000 !important;
+  background-color: var(--mantine-color-default-hover) !important;
+  color: var(--mantine-color-text) !important;
 }
 
 img {
@@ -120,12 +215,19 @@ img {
   margin: 1rem auto;
 }
 
+[data-mantine-color-scheme="dark"] .ProseMirror img {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
 .ProseMirror img:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: box-shadow 0.2s ease;
 }
 
-/* Mobile responsive adjustments */
+[data-mantine-color-scheme="dark"] .ProseMirror img:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
 @media (max-width: 768px) {
   img {
     max-width: calc(100% - 1rem);
@@ -159,7 +261,6 @@ img {
   }
 }
 
-/* Content container styles */
 .ProseMirror {
   word-wrap: break-word;
   overflow-wrap: break-word;
