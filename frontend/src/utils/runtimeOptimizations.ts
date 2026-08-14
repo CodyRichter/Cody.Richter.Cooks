@@ -60,17 +60,19 @@ export const optimizeImageLoading = () => {
     const images = document.querySelectorAll<HTMLImageElement>('img[data-src]')
     images.forEach(img => {
       const src = img.getAttribute('data-src')
-      const normalizedSrc = src?.trim().toLowerCase()
-      if (
-        src &&
-        normalizedSrc &&
-        !normalizedSrc.startsWith('javascript:') &&
-        !normalizedSrc.startsWith('data:') &&
-        !normalizedSrc.startsWith('vbscript:')
-      ) {
-        img.loading = 'lazy'
-        img.src = src
-        img.removeAttribute('data-src')
+      if (src) {
+        try {
+          const parsedUrl = new URL(src.trim(), window.location.origin)
+          const isSafeProtocol =
+            parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:'
+          if (isSafeProtocol) {
+            img.loading = 'lazy'
+            img.src = parsedUrl.href
+            img.removeAttribute('data-src')
+          }
+        } catch {
+          // Ignore invalid URLs in data-src
+        }
       }
     })
   }
