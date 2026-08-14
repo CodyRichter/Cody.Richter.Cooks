@@ -169,6 +169,7 @@ async def refresh_token(
 
 
 @router.post("/forgot-password/")
+@router.post("/forgot-password", include_in_schema=False)
 async def forgot_password(
     request_data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)
 ):
@@ -181,6 +182,7 @@ async def forgot_password(
 
 
 @router.post("/reset-password/")
+@router.post("/reset-password", include_in_schema=False)
 async def reset_password(
     request_data: ResetPasswordRequest, request: Request, db: Session = Depends(get_db)
 ):
@@ -191,7 +193,8 @@ async def reset_password(
     return reset_password_internal(request_data, request, db)
 
 
-@router.get("/reset-password/verify")
+@router.get("/reset-password/verify/")
+@router.get("/reset-password/verify", include_in_schema=False)
 async def verify_reset_password_token(token: str, db: Session = Depends(get_db)):
     """
     Verify a password reset token and return user details (username).

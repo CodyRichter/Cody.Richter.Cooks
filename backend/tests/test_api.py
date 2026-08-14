@@ -234,6 +234,106 @@ class TestUserAPI(APITestBase):
         )
         self.assert_error_response(response, 401, "Not authenticated")
 
+    def test_password_reset_verify_token_valid(
+        self, client: TestClient, test_user: User
+    ):
+        """Test verifying a valid password reset token with and without trailing slash."""
+        from app.utils.auth import create_password_reset_token
+
+        token = create_password_reset_token(test_user.id, test_user.password_hash)
+
+        # Test with trailing slash (used by frontend apiClient)
+        response = client.get(
+            f"/api/v1/users/reset-password/verify/?token={token}",
+            follow_redirects=False,
+        )
+        assert response.status_code == 200
+        assert response.json()["username"] == test_user.username
+
+        # Test without trailing slash (direct route match, no 307 redirect)
+        response_no_slash = client.get(
+            f"/api/v1/users/reset-password/verify?token={token}",
+            follow_redirects=False,
+        )
+        assert response_no_slash.status_code == 200
+        assert response_no_slash.json()["username"] == test_user.username
+
+    def test_password_reset_verify_token_invalid(self, client: TestClient):
+        """Test verifying an invalid password reset token."""
+        response = client.get(
+            "/api/v1/users/reset-password/verify/?token=invalid-token",
+            follow_redirects=False,
+        )
+        assert response.status_code == 400
+        assert "Invalid or expired password reset token" in response.json()["detail"]
+
+    def test_password_reset_flow_complete(self, client: TestClient, test_user: User):
+        """Test the full forgot password -> verify -> reset flow."""
+        from unittest.mock import patch, AsyncMock
+        from app.utils.auth import create_password_reset_token
+
+        # 1. Forgot password request (mocking turnstile captcha and email)
+        with (
+            patch(
+                "app.handlers.users.impl_v1.verify_turnstile_token",
+                new_callable=AsyncMock,
+            ) as mock_captcha,
+            patch(
+                "app.handlers.users.impl_v1.EmailService.send_password_reset_email"
+            ) as mock_email,
+        ):
+            mock_captcha.return_value = True
+            mock_email.return_value = True
+
+            forgot_resp = client.post(
+                "/api/v1/users/forgot-password/",
+                json={"email": test_user.email, "captcha_token": "valid_mock_captcha"},
+            )
+            assert forgot_resp.status_code == 200
+            assert "password reset link" in forgot_resp.json()["message"]
+
+        # 2. Generate token for user's current password
+        token = create_password_reset_token(test_user.id, test_user.password_hash)
+
+        # 3. Verify token returns username
+        verify_resp = client.get(
+            f"/api/v1/users/reset-password/verify/?token={token}",
+            follow_redirects=False,
+        )
+        assert verify_resp.status_code == 200
+        assert verify_resp.json()["username"] == test_user.username
+
+        # 4. Submit new password
+        new_password = "NewStrongPassword123!"
+        reset_resp = client.post(
+            "/api/v1/users/reset-password/",
+            json={"token": token, "new_password": new_password},
+        )
+        assert reset_resp.status_code == 200
+        assert "Password has been reset successfully" in reset_resp.json()["message"]
+
+        # 5. Login with new password succeeds
+        login_resp = client.post(
+            "/api/v1/users/login/",
+            json={"username": test_user.username, "password": new_password},
+        )
+        assert login_resp.status_code == 200
+        assert "access_token" in login_resp.json()
+
+        # 6. Login with old password fails
+        old_login_resp = client.post(
+            "/api/v1/users/login/",
+            json={"username": test_user.username, "password": "TestPassword123!"},
+        )
+        assert old_login_resp.status_code == 401
+
+        # 7. Old token is now invalidated because password_hash changed
+        invalid_verify_resp = client.get(
+            f"/api/v1/users/reset-password/verify/?token={token}",
+            follow_redirects=False,
+        )
+        assert invalid_verify_resp.status_code == 400
+
 
 @pytest.mark.api
 @pytest.mark.integration

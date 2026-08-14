@@ -20,12 +20,13 @@ function ResetPasswordForm() {
   // Verify token and fetch username on mount
   useEffect(() => {
     if (token) {
-      apiClient.get<{ username: string }>(`/api/v1/users/reset-password/verify?token=${token}`, false)
+      apiClient.get<{ username: string }>(`/api/v1/users/reset-password/verify/?token=${token}`, false)
         .then(data => {
           setUsername(data.username);
           setIsVerifying(false);
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Password reset token verification failed:', error);
           setIsVerifying(false);
         });
     }
