@@ -60,7 +60,14 @@ export const optimizeImageLoading = () => {
     const images = document.querySelectorAll<HTMLImageElement>('img[data-src]')
     images.forEach(img => {
       const src = img.getAttribute('data-src')
-      if (src && !src.toLowerCase().startsWith('javascript:')) {
+      const normalizedSrc = src?.trim().toLowerCase()
+      if (
+        src &&
+        normalizedSrc &&
+        !normalizedSrc.startsWith('javascript:') &&
+        !normalizedSrc.startsWith('data:') &&
+        !normalizedSrc.startsWith('vbscript:')
+      ) {
         img.loading = 'lazy'
         img.src = src
         img.removeAttribute('data-src')
