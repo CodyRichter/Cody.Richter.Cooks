@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Badge,
   Box,
   Button,
   Checkbox,
@@ -22,6 +21,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMediaQuery } from "@mantine/hooks";
 
 import { Ingredient } from "@/types/Ingredient";
 import { convertToFractionalRepresentation } from "@/utils/recipeUtils";
@@ -48,6 +48,10 @@ export default function RecipeIngredientCard({
   onScaleChange,
   servingSize,
 }: RecipeIngredientCardProps) {
+  const isMobile = useMediaQuery("(max-width: 768px)", false, {
+    getInitialValueInEffect: true,
+  });
+
   const [checkedIngredientIds, setCheckedIngredientIds] = useState<Set<string>>(
     new Set()
   );
@@ -63,7 +67,6 @@ export default function RecipeIngredientCard({
     : null;
 
   const toggleIngredient = (id: string) => {
-    // Capture "First" positions before state update
     if (containerRef.current) {
       const children = Array.from(containerRef.current.children);
       const positions = new Map<string, number>();
@@ -94,12 +97,10 @@ export default function RecipeIngredientCard({
       const oldTop = positionsRef.current.get(ingredientId || "");
 
       if (oldTop !== undefined) {
-        // "Last" position
         const newTop = child.getBoundingClientRect().top;
         const deltaY = oldTop - newTop;
 
         if (deltaY !== 0) {
-          // "Invert" and "Play"
           child.animate(
             [
               { transform: `translateY(${deltaY}px)` },
@@ -114,7 +115,6 @@ export default function RecipeIngredientCard({
       }
     });
 
-    // Reset for next transition
     positionsRef.current = new Map();
   }, [checkedIngredientIds]);
 
@@ -137,7 +137,6 @@ export default function RecipeIngredientCard({
       .join("\n");
   }, [ingredients, scaleFactor]);
 
-  // Stepper handlers
   const handleDecrement = () => {
     if (!onScaleChange) return;
     if (servingSize && currentServings) {
@@ -162,57 +161,133 @@ export default function RecipeIngredientCard({
     }
   };
 
-  // Guard against undefined ingredients
   if (!ingredients || ingredients.length === 0) {
     return (
-      <Stack gap="sm">
-        <Title order={4}>Ingredients</Title>
-        <Text c="dimmed" size="sm">
-          No ingredients added yet.
-        </Text>
-      </Stack>
+      <Paper
+        withBorder={!isMobile}
+        shadow={isMobile ? "none" : "xs"}
+        radius={isMobile ? 0 : "lg"}
+        p={isMobile ? 0 : "lg"}
+        bg={isMobile ? "transparent" : undefined}
+        h="100%"
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <Stack gap="sm" style={{ flex: 1 }}>
+          <Title order={3} size="h4" fw={700}>
+            Ingredients
+          </Title>
+          <Text c="dimmed" size="sm">
+            No ingredients added yet.
+          </Text>
+        </Stack>
+      </Paper>
     );
   }
 
   return (
-    <Stack gap="sm">
-      {/* Title Bar */}
-      <Group gap="xs" align="center">
-        <Title order={4}>Ingredients</Title>
-        <Badge variant="light" color="gray" size="sm">
-          {ingredients.length} {ingredients.length === 1 ? "item" : "items"}
-        </Badge>
-      </Group>
+    <Paper
+      withBorder={!isMobile}
+      shadow={isMobile ? "none" : "xs"}
+      radius={isMobile ? 0 : "lg"}
+      p={isMobile ? 0 : "lg"}
+      bg={isMobile ? "transparent" : undefined}
+      h="100%"
+      style={{ display: "flex", flexDirection: "column" }}
+    >
+      <Stack gap="sm" style={{ flex: 1 }}>
+        {/* Title Bar */}
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <Title order={3} size="h4" fw={700}>
+            Ingredients
+          </Title>
 
-      {/* All-in-One Ingredients Actions Bar */}
-      <Paper
-        p="xs"
-        radius="md"
-        withBorder
-        style={{
-          backgroundColor: "var(--mantine-color-default-hover)",
-        }}
-      >
-        <Group justify="space-between" align="center" gap="sm" wrap="wrap">
-          {/* Left: Scaling Stepper & Reset Controls */}
-          {onScaleChange ? (
-            <Group gap="xs" align="center" wrap="wrap" style={{ flex: 1, minWidth: "160px" }}>
-              <Group gap={6} align="center">
-                <IconUsers size={18} stroke={1.5} style={{ opacity: 0.75 }} />
+          <CopyButton value={formattedIngredientsAsString} timeout={2000}>
+            {({ copied, copy }) => (
+              <Tooltip
+                label={
+                  copied
+                    ? "Ingredients Copied to Clipboard!"
+                    : "Copy Ingredients"
+                }
+                withArrow
+                position="top"
+              >
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  color={copied ? "teal" : "gray"}
+                  px="xs"
+                  leftSection={
+                    copied ? (
+                      <IconClipboardCheck size={14} color="var(--mantine-color-teal-6)" />
+                    ) : (
+                      <IconCopy size={14} />
+                    )
+                  }
+                  onClick={copy}
+                  style={{ fontWeight: 600 }}
+                >
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+              </Tooltip>
+            )}
+          </CopyButton>
+        </Group>
+
+        {/* Scaling Controls Bar - Stepper is anchored right, Reset appears on left so + never shifts */}
+        {onScaleChange && (
+          <Box
+            p={isMobile ? "4px 0" : "6px 10px"}
+            style={{
+              backgroundColor: isMobile
+                ? "transparent"
+                : "var(--mantine-color-default-hover)",
+              borderRadius: "var(--mantine-radius-md)",
+              border: isMobile
+                ? "none"
+                : "1px solid var(--mantine-color-default-border)",
+            }}
+          >
+            <Group justify="space-between" align="center" gap="xs" wrap="nowrap">
+              {/* Left: Label + Reset button */}
+              <Group gap={6} align="center" wrap="nowrap">
+                <IconUsers size={16} stroke={1.5} style={{ opacity: 0.75 }} />
                 <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: "0.5px" }}>
                   {servingSize ? "Servings" : "Scale"}
                 </Text>
+
+                {isScaled && (
+                  <Button
+                    size="xs"
+                    variant="subtle"
+                    color="orange"
+                    radius="sm"
+                    leftSection={<IconRotate size={12} stroke={2} />}
+                    onClick={() => onScaleChange(1)}
+                    style={{
+                      fontWeight: 600,
+                      paddingLeft: 6,
+                      paddingRight: 6,
+                      height: 22,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    Reset
+                  </Button>
+                )}
               </Group>
 
-              {/* Stepper with comfortable touch targets */}
+              {/* Right: Stepper controls stay anchored on right without shifting */}
               <Group
-                gap={4}
+                gap={2}
                 align="center"
+                wrap="nowrap"
                 style={{
                   backgroundColor: "var(--mantine-color-body)",
                   borderRadius: "var(--mantine-radius-md)",
                   border: "1px solid var(--mantine-color-default-border)",
-                  padding: "3px 6px",
+                  padding: "2px 6px",
+                  flexShrink: 0,
                 }}
               >
                 <ActionIcon
@@ -222,16 +297,16 @@ export default function RecipeIngredientCard({
                   onClick={handleDecrement}
                   disabled={servingSize ? (currentServings ?? 1) <= 1 : scaleFactor <= 0.25}
                   aria-label={servingSize ? "Decrease servings" : "Decrease scale"}
-                  style={{ minWidth: 28, minHeight: 28 }}
+                  style={{ minWidth: 26, minHeight: 26 }}
                 >
-                  <IconMinus size={14} stroke={2.5} />
+                  <IconMinus size={12} stroke={2.5} />
                 </ActionIcon>
 
                 <Text
-                  size="sm"
+                  size="xs"
                   fw={700}
                   style={{
-                    minWidth: "3.5rem",
+                    minWidth: "2.5rem",
                     textAlign: "center",
                     fontVariantNumeric: "tabular-nums",
                   }}
@@ -247,158 +322,103 @@ export default function RecipeIngredientCard({
                   color="gray"
                   onClick={handleIncrement}
                   aria-label={servingSize ? "Increase servings" : "Increase scale"}
-                  style={{ minWidth: 28, minHeight: 28 }}
+                  style={{ minWidth: 26, minHeight: 26 }}
                 >
-                  <IconPlus size={14} stroke={2.5} />
+                  <IconPlus size={12} stroke={2.5} />
                 </ActionIcon>
               </Group>
-
-              {isScaled && (
-                <Button
-                  size="xs"
-                  variant="light"
-                  color="orange"
-                  radius="sm"
-                  leftSection={<IconRotate size={14} stroke={2} />}
-                  onClick={() => onScaleChange(1)}
-                  style={{ fontWeight: 600 }}
-                >
-                  Reset
-                </Button>
-              )}
             </Group>
-          ) : (
-            <Box />
-          )}
+          </Box>
+        )}
 
-          {/* Right: Divided Clipboard/Utility Action */}
-          <Group gap="xs" align="center" style={{ flexShrink: 0 }}>
-            {onScaleChange && (
-              <Divider
-                orientation="vertical"
-                style={{
-                  height: "1.5rem",
-                  alignSelf: "center",
-                }}
-              />
-            )}
+        <Divider />
 
-            <CopyButton value={formattedIngredientsAsString} timeout={2000}>
-              {({ copied, copy }) => (
-                <Tooltip
-                  label={
-                    copied
-                      ? "Ingredients Copied to Clipboard!"
-                      : "Copy Ingredients"
+        {/* Ingredient Items List */}
+        <Stack
+          gap="2px"
+          ref={containerRef}
+          style={{
+            overflowAnchor: "none",
+            width: "100%",
+            flex: 1,
+          }}
+        >
+          {sortedIngredients.map((ingredient) => {
+            const isChecked = checkedIngredientIds.has(ingredient.id);
+            return (
+              <Box
+                key={`ingredient-${ingredient.id}`}
+                data-ingredient-id={ingredient.id}
+                onClick={() => toggleIngredient(ingredient.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleIngredient(ingredient.id);
                   }
-                  withArrow
-                  position="top"
-                >
-                  <Button
-                    size="xs"
-                    variant="default"
-                    radius="sm"
-                    color={copied ? "teal" : undefined}
-                    leftSection={
-                      copied ? (
-                        <IconClipboardCheck size={16} color="var(--mantine-color-teal-6)" />
-                      ) : (
-                        <IconCopy size={16} />
-                      )
-                    }
-                    onClick={copy}
-                    style={{ fontWeight: 600 }}
-                  >
-                    {copied ? "Copied" : "Copy"}
-                  </Button>
-                </Tooltip>
-              )}
-            </CopyButton>
-          </Group>
-        </Group>
-      </Paper>
-
-      {/* Ingredient Items List */}
-      <Stack
-        gap="4px"
-        ref={containerRef}
-        style={{
-          overflowAnchor: "none",
-          width: "100%",
-        }}
-      >
-        {sortedIngredients.map((ingredient) => {
-          const isChecked = checkedIngredientIds.has(ingredient.id);
-          return (
-            <Box
-              key={`ingredient-${ingredient.id}`}
-              data-ingredient-id={ingredient.id}
-              onClick={() => toggleIngredient(ingredient.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggleIngredient(ingredient.id);
-                }
-              }}
-              tabIndex={0}
-              role="checkbox"
-              aria-checked={isChecked}
-              p="xs"
-              style={{
-                width: "100%",
-                borderRadius: "var(--mantine-radius-md)",
-                cursor: "pointer",
-                userSelect: "none",
-                transition: "background-color 0.15s ease",
-                backgroundColor: isChecked
-                  ? "transparent"
-                  : undefined,
-              }}
-              className="recipe-ingredient-row"
-            >
-              <Group align="flex-start" wrap="nowrap" gap="sm">
-                <Checkbox
-                  color="orange"
-                  checked={isChecked}
-                  readOnly
-                  tabIndex={-1}
-                  styles={{
-                    root: { pointerEvents: "none", marginTop: 2 },
-                  }}
-                />
-                <Stack gap={2} style={{ flex: 1 }}>
-                  <Text
+                }}
+                tabIndex={0}
+                role="checkbox"
+                aria-checked={isChecked}
+                p="6px 4px"
+                style={{
+                  width: "100%",
+                  borderRadius: "var(--mantine-radius-md)",
+                  cursor: "pointer",
+                  userSelect: "none",
+                  transition: "background-color 0.15s ease",
+                  backgroundColor: isChecked
+                    ? "transparent"
+                    : undefined,
+                }}
+                className="recipe-ingredient-row"
+              >
+                <Group align="flex-start" wrap="nowrap" gap="xs">
+                  <Checkbox
+                    color="orange"
+                    checked={isChecked}
+                    readOnly
+                    tabIndex={-1}
                     size="sm"
-                    style={{
-                      textDecoration: isChecked ? "line-through" : "none",
-                      color: isChecked
-                        ? "var(--mantine-color-dimmed)"
-                        : "inherit",
-                      transition: "all 0.2s ease",
-                      lineHeight: 1.4,
+                    styles={{
+                      root: { pointerEvents: "none", marginTop: 2 },
                     }}
-                  >
-                    {formatIngredient(ingredient, scaleFactor)}
-                  </Text>
-                  {ingredient.subtext && (
+                  />
+                  <Stack gap={1} style={{ flex: 1, minWidth: 0 }}>
                     <Text
-                      size="xs"
-                      c="dimmed"
+                      size="sm"
                       style={{
                         textDecoration: isChecked ? "line-through" : "none",
+                        color: isChecked
+                          ? "var(--mantine-color-dimmed)"
+                          : "inherit",
                         transition: "all 0.2s ease",
-                        lineHeight: 1.3,
+                        lineHeight: 1.35,
+                        wordBreak: "break-word",
                       }}
                     >
-                      {ingredient.subtext}
+                      {formatIngredient(ingredient, scaleFactor)}
                     </Text>
-                  )}
-                </Stack>
-              </Group>
-            </Box>
-          );
-        })}
+                    {ingredient.subtext && (
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        style={{
+                          textDecoration: isChecked ? "line-through" : "none",
+                          transition: "all 0.2s ease",
+                          lineHeight: 1.25,
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {ingredient.subtext}
+                      </Text>
+                    )}
+                  </Stack>
+                </Group>
+              </Box>
+            );
+          })}
+        </Stack>
       </Stack>
-    </Stack>
+    </Paper>
   );
 }

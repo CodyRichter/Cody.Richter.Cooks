@@ -1,23 +1,41 @@
 'use client';
 
-import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, Button } from "@mantine/core";
-import { IconEdit, IconTrash, IconClock, IconUsers, IconChefHat, IconUserPlus } from "@tabler/icons-react";
+import {
+  Badge,
+  Box,
+  Button,
+  Container,
+  Divider,
+  Grid,
+  Group,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import {
+  IconChefHat,
+  IconClock,
+  IconEdit,
+  IconTrash,
+  IconUserPlus,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-
+import { ApiErrorAlert } from "@/components/error-handling";
 import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
-import ShareRecipeModal from "@/components/recipes/share/ShareRecipeModal";
 import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
-import { ApiErrorAlert } from "@/components/error-handling";
+import ShareRecipeModal from "@/components/recipes/share/ShareRecipeModal";
 import { titleize } from "@/utils/recipeUtils";
-import { useAuth } from "@/contexts/AuthContext";
-import { useParams, useRouter } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRecipe } from "@/hooks/useRecipes";
-import { useUserRecipePermissions, useRecipePermissions } from "@/hooks/useRecipePermissions";
+import { useRecipePermissions, useUserRecipePermissions } from "@/hooks/useRecipePermissions";
 
 export default function ViewRecipe() {
   const auth = useAuth();
@@ -38,7 +56,7 @@ export default function ViewRecipe() {
 
   const authorName = useMemo(() => {
     if (!permissions || !Array.isArray(permissions)) return null;
-    const owner = permissions.find(p => p.role === 'owner');
+    const owner = permissions.find((p) => p.role === 'owner');
     return owner ? owner.user_username : null;
   }, [permissions]);
 
@@ -75,174 +93,118 @@ export default function ViewRecipe() {
     );
   }
 
+  const hasActions = auth.isAuthenticated && (canEdit || canDelete);
+
   return (
-    <Container size="xl" px={{ base: "sm", sm: "md" }} py={{ base: "xs", sm: "md" }}>
-      <Stack gap="lg">
+    <Container size="xl" px={{ base: "xs", sm: "md" }} py={{ base: "xs", sm: "md" }}>
+      <Stack gap={isMobile ? "lg" : "md"}>
+        {/* Section 1: Overview & Details */}
         <Paper
-          shadow={isMobile ? "none" : "lg"}
-          p={{ base: 0, sm: "lg" }}
+          shadow={isMobile ? "none" : "xs"}
+          p={isMobile ? 0 : "xl"}
           radius={isMobile ? 0 : "lg"}
           withBorder={!isMobile}
           bg={isMobile ? "transparent" : undefined}
-          style={{
-            borderLeft: isMobile ? undefined : "4px solid var(--mantine-color-orange-4)",
-          }}
         >
-          <Stack gap="lg">
-            {/* Header Section */}
-            <Stack gap="sm">
-              <Group justify="space-between" align="flex-start" wrap="nowrap">
-                <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
-                  <Title order={isMobile ? 3 : 2} fw={700} style={{ wordBreak: 'break-word' }}>
-                    {recipe.title}
-                  </Title>
+          <Stack gap="md">
+            {/* Top Bar: Title & Desktop Actions */}
+            <Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
+              <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+                <Title
+                  order={1}
+                  size={isMobile ? "h2" : "h1"}
+                  fw={800}
+                  style={{ wordBreak: 'break-word', letterSpacing: '-0.5px' }}
+                >
+                  {recipe.title}
+                </Title>
 
-                  {/* Recipe metadata */}
-                  <Group gap="xs" c="dimmed" wrap="wrap">
-                    {authorName && (
-                      <>
-                        <Group gap="4px">
-                          <IconChefHat size="0.9rem" stroke={1.5} />
-                          <Text size="xs" fw={600}>
-                            By {authorName}
-                          </Text>
-                        </Group>
-                        <Text size="xs" c="gray.4" fw={700}>•</Text>
-                      </>
-                    )}
-
-                    {recipe.cooking_time && (
-                      <>
-                        <Group gap="4px">
-                          <IconClock size="0.9rem" stroke={1.5} />
-                          <Text size="xs" fw={600}>
-                            {recipe.cooking_time}m
-                          </Text>
-                        </Group>
-                        <Text size="xs" c="gray.4" fw={700}>•</Text>
-                      </>
-                    )}
-
-                    <Text size="xs" fw={600}>
-                      {new Date(recipe.created_at).toLocaleDateString()}
-                    </Text>
-
-                    {recipe.serving_size && (
-                      <>
-                        <Text size="xs" c="gray.4" fw={700}>•</Text>
-                        <Group gap="4px">
-                          <IconUsers size="0.9rem" stroke={1.5} />
-                          <Text size="xs" fw={600} style={{ fontVariantNumeric: 'tabular-nums' }}>
-                            {recipe.serving_size} {recipe.serving_size === 1 ? 'serving' : 'servings'}
-                          </Text>
-                        </Group>
-                      </>
-                    )}
-                  </Group>
-
-                  {/* Tags */}
-                  {recipe.tags && recipe.tags.length > 0 && (
-                    <Group gap="6px" mt="xs" wrap="wrap">
-                      {recipe.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="light"
-                          color="orange"
-                          radius="md"
-                          size="sm"
-                          style={{
-                            textTransform: "none",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {titleize(tag)}
-                        </Badge>
-                      ))}
-                    </Group>
+                {/* Recipe Metadata Pills */}
+                <Group gap="xs" c="dimmed" wrap="wrap">
+                  {authorName && (
+                    <>
+                      <Group gap={4} align="center">
+                        <IconChefHat size="0.95rem" stroke={1.75} />
+                        <Text size="xs" fw={600}>
+                          By {authorName}
+                        </Text>
+                      </Group>
+                      <Text size="xs" c="gray.4" fw={700}>•</Text>
+                    </>
                   )}
-                </Stack>
 
-                {/* Desktop Action Buttons */}
-                {auth.isAuthenticated && (
-                  <Group gap="xs" visibleFrom="sm" style={{ flexShrink: 0 }}>
-                    {canEdit && (
-                      <>
-                        <Button
-                          variant="filled"
-                          color="blue"
-                          size="sm"
-                          radius="xl"
-                          leftSection={<IconEdit size="1rem" stroke={1.5} />}
-                          onClick={handleEditClick}
-                          style={{
-                            transition: "all 0.2s ease",
-                            fontWeight: 600,
-                            boxShadow: '0 4px 12px rgba(34, 139, 230, 0.15)',
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="filled"
-                          color="teal"
-                          size="sm"
-                          radius="xl"
-                          leftSection={<IconUserPlus size="1rem" stroke={1.5} />}
-                          onClick={openShare}
-                          style={{
-                            transition: "all 0.2s ease",
-                            fontWeight: 600,
-                            boxShadow: '0 4px 12px rgba(22, 184, 153, 0.15)',
-                          }}
-                        >
-                          Share
-                        </Button>
-                      </>
-                    )}
+                  {recipe.cooking_time && (
+                    <>
+                      <Group gap={4} align="center">
+                        <IconClock size="0.95rem" stroke={1.75} />
+                        <Text size="xs" fw={600}>
+                          {recipe.cooking_time} mins
+                        </Text>
+                      </Group>
+                      <Text size="xs" c="gray.4" fw={700}>•</Text>
+                    </>
+                  )}
 
-                    {canDelete && (
-                      <Button
-                        variant="filled"
-                        color="red"
+                  {recipe.serving_size && (
+                    <>
+                      <Group gap={4} align="center">
+                        <IconUsers size="0.95rem" stroke={1.75} />
+                        <Text size="xs" fw={600} style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {recipe.serving_size} {recipe.serving_size === 1 ? 'serving' : 'servings'}
+                        </Text>
+                      </Group>
+                      <Text size="xs" c="gray.4" fw={700}>•</Text>
+                    </>
+                  )}
+
+                  <Text size="xs" fw={600}>
+                    {new Date(recipe.created_at).toLocaleDateString()}
+                  </Text>
+                </Group>
+
+                {/* Tags */}
+                {recipe.tags && recipe.tags.length > 0 && (
+                  <Group gap="6px" mt={4} wrap="wrap">
+                    {recipe.tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="light"
+                        color="orange"
+                        radius="md"
                         size="sm"
-                        radius="xl"
-                        leftSection={<IconTrash size="1rem" stroke={1.5} />}
-                        onClick={openDelete}
                         style={{
-                          transition: "all 0.2s ease",
+                          textTransform: "none",
                           fontWeight: 600,
-                          boxShadow: '0 4px 12px rgba(250, 82, 82, 0.15)',
                         }}
                       >
-                        Delete
-                      </Button>
-                    )}
+                        {titleize(tag)}
+                      </Badge>
+                    ))}
                   </Group>
                 )}
-              </Group>
+              </Stack>
 
-              {/* Mobile Action Buttons (Full-Width Segment / Clean Bar) */}
-              {auth.isAuthenticated && (canEdit || canDelete) && (
-                <Group gap="xs" grow hiddenFrom="sm" mt="xs">
+              {/* Desktop Action Buttons with matching outlines */}
+              {hasActions && (
+                <Group gap="xs" visibleFrom="sm" style={{ flexShrink: 0 }}>
                   {canEdit && (
                     <>
                       <Button
                         variant="light"
-                        color="blue"
+                        color="orange"
                         size="sm"
                         radius="md"
-                        leftSection={<IconEdit size="1.1rem" stroke={1.5} />}
+                        leftSection={<IconEdit size="1rem" stroke={1.75} />}
                         onClick={handleEditClick}
                         style={{ fontWeight: 600 }}
                       >
                         Edit
                       </Button>
                       <Button
-                        variant="light"
-                        color="teal"
+                        variant="default"
                         size="sm"
                         radius="md"
-                        leftSection={<IconUserPlus size="1.1rem" stroke={1.5} />}
+                        leftSection={<IconUserPlus size="1rem" stroke={1.75} />}
                         onClick={openShare}
                         style={{ fontWeight: 600 }}
                       >
@@ -250,13 +212,14 @@ export default function ViewRecipe() {
                       </Button>
                     </>
                   )}
+
                   {canDelete && (
                     <Button
-                      variant="light"
-                      color="red"
+                      variant="default"
+                      c="red.6"
                       size="sm"
                       radius="md"
-                      leftSection={<IconTrash size="1.1rem" stroke={1.5} />}
+                      leftSection={<IconTrash size="1rem" stroke={1.75} />}
                       onClick={openDelete}
                       style={{ fontWeight: 600 }}
                     >
@@ -265,39 +228,106 @@ export default function ViewRecipe() {
                   )}
                 </Group>
               )}
-            </Stack>
+            </Group>
 
-            <Divider />
+            {/* Mobile Action Bar with matching outlines */}
+            {hasActions && (
+              <Group gap="xs" grow hiddenFrom="sm" mt="xs">
+                {canEdit && (
+                  <>
+                    <Button
+                      variant="light"
+                      color="orange"
+                      size="sm"
+                      radius="md"
+                      leftSection={<IconEdit size="1rem" stroke={1.75} />}
+                      onClick={handleEditClick}
+                      style={{ fontWeight: 600 }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      radius="md"
+                      leftSection={<IconUserPlus size="1rem" stroke={1.75} />}
+                      onClick={openShare}
+                      style={{ fontWeight: 600 }}
+                    >
+                      Share
+                    </Button>
+                  </>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="default"
+                    c="red.6"
+                    size="sm"
+                    radius="md"
+                    leftSection={<IconTrash size="1rem" stroke={1.75} />}
+                    onClick={openDelete}
+                    style={{ fontWeight: 600 }}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </Group>
+            )}
 
             {/* Description Section */}
             {recipe.description && (
-              <div>
-                <div
+              <>
+                <Divider />
+                <Box
+                  className="recipe-description-content"
                   dangerouslySetInnerHTML={{ __html: recipe.description }}
                   onClick={handleDescriptionClick}
                   style={{
-                    lineHeight: 1.6,
-                    fontSize: "16px",
-                    fontFamily: "inherit",
-                    fontWeight: 400,
                     cursor: "auto",
                   }}
                 />
-              </div>
+              </>
             )}
+          </Stack>
+        </Paper>
 
-            {/* Ingredients Section */}
+        {isMobile && <Divider />}
+
+        {/* 2-Column Desktop Grid / Stacked Seamless Mobile Flow */}
+        <Grid gap="md" style={{ alignItems: "stretch" }}>
+          {/* Section 2: Ingredients */}
+          <Grid.Col
+            span={{ base: 12, md: 5, lg: 4 }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <RecipeIngredientCard
               ingredients={recipe.ingredients || []}
               scaleFactor={scaleFactor}
               onScaleChange={setScaleFactor}
               servingSize={recipe.serving_size}
             />
+          </Grid.Col>
 
-            {/* Instructions Section */}
+          {isMobile && (
+            <Grid.Col span={12}>
+              <Divider />
+            </Grid.Col>
+          )}
+
+          {/* Section 3: Instructions */}
+          <Grid.Col
+            span={{ base: 12, md: 7, lg: 8 }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <RecipeInstructionsCard instructions={recipe.instructions || []} />
-          </Stack>
-        </Paper>
+          </Grid.Col>
+        </Grid>
       </Stack>
 
       <DeleteRecipeModal
