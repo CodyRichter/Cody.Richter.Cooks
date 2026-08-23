@@ -10,11 +10,13 @@ import {
   Title,
   Tooltip,
   noop,
+  Badge,
 } from "@mantine/core";
 import {
   IconAlertTriangle,
   IconBrandTelegram,
   IconCircleDashedCheck,
+  IconShieldCheck,
 } from "@tabler/icons-react";
 
 import ChangePasswordModal from "@/components/account/ChangePasswordModal";
@@ -33,6 +35,7 @@ export default function AccountDetailsPage() {
 
   const username = auth.user?.username || "<Username Not Found>";
   const email = auth.user?.email || "<Email Not Found>";
+  const isAdmin = auth.user?.is_admin || false;
 
   // For now, assume email is verified since we don't have email verification in the backend yet
   const emailVerified = true;
@@ -42,6 +45,11 @@ export default function AccountDetailsPage() {
       <Card shadow="sm" radius="md" withBorder pb="lg">
         <Group gap="xs">
           <Title order={4}>Account</Title>
+          {isAdmin && (
+            <Badge color="red" variant="light" leftSection={<IconShieldCheck size={14} />}>
+              Administrator
+            </Badge>
+          )}
         </Group>
         <Text mt="md" size="sm" color="dimmed">
           From this page, you can view your account details and manage your

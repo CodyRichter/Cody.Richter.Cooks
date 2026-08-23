@@ -1,11 +1,21 @@
 'use client';
 
-import { ActionIcon, Button, Group, Text, Container, Stack, Tooltip } from "@mantine/core";
-import { useEffect, useRef } from "react";
+import {
+  ActionIcon,
+  Alert,
+  Badge,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
-import { IconChevronLeft, IconDeviceFloppy } from "@tabler/icons-react";
+import { IconChevronLeft, IconDeviceFloppy, IconShieldCheck } from "@tabler/icons-react";
 import { ApiErrorAlert } from "@/components/error-handling";
 import { RecipeDetail, RecipeUpdate } from "@/types/Recipe";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
@@ -16,7 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useRecipe, useUpdateRecipe } from "@/hooks/useRecipes";
-import { useUserRecipePermissions } from "@/hooks/useRecipePermissions";
+import { useRecipePermissions, useUserRecipePermissions } from "@/hooks/useRecipePermissions";
 
 export default function EditRecipePage() {
   const params = useParams();
@@ -28,10 +38,14 @@ export default function EditRecipePage() {
   const { data: originalRecipe, isLoading, error, refetch } = useRecipe(recipe_id);
 
   // Get user permissions for this recipe
-  const { canEdit } = useUserRecipePermissions(recipe_id);
+  const { canEdit, isAdminOverride } = useUserRecipePermissions(recipe_id);
+  const { data: permissions } = useRecipePermissions(recipe_id);
 
-  // No longer using formVersion state as it causes re-renders on every keystroke.
-  // We'll use form.watch() in components that need reactivity.
+  const authorName = useMemo(() => {
+    if (!permissions || !Array.isArray(permissions)) return null;
+    const owner = permissions.find((p) => p.role === 'owner');
+    return owner ? owner.user_username : null;
+  }, [permissions]);
 
   // Initialize form
   const form = useForm<RecipeDetail>({
@@ -160,21 +174,49 @@ export default function EditRecipePage() {
   return (
     <Container size="xl" px="md">
       <Stack gap="lg">
-        <Group gap="sm">
-          <Tooltip label="Back to Recipe">
-            <ActionIcon
-              onClick={handleBackClick}
-              variant="light"
-              size="lg"
-              color="gray"
-              radius="md"
-            >
-              <IconChevronLeft size={20} />
-            </ActionIcon>
-          </Tooltip>
-          <Text fw={800} size="xl" style={{ letterSpacing: '-0.02em' }}>
-            Edit Recipe
-          </Text>
+        {/* Admin Editing Banner */}
+        {isAdminOverride && (
+          <Alert
+            icon={<IconShieldCheck size="1.25rem" />}
+            title="Admin Editing Mode"
+            color="blue"
+            variant="light"
+            radius="md"
+          >
+            You are editing this recipe using Administrator permissions.
+            {authorName ? ` This recipe is owned by ${authorName}.` : ' This recipe is owned by another user.'}
+          </Alert>
+        )}
+
+        <Group justify="space-between" align="center">
+          <Group gap="sm">
+            <Tooltip label="Back to Recipe">
+              <ActionIcon
+                onClick={handleBackClick}
+                variant="light"
+                size="lg"
+                color="gray"
+                radius="md"
+              >
+                <IconChevronLeft size={20} />
+              </ActionIcon>
+            </Tooltip>
+            <Text fw={800} size="xl" style={{ letterSpacing: '-0.02em' }}>
+              Edit Recipe
+            </Text>
+            {isAdminOverride && (
+              <Badge
+                leftSection={<IconShieldCheck size="0.85rem" stroke={2} />}
+                color="blue"
+                variant="light"
+                size="sm"
+                radius="sm"
+                style={{ textTransform: 'none', fontWeight: 600 }}
+              >
+                Admin Mode
+              </Badge>
+            )}
+          </Group>
         </Group>
 
         <EditRecipe form={form} />

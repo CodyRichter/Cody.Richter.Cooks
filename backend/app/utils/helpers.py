@@ -56,6 +56,14 @@ def enforce_recipe_permissions(
     """
     permission = get_user_recipe_permission(db, user.id, recipe_id)
 
+    # Administrators have full access without specific permissions
+    if getattr(user, "is_admin", False):
+        if permission:
+            return permission
+        return RecipePermission(
+            user_id=user.id, recipe_id=recipe_id, role=PermissionRole.OWNER
+        )
+
     if not permission:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

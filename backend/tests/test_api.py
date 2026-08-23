@@ -525,6 +525,62 @@ class TestRecipeAPI(APITestBase):
         deleted_recipe = db_session.query(Recipe).filter(Recipe.id == recipe_id).first()
         assert deleted_recipe is None
 
+    def test_admin_recipe_operations(
+        self,
+        client: TestClient,
+        db_session: Session,
+        test_recipe: Recipe,
+        test_user: User,
+        test_user2: User,
+        auth_headers_admin: dict,
+    ):
+        """Test admin can view, update, delete, and manage permissions on recipes they do not own."""
+        # 1. Admin can list recipe permissions with emails
+        response = client.get(
+            f"/api/v1/recipes/{test_recipe.id}/permissions/",
+            headers=auth_headers_admin,
+        )
+        data = self.assert_success_response(response)
+        assert len(data) >= 1
+        assert data[0]["user_email"] is not None
+
+        # 2. Admin can grant permission to another user on non-owned recipe
+        grant_resp = client.post(
+            f"/api/v1/recipes/{test_recipe.id}/permissions/",
+            json={"username": test_user2.username, "role": "editor"},
+            headers=auth_headers_admin,
+        )
+        self.assert_success_response(grant_resp, 201)
+
+        # 3. Admin can revoke permission from another user on non-owned recipe
+        revoke_resp = client.delete(
+            f"/api/v1/recipes/{test_recipe.id}/permissions/{test_user2.id}/",
+            headers=auth_headers_admin,
+        )
+        assert revoke_resp.status_code == 204
+
+        # 4. Admin can update non-owned recipe
+        update_resp = client.put(
+            f"/api/v1/recipes/{test_recipe.id}/",
+            json={"title": "Admin Updated Title", "cooking_time": 99},
+            headers=auth_headers_admin,
+        )
+        updated_data = self.assert_success_response(update_resp)
+        assert updated_data["title"] == "Admin Updated Title"
+        assert updated_data["cooking_time"] == 99
+
+        # 5. Admin can delete non-owned recipe
+        delete_resp = client.delete(
+            f"/api/v1/recipes/{test_recipe.id}/",
+            headers=auth_headers_admin,
+        )
+        assert delete_resp.status_code == 204
+
+        # Verify recipe was deleted
+        assert (
+            db_session.query(Recipe).filter(Recipe.id == test_recipe.id).first() is None
+        )
+
     def test_recipe_permissions_management(
         self,
         client: TestClient,

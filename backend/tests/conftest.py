@@ -128,6 +128,21 @@ def test_user2(db_session: Session) -> User:
 
 
 @pytest.fixture
+def admin_user(db_session: Session) -> User:
+    """Create an admin user."""
+    user = User(
+        username="adminuser",
+        email="admin@example.com",
+        password_hash=PasswordSecurity.hash_password("AdminPassword123!"),
+        is_admin=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
 def test_recipe(db_session: Session, test_user: User) -> Recipe:
     """Create a test recipe."""
     recipe = Recipe(
@@ -161,6 +176,13 @@ def auth_headers(test_user: User) -> dict:
 def auth_headers_user2(test_user2: User) -> dict:
     """Create authentication headers for second test user."""
     access_token = create_access_token(data={"sub": test_user2.username})
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest.fixture
+def auth_headers_admin(admin_user: User) -> dict:
+    """Create authentication headers for admin user."""
+    access_token = create_access_token(data={"sub": admin_user.username})
     return {"Authorization": f"Bearer {access_token}"}
 
 

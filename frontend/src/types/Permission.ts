@@ -58,4 +58,5 @@ export interface UserRecipePermissions {
   canDelete: boolean
   userRole: PermissionRole | null
   isOwner: boolean
+  isAdminOverride: boolean
 }

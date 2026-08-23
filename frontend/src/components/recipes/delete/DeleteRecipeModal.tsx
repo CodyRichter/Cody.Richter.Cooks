@@ -1,21 +1,28 @@
-import { Button, Center, Divider, Group, Modal, Text } from "@mantine/core";
+import { Alert, Button, Center, Divider, Group, Modal, Text } from "@mantine/core";
+import { IconShieldCheck } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useDeleteRecipe } from "@/hooks/useRecipes";
 
+interface DeleteRecipeModalProps {
+  recipeTitle: string;
+  recipeId: string;
+  opened: boolean;
+  close: () => void;
+  isAdminOverride?: boolean;
+  authorName?: string | null;
+}
+
 export default function DeleteRecipeModal({
   recipeTitle,
   recipeId,
   opened,
   close,
-}: {
-  recipeTitle: string;
-  recipeId: string;
-  opened: boolean;
-  close: () => void;
-}) {
+  isAdminOverride,
+  authorName,
+}: DeleteRecipeModalProps) {
   const [timeUntilDeletionEnabled, setTimeUntilDeletionEnabled] = useState(0);
   const router = useRouter();
 
@@ -63,6 +70,23 @@ export default function DeleteRecipeModal({
       size="lg"
     >
       <Divider mb="md" />
+
+      {isAdminOverride && (
+        <Alert
+          icon={<IconShieldCheck size="1.2rem" />}
+          title="Administrator Action"
+          color="blue"
+          variant="light"
+          radius="md"
+          mb="md"
+        >
+          You are deleting a recipe owned by{" "}
+          <Text component="span" fw={700}>
+            {authorName || "another user"}
+          </Text>
+          . This action is authorized by your Administrator permissions.
+        </Alert>
+      )}
 
       <Text c="red" size="lg" fw={900} ta="center">
         Are you sure you want to delete this recipe? This action cannot be

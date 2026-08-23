@@ -18,6 +18,7 @@ class UserSchema(BaseModel):
     password: Optional[str] = Field(
         None, min_length=8, max_length=128, description="User password"
     )
+    is_admin: Optional[bool] = Field(False, description="Whether the user is an admin")
 
     # Response-only fields
     id: Optional[str] = Field(None, description="User ID")
@@ -53,6 +54,7 @@ class UserResponseSchema(BaseModel):
     id: str
     username: str
     email: str
+    is_admin: bool
     created_at: datetime
     updated_at: datetime
 

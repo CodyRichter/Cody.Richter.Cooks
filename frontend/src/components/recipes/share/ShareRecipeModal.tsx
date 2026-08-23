@@ -1,5 +1,6 @@
 import {
     ActionIcon,
+    Alert,
     Badge,
     Box,
     Button,
@@ -11,7 +12,7 @@ import {
     TextInput,
     Tooltip,
 } from '@mantine/core'
-import { IconTrash, IconUserPlus, IconInfoCircle, IconUser } from '@tabler/icons-react'
+import { IconTrash, IconUserPlus, IconInfoCircle, IconUser, IconShieldCheck } from '@tabler/icons-react'
 import { useMediaQuery } from '@mantine/hooks'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -24,6 +25,8 @@ import {
 interface ShareRecipeModalProps {
     recipeId: string
     isOwner: boolean
+    isAdminOverride?: boolean
+    authorName?: string | null
     opened: boolean
     close: () => void
 }
@@ -31,6 +34,8 @@ interface ShareRecipeModalProps {
 export default function ShareRecipeModal({
     recipeId,
     isOwner,
+    isAdminOverride,
+    authorName,
     opened,
     close,
 }: ShareRecipeModalProps) {
@@ -44,6 +49,8 @@ export default function ShareRecipeModal({
     const { data: permissions, isLoading } = useRecipePermissions(recipeId)
     const grantPermission = useGrantRecipePermission(recipeId)
     const revokePermission = useRevokeRecipePermission(recipeId)
+
+    const canManage = isOwner || Boolean(isAdminOverride)
 
     const handleAddCollaborator = async () => {
         if (!usernameInput.trim()) return
@@ -85,14 +92,28 @@ export default function ShareRecipeModal({
         <Modal
             opened={opened}
             onClose={handleClose}
-            title={isOwner ? 'Share Recipe' : 'Recipe Collaborators'}
+            title={isAdminOverride ? 'Share Recipe (Admin Mode)' : isOwner ? 'Share Recipe' : 'Recipe Collaborators'}
             centered
             size="lg"
             fullScreen={isMobile}
         >
             <Stack gap="md">
-                {/* Add Collaborator Section - Only for Owners */}
-                {isOwner && (
+                {/* Admin Mode Alert */}
+                {isAdminOverride && (
+                  <Alert
+                    icon={<IconShieldCheck size="1.2rem" />}
+                    title="Administrator Privileges"
+                    color="blue"
+                    variant="light"
+                    radius="md"
+                  >
+                    You are managing collaborators for this recipe using Administrator permissions
+                    {authorName ? ` (Owner: ${authorName})` : ''}.
+                  </Alert>
+                )}
+
+                {/* Add Collaborator Section - For Owners and Admins */}
+                {canManage && (
                     <>
                         <Box>
                             <Text size="sm" fw={600} mb="xs">
@@ -187,8 +208,8 @@ export default function ShareRecipeModal({
                                                 {permission.role === 'owner' ? 'Owner' : 'Editor'}
                                             </Badge>
 
-                                            {/* Remove button - only for owners, not on self, not on owner */}
-                                            {isOwner && !isOwnerRole && (
+                                            {/* Remove button - for owners & admins, not on owner */}
+                                            {canManage && !isOwnerRole && (
                                                 <Tooltip label="Remove collaborator">
                                                     <ActionIcon
                                                         color="red"
@@ -209,13 +230,13 @@ export default function ShareRecipeModal({
                     )}
                 </Box>
 
-                {/* Info message for editors */}
-                {!isOwner && (
+                {/* Info message for non-owners/non-admins */}
+                {!canManage && (
                     <>
                         <Divider />
                         <Group gap="xs" c="dimmed">
                             <IconInfoCircle size="1rem" />
-                            <Text size="xs">Only the recipe owner can add or remove editors.</Text>
+                            <Text size="xs">Only the recipe owner or an administrator can add or remove editors.</Text>
                         </Group>
                     </>
                 )}

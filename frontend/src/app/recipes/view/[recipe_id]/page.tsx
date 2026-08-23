@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Alert,
   Badge,
   Box,
   Button,
@@ -17,6 +18,7 @@ import {
   IconChefHat,
   IconClock,
   IconEdit,
+  IconShieldCheck,
   IconTrash,
   IconUserPlus,
   IconUsers,
@@ -51,7 +53,7 @@ export default function ViewRecipe() {
 
   const { data: recipe, isLoading, error, refetch } = useRecipe(recipe_id);
 
-  const { canEdit, canDelete, isOwner } = useUserRecipePermissions(recipe_id);
+  const { canEdit, canDelete, isOwner, isAdminOverride } = useUserRecipePermissions(recipe_id);
   const { data: permissions } = useRecipePermissions(recipe_id);
 
   const authorName = useMemo(() => {
@@ -107,6 +109,24 @@ export default function ViewRecipe() {
           bg={isMobile ? "transparent" : undefined}
         >
           <Stack gap="md">
+            {/* Admin Override Notice Banner */}
+            {isAdminOverride && (
+              <Alert
+                icon={<IconShieldCheck size="1.25rem" />}
+                title="Administrator Access"
+                color="blue"
+                variant="light"
+                radius="md"
+              >
+                You have full access to view, edit, share, and delete this recipe because you are an Administrator.
+                {authorName && (
+                  <Text component="span" fw={600}>
+                    {' '}(Owned by {authorName})
+                  </Text>
+                )}
+              </Alert>
+            )}
+
             {/* Top Bar: Title & Desktop Actions */}
             <Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
               <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
@@ -129,6 +149,22 @@ export default function ViewRecipe() {
                           By {authorName}
                         </Text>
                       </Group>
+                      <Text size="xs" c="gray.4" fw={700}>•</Text>
+                    </>
+                  )}
+
+                  {isAdminOverride && (
+                    <>
+                      <Badge
+                        leftSection={<IconShieldCheck size="0.85rem" stroke={2} />}
+                        color="blue"
+                        variant="light"
+                        size="sm"
+                        radius="sm"
+                        style={{ textTransform: 'none', fontWeight: 600 }}
+                      >
+                        Admin Permissions
+                      </Badge>
                       <Text size="xs" c="gray.4" fw={700}>•</Text>
                     </>
                   )}
@@ -333,6 +369,8 @@ export default function ViewRecipe() {
       <DeleteRecipeModal
         recipeTitle={recipe.title}
         recipeId={recipe.id}
+        isAdminOverride={isAdminOverride}
+        authorName={authorName}
         opened={deleteModalOpened}
         close={closeDelete}
       />
@@ -340,6 +378,8 @@ export default function ViewRecipe() {
       <ShareRecipeModal
         recipeId={recipe.id}
         isOwner={isOwner}
+        isAdminOverride={isAdminOverride}
+        authorName={authorName}
         opened={shareModalOpened}
         close={closeShare}
       />

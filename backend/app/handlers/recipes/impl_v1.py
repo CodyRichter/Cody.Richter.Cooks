@@ -211,10 +211,14 @@ def list_recipe_permissions_internal(recipe_id: str, user: Optional[User], db: S
     caller_permission = (
         get_user_recipe_permission(db, user.id, recipe_id) if user else None
     )
-    is_privileged = caller_permission and caller_permission.role in [
-        PermissionRole.OWNER,
-        PermissionRole.EDITOR,
-    ]
+    is_privileged = (user and getattr(user, "is_admin", False)) or (
+        caller_permission
+        and caller_permission.role
+        in [
+            PermissionRole.OWNER,
+            PermissionRole.EDITOR,
+        ]
+    )
 
     # Get permissions for this recipe with user details
     query = (
