@@ -14,30 +14,48 @@ export default function EditRecipeDescriptionTextEditor({
     <RichTextEditor
       editor={editor}
       styles={{
+        root: {
+          border: '1px solid var(--mantine-color-default-border)',
+          borderRadius: 'var(--mantine-radius-md)',
+          backgroundColor: 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7))',
+        },
         toolbar: {
-          padding: isMobile ? "12px 8px" : "8px",
-          gap: isMobile ? "8px" : "4px",
+          padding: isMobile ? "6px" : "4px 6px",
+          gap: "4px",
+          backgroundColor: 'transparent',
+          borderBottom: '1px solid var(--mantine-color-default-border)',
+          alignItems: 'center',
+        },
+        controlsGroup: {
+          display: 'inline-flex',
+          alignItems: 'center',
         },
         control: {
-          width: isMobile ? "44px" : "32px",
-          height: isMobile ? "44px" : "32px",
-          fontSize: isMobile ? "18px" : "14px",
+          width: isMobile ? "32px" : "28px",
+          height: isMobile ? "32px" : "28px",
+          minWidth: isMobile ? "32px" : "28px",
+          minHeight: isMobile ? "32px" : "28px",
+          fontSize: isMobile ? "14px" : "13px",
+          borderRadius: 'var(--mantine-radius-sm)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         content: {
-          fontSize: isMobile ? "16px" : "14px",
-          lineHeight: isMobile ? "1.6" : "1.5",
-          padding: isMobile ? "16px" : "12px",
+          fontSize: isMobile ? "15px" : "14px",
+          lineHeight: "1.6",
+          padding: isMobile ? "12px" : "14px",
+          minHeight: "90px",
         },
       }}
       variant="subtle"
     >
       <RichTextEditor.Toolbar
-        sticky
-        stickyOffset={isMobile ? 80 : 60}
         style={{
           flexWrap: "wrap",
-          gap: isMobile ? "3px" : "2px",
-          justifyContent: isMobile ? "center" : "flex-start",
+          gap: "4px",
+          alignItems: "center",
+          justifyContent: "flex-start",
         }}
       >
         <RichTextEditor.ControlsGroup>
@@ -47,31 +65,15 @@ export default function EditRecipeDescriptionTextEditor({
         </RichTextEditor.ControlsGroup>
 
         <RichTextEditor.ControlsGroup>
-          <RichTextEditor.ClearFormatting />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
           <RichTextEditor.H3 />
-          <RichTextEditor.H4 />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Blockquote />
           <RichTextEditor.BulletList />
           <RichTextEditor.OrderedList />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.AlignLeft />
-          <RichTextEditor.AlignCenter />
+          <RichTextEditor.Blockquote />
         </RichTextEditor.ControlsGroup>
 
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.Link />
           <RichTextEditor.Unlink />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
           <TextEditorImageUploader editor={editor} />
         </RichTextEditor.ControlsGroup>
       </RichTextEditor.Toolbar>

@@ -1,6 +1,7 @@
 import { useEditor } from "@tiptap/react";
 import Highlight from "@tiptap/extension-highlight";
 import { Link } from "@mantine/tiptap";
+import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import SubScript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
@@ -25,6 +26,10 @@ const extensions = [
     StarterKit,
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     TextEditorImageExtension,
+    Placeholder.configure({
+        placeholder: "Write a short story, overview, or serving tips for this recipe...",
+        emptyEditorClass: "is-editor-empty",
+    }),
 ];
 
 // Debounce delay for syncing editor content to form state (ms)
@@ -62,7 +67,6 @@ export default function TipTapEditorWrapper({
         content: description,
         onUpdate({ editor }) {
             // Debounce form updates to prevent re-renders on every keystroke
-            // The editor provides instant visual feedback; form state syncs after typing pauses
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
             }

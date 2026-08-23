@@ -1,10 +1,10 @@
+'use client';
+
 import {
   ActionIcon,
   Badge,
   Button,
   Group,
-  Stack,
-  Text,
   TextInput,
 } from "@mantine/core";
 import { IconPlus, IconX } from "@tabler/icons-react";
@@ -19,30 +19,23 @@ interface EditRecipeTagsProps {
 }
 
 /**
- * Component for managing recipe tags.
- * Uses form.watch() to stay in sync with tag changes.
+ * Compact inline tag manager for the recipe overview bar.
  */
 export default function EditRecipeTags({
   form,
 }: EditRecipeTagsProps) {
-  // Track tags list - updated by form.watch callback
   const [tags, setTags] = useState<string[]>(() => form.getValues().tags || []);
-
-  // Track local UI state
   const [newTagValue, setNewTagValue] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
 
-  // Subscribe to tag changes
   form.watch('tags', ({ value }) => {
     setTags(value || []);
   });
 
-  // Handles the change in tags in the recipe object
   const handleTagChange = (newTags: string[]) => {
     form.setFieldValue('tags', Array.from(new Set(newTags)));
   };
 
-  // Attempts to add a tag to the recipe
   const addTag = () => {
     const cleanValue = newTagValue
       .toLowerCase()
@@ -57,12 +50,10 @@ export default function EditRecipeTags({
     setIsAddingTag(false);
   };
 
-  // Removes a tag from the recipe
   const removeTag = (tagToRemove: string) => {
     handleTagChange(tags.filter((tag: string) => tag !== tagToRemove));
   };
 
-  // Keyboard shortcuts for the "Add Tag" input
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -74,96 +65,92 @@ export default function EditRecipeTags({
   };
 
   return (
-    <Stack gap="sm">
-      {/* Add Tag Section */}
+    <Group gap="xs" align="center" wrap="wrap">
+      {tags.map((tag: string, index: number) => (
+        <Badge
+          key={`tag-${index}`}
+          variant="light"
+          color="orange"
+          radius="md"
+          size="sm"
+          rightSection={
+            <ActionIcon
+              size="xs"
+              variant="transparent"
+              color="orange"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeTag(tag);
+              }}
+              aria-label={`Remove tag ${tag}`}
+            >
+              <IconX size={10} />
+            </ActionIcon>
+          }
+          style={{
+            textTransform: "none",
+            fontWeight: 600,
+          }}
+        >
+          {titleize(tag)}
+        </Badge>
+      ))}
+
       {isAddingTag ? (
-        <Group gap="xs" align="flex-end">
+        <Group gap={4} align="center">
           <TextInput
-            label="Add Tag"
-            placeholder="Enter tag name..."
+            placeholder="Tag (e.g. Italian)"
             value={newTagValue}
             onChange={(e) => setNewTagValue(e.currentTarget.value)}
             onKeyDown={handleKeyPress}
             autoFocus
-            size="sm"
-            style={{ flex: 1 }}
+            size="xs"
+            radius="md"
+            w={120}
           />
+          <Button
+            variant="filled"
+            color="orange"
+            size="xs"
+            radius="md"
+            onClick={addTag}
+            disabled={!newTagValue.trim()}
+            px="xs"
+          >
+            Add
+          </Button>
           <Button
             variant="subtle"
             color="gray"
-            size="sm"
+            size="xs"
             radius="md"
             onClick={() => {
               setIsAddingTag(false);
               setNewTagValue("");
             }}
+            px="xs"
           >
             Cancel
           </Button>
-          <Button
-            variant="filled"
-            color="orange"
-            size="sm"
-            radius="md"
-            onClick={addTag}
-            disabled={!newTagValue.trim()}
-          >
-            Add
-          </Button>
         </Group>
       ) : (
-        <Group gap="xs" align="center">
-          <Text size="sm" c="dimmed" fw={400}>
-            Tags:
-          </Text>
-          <Button
-            variant="light"
-            color="orange"
-            size="xs"
-            radius="md"
-            leftSection={<IconPlus size="0.8rem" />}
-            onClick={() => setIsAddingTag(true)}
-          >
-            Add Tag
-          </Button>
-        </Group>
+        <Button
+          variant="subtle"
+          color="gray"
+          size="xs"
+          radius="md"
+          leftSection={<IconPlus size={12} />}
+          onClick={() => setIsAddingTag(true)}
+          styles={{
+            root: {
+              border: '1px dashed var(--mantine-color-default-border)',
+              height: '26px',
+            },
+          }}
+        >
+          Add Tag
+        </Button>
       )}
-
-      {/* Tags Display */}
-      {tags.length > 0 && (
-        <Group gap="xs">
-          {tags.map((tag: string, index: number) => (
-            <Badge
-              key={`tag-${index}`}
-              variant="light"
-              color="orange"
-              radius="md"
-              size="lg"
-              rightSection={
-                <ActionIcon
-                  size="xs"
-                  variant="transparent"
-                  color="orange"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeTag(tag);
-                  }}
-                  ml="xs"
-                >
-                  <IconX size={10} />
-                </ActionIcon>
-              }
-              style={{
-                cursor: "pointer",
-                textTransform: "none",
-                fontWeight: 700,
-              }}
-            >
-              {titleize(tag)}
-            </Badge>
-          ))}
-        </Group>
-      )}
-    </Stack>
+    </Group>
   );
 }

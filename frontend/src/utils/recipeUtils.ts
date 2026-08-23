@@ -65,36 +65,106 @@ export function titleize(str: string): string {
     .join(" ");
 }
 
+export interface RecipeValidationStatus {
+  isValid: boolean;
+  completionCount: number;
+  totalCount: number;
+  titleValid: boolean;
+  descriptionValid: boolean;
+  ingredientsValid: boolean;
+  instructionsValid: boolean;
+  issues: string[];
+}
+
+/**
+ * Evaluates the validation state of a recipe and returns detailed progress information.
+ * @param recipe The recipe to check
+ * @returns RecipeValidationStatus object
+ */
+export function getRecipeValidationStatus(recipe: RecipeDetail): RecipeValidationStatus {
+  if (!recipe) {
+    return {
+      isValid: false,
+      completionCount: 0,
+      totalCount: 4,
+      titleValid: false,
+      descriptionValid: false,
+      ingredientsValid: false,
+      instructionsValid: false,
+      issues: ["Recipe data is missing"],
+    };
+  }
+
+  const issues: string[] = [];
+
+  const titleValid = !!recipe.title && recipe.title.trim().length >= 3;
+  if (!titleValid) {
+    issues.push("Recipe title (min 3 characters)");
+  }
+
+  const strippedDescription = (recipe.description || "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+  const descriptionValid = !!recipe.description && strippedDescription.length > 0;
+  if (!descriptionValid) {
+    issues.push("Short description / story");
+  }
+
+  const hasIngredients = Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0;
+  const ingredientsComplete =
+    hasIngredients &&
+    recipe.ingredients.every(
+      (ing: Ingredient) => !!ing.name?.trim() && ing.quantity > 0 && !!ing.unit?.trim()
+    );
+  const ingredientsValid = hasIngredients && ingredientsComplete;
+  if (!hasIngredients) {
+    issues.push("At least 1 ingredient");
+  } else if (!ingredientsComplete) {
+    issues.push("All ingredients require a quantity, unit, and name");
+  }
+
+  const hasInstructions = Array.isArray(recipe.instructions) && recipe.instructions.length > 0;
+  const instructionsComplete =
+    hasInstructions &&
+    recipe.instructions.every(
+      (inst: InstructionStep) => {
+        const strippedInstDesc = (inst.description || "").replace(/<[^>]*>/g, "").trim();
+        return !!inst.title?.trim() && (!!inst.description?.trim() && strippedInstDesc.length > 0);
+      }
+    );
+  const instructionsValid = hasInstructions && instructionsComplete;
+  if (!hasInstructions) {
+    issues.push("At least 1 instruction step");
+  } else if (!instructionsComplete) {
+    issues.push("All steps require a step title and description");
+  }
+
+  const completionCount =
+    (titleValid ? 1 : 0) +
+    (descriptionValid ? 1 : 0) +
+    (ingredientsValid ? 1 : 0) +
+    (instructionsValid ? 1 : 0);
+
+  const isValid =
+    titleValid && descriptionValid && ingredientsValid && instructionsValid;
+
+  return {
+    isValid,
+    completionCount,
+    totalCount: 4,
+    titleValid,
+    descriptionValid,
+    ingredientsValid,
+    instructionsValid,
+    issues,
+  };
+}
+
 /**
  * Checks if a recipe is valid.
  * @param recipe The recipe to check
  * @returns True if the recipe is valid, false otherwise
  */
 export function isRecipeValid(recipe: RecipeDetail): boolean {
-  if (!recipe) {
-    return false;
-  }
-
-  const baseFieldsValid =
-    !!recipe &&
-    !!recipe.id &&
-    !!recipe.title &&
-    recipe.title.length > 0 &&
-    !!recipe.description &&
-    recipe.description.length > 0 &&
-    recipe.ingredients.length > 0 &&
-    recipe.instructions.length > 0;
-
-  // Check if all ingredients have a name and quantity
-  const ingredientsValid = recipe.ingredients.every(
-    (ingredient: Ingredient) =>
-      !!ingredient.name && !!ingredient.quantity && !!ingredient.unit
-  );
-
-  // Check if all instructions have a step
-  const instructionsValid = recipe.instructions.every(
-    (instruction: InstructionStep) => !!instruction.title && !!instruction.description
-  );
-
-  return baseFieldsValid && ingredientsValid && instructionsValid;
+  return getRecipeValidationStatus(recipe).isValid;
 }

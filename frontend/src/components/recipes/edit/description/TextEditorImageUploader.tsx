@@ -9,6 +9,7 @@ import {
 } from "@mantine/core";
 import { IconAlertCircle, IconPhoto } from "@tabler/icons-react";
 import React, { useCallback, useEffect, useState } from "react";
+import { RichTextEditor } from "@mantine/tiptap";
 
 import { Editor } from "@tiptap/react";
 import imageCompression from "browser-image-compression";
@@ -163,18 +164,13 @@ export default function TextEditorImageUploader({
 
   return (
     <>
-      <Button
-        variant="subtle"
-        size="sm"
+      <RichTextEditor.Control
         onClick={() => setModalOpened(true)}
         aria-label="Insert image"
-        color="gray"
-        pl={8}
-        pr={8}
-        className="tiptap-editor-button"
+        title="Insert Image"
       >
-        <IconPhoto size={17} />
-      </Button>
+        <IconPhoto size={16} />
+      </RichTextEditor.Control>
 
       <Modal
         opened={modalOpened}

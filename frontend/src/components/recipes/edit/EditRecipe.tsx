@@ -1,258 +1,294 @@
+'use client';
+
 import {
+  Badge,
+  Box,
   Button,
   Divider,
+  Grid,
   Group,
+  NumberInput,
   Paper,
   Stack,
-  TextInput,
-  NumberInput,
-  Title,
-  Grid,
-  Tabs,
-  Box,
-  Indicator,
   Text,
+  TextInput,
+  Title,
 } from "@mantine/core";
 import EditRecipeIngredients from "@/components/recipes/edit/ingredients/EditRecipeIngredients";
 import EditRecipeInstructions from "@/components/recipes/edit/instructions/EditRecipeInstructions";
 import EditRecipeTags from "@/components/recipes/edit/tags/EditRecipeTags";
-import { IconPlus, IconClock, IconUsers, IconCarrot, IconToolsKitchen } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconClock,
+  IconUsers,
+  IconCarrot,
+  IconToolsKitchen,
+} from "@tabler/icons-react";
 import { RecipeDetail } from "@/types/Recipe";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { UseFormReturnType } from "@mantine/form";
 import TipTapEditorWrapper from "@/components/recipes/edit/description/TipTapEditorWrapper";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface EditRecipeProps {
   form: UseFormReturnType<RecipeDetail>;
 }
 
 export default function EditRecipe({ form }: EditRecipeProps) {
-  // Memoize the setDescription callback to prevent TipTap editor recreation
-  const setDescription = useCallback((val: string) => {
-    form.setFieldValue('description', val);
-  }, [form]);
+  const isDesktop = useMediaQuery('(min-width: 992px)', false, {
+    getInitialValueInEffect: true,
+  });
 
-  // Get initial description for TipTap (it manages its own state internally)
-  // Using getValues() only for initial render - TipTap handles subsequent updates
+  // Watch lists to update section counts reactively
+  const [ingredientCount, setIngredientCount] = useState(
+    () => form.getValues().ingredients?.length || 0
+  );
+  const [instructionCount, setInstructionCount] = useState(
+    () => form.getValues().instructions?.length || 0
+  );
+
+  form.watch('ingredients', ({ value }) => {
+    setIngredientCount(value?.length || 0);
+  });
+
+  form.watch('instructions', ({ value }) => {
+    setInstructionCount(value?.length || 0);
+  });
+
+  // Memoize the setDescription callback to prevent TipTap editor recreation
+  const setDescription = useCallback(
+    (val: string) => {
+      form.setFieldValue('description', val);
+    },
+    [form]
+  );
+
   const initialDescription = form.getValues().description || '';
 
+  const handleAddIngredient = () => {
+    const currentRecipe = form.getValues();
+    form.insertListItem('ingredients', {
+      id: crypto.randomUUID(),
+      quantity: 0,
+      name: "",
+      unit: "",
+      subtext: "",
+      order_index: currentRecipe.ingredients?.length || 0,
+      recipe_id: currentRecipe.id,
+    });
+  };
+
+  const handleAddInstruction = () => {
+    const currentRecipe = form.getValues();
+    form.insertListItem('instructions', {
+      id: crypto.randomUUID(),
+      title: "",
+      description: "",
+      step_number: (currentRecipe.instructions?.length || 0) + 1,
+      recipe_id: currentRecipe.id,
+    });
+  };
+
   return (
-    <Grid gap="xl">
-      {/* Main Content Column */}
-      <Grid.Col span={{ base: 12, md: 8 }}>
-        <Stack gap="xl">
-          <Paper shadow="sm" p="xl" radius="md" withBorder>
-            <Stack gap="lg">
-              <TextInput
-                label="Recipe Title"
-                placeholder="Give your recipe a catchy name..."
-                size="xl"
-                variant="unstyled"
-                key={form.key('title')}
-                {...form.getInputProps('title')}
-                withAsterisk
-                styles={{
-                  input: {
-                    fontSize: '2.5rem',
-                    fontWeight: 800,
-                    padding: 0,
-                    color: 'var(--mantine-color-text)',
-                  },
-                  label: {
-                    fontSize: 'var(--mantine-font-size-sm)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    color: 'var(--mantine-color-dimmed)',
-                    marginBottom: 4,
-                  },
-                }}
-              />
+    <Stack gap="md">
+      {/* 1. Clean, Modern Recipe Overview Card */}
+      <Paper shadow="xs" p={{ base: 'sm', sm: 'lg' }} radius="md" withBorder>
+        <Stack gap="sm">
+          {/* Recipe Title Headline */}
+          <TextInput
+            placeholder="Recipe Title (e.g. Tuscan Salmon)"
+            size="lg"
+            radius="md"
+            withAsterisk
+            styles={{
+              input: {
+                fontSize: 'clamp(1.15rem, 4vw, 1.4rem)',
+                fontWeight: 700,
+                border: 'none',
+                backgroundColor: 'transparent',
+                paddingLeft: 0,
+                paddingRight: 0,
+              },
+            }}
+            key={form.key('title')}
+            {...form.getInputProps('title')}
+          />
 
+          {/* Inline Metadata Strip (Time, Servings, Tags) */}
+          <Group gap="xs" align="center" wrap="wrap">
+            <NumberInput
+              placeholder="Time"
+              key={form.key('cooking_time')}
+              {...form.getInputProps('cooking_time')}
+              min={0}
+              max={1440}
+              step={5}
+              hideControls
+              suffix=" mins"
+              leftSection={<IconClock size={14} color="var(--mantine-color-dimmed)" />}
+              radius="md"
+              size="xs"
+              w={{ base: 95, sm: 110 }}
+            />
 
-              <Divider
-                label={
-                  <Group gap={4}>
-                    <Text size="xs" fw={500} c="dimmed">Short Description</Text>
-                    <Text size="xs" c="red">*</Text>
-                  </Group>
-                }
-                labelPosition="left"
-              />
+            <NumberInput
+              placeholder="Servings"
+              key={form.key('serving_size')}
+              {...form.getInputProps('serving_size')}
+              min={1}
+              max={50}
+              step={1}
+              hideControls
+              suffix=" serv"
+              leftSection={<IconUsers size={14} color="var(--mantine-color-dimmed)" />}
+              radius="md"
+              size="xs"
+              w={{ base: 95, sm: 115 }}
+            />
 
-              <Box>
-                <TipTapEditorWrapper
-                  description={initialDescription}
-                  setDescription={setDescription}
-                />
-              </Box>
-            </Stack>
-          </Paper>
+            <Divider orientation="vertical" visibleFrom="xs" />
 
-          <Tabs defaultValue="ingredients" variant="pills" radius="md">
-            <Paper shadow="sm" radius="md" withBorder p="md">
-              <Stack gap="md">
-                <Tabs.List grow>
-                  <Tabs.Tab
-                    value="ingredients"
-                    leftSection={
-                      <Indicator
-                        color="red"
-                        size={10}
-                        offset={-2}
-                        disabled={form.getValues().ingredients.length > 0}
-                      >
-                        <IconCarrot size="1.2rem" />
-                      </Indicator>
-                    }
-                  >
-                    Ingredients
-                  </Tabs.Tab>
-                  <Tabs.Tab
-                    value="instructions"
-                    leftSection={
-                      <Indicator
-                        color="red"
-                        size={10}
-                        offset={-2}
-                        disabled={form.getValues().instructions.length > 0}
-                      >
-                        <IconToolsKitchen size="1.2rem" />
-                      </Indicator>
-                    }
-                  >
-                    Instructions
-                  </Tabs.Tab>
-                </Tabs.List>
+            <EditRecipeTags form={form} />
+          </Group>
 
-                <Tabs.Panel value="ingredients" pt="md">
-                  <Stack gap="md">
-                    <Group justify="space-between" align="center">
-                      <Title order={3} size="h4" fw={600}>Ingredients</Title>
-                      <Button
-                        variant="light"
-                        color="orange"
-                        size="sm"
-                        radius="md"
-                        leftSection={<IconPlus size="1rem" />}
-                        onClick={() => {
-                          const currentRecipe = form.getValues();
-                          form.insertListItem('ingredients', {
-                            id: crypto.randomUUID(),
-                            quantity: 0,
-                            name: "",
-                            unit: "",
-                            subtext: "",
-                            order_index: currentRecipe.ingredients.length,
-                            recipe_id: currentRecipe.id,
-                          });
-                        }}
-                      >
-                        Add Ingredient
-                      </Button>
-                    </Group>
-                    <EditRecipeIngredients form={form} />
-                  </Stack>
-                </Tabs.Panel>
+          <Divider />
 
-                <Tabs.Panel value="instructions" pt="md">
-                  <Stack gap="md">
-                    <Group justify="space-between" align="center">
-                      <Title order={3} size="h4" fw={600}>Instructions</Title>
-                      <Button
-                        variant="light"
-                        color="orange"
-                        size="sm"
-                        radius="md"
-                        leftSection={<IconPlus size="1rem" />}
-                        onClick={() => {
-                          const currentRecipe = form.getValues();
-                          form.insertListItem('instructions', {
-                            id: crypto.randomUUID(),
-                            title: "",
-                            description: "",
-                            step_number: currentRecipe.instructions.length + 1,
-                            recipe_id: currentRecipe.id,
-                          });
-                        }}
-                      >
-                        Add Instruction Step
-                      </Button>
-                    </Group>
-                    <EditRecipeInstructions form={form} />
-                  </Stack>
-                </Tabs.Panel>
-              </Stack>
-            </Paper>
-          </Tabs>
+          {/* Description & Story */}
+          <Box>
+            <TipTapEditorWrapper
+              description={initialDescription}
+              setDescription={setDescription}
+            />
+          </Box>
         </Stack>
-      </Grid.Col>
+      </Paper>
 
-      {/* Sidebar Column */}
-      <Grid.Col span={{ base: 12, md: 4 }}>
-        <Stack gap="lg" pos="sticky" top={20}>
-          <Paper shadow="sm" p="xl" radius="md" withBorder style={{ borderTop: '4px solid orange' }}>
-            <Stack gap="lg">
-              <Group gap="xs" align="center">
-                <Title order={3} size="h4" fw={600}>Recipe Details</Title>
+      {/* 2. Split Workstation Layout (Desktop: Side-by-Side with Sticky Ingredients; Mobile: Clean Vertical Stack) */}
+      <Grid gap="md" align="flex-start">
+        {/* Left Column: Ingredients List */}
+        <Grid.Col
+          span={{ base: 12, md: 5 }}
+          style={
+            isDesktop
+              ? {
+                  position: 'sticky',
+                  top: 'calc(var(--app-shell-header-offset, 65px) + 75px)',
+                  alignSelf: 'flex-start',
+                }
+              : undefined
+          }
+        >
+          <Paper shadow="xs" p={{ base: 'sm', sm: 'md' }} radius="md" withBorder>
+            <Stack gap="sm">
+              {/* Header */}
+              <Group justify="space-between" align="center">
+                <Group gap="xs" align="center">
+                  <IconCarrot size={18} color="var(--mantine-color-orange-6)" />
+                  <Title order={3} size="h5" fw={700}>
+                    Ingredients
+                  </Title>
+                  <Badge variant="light" color="orange" size="sm" radius="xl">
+                    {ingredientCount}
+                  </Badge>
+                </Group>
+
+                <Button
+                  variant="light"
+                  color="orange"
+                  size="xs"
+                  radius="md"
+                  leftSection={<IconPlus size={13} />}
+                  onClick={handleAddIngredient}
+                >
+                  Add
+                </Button>
               </Group>
 
               <Divider />
 
-              <NumberInput
-                label="Cooking Time"
-                placeholder="30"
-                key={form.key('cooking_time')}
-                {...form.getInputProps('cooking_time')}
-                min={0}
-                max={1440}
-                step={5}
-                suffix=" mins"
-                leftSection={<IconClock size="1.1rem" />}
-                variant="filled"
-                radius="md"
-                withAsterisk
-              />
+              {/* Ingredients List */}
+              <EditRecipeIngredients form={form} />
 
-              <NumberInput
-                label="Serving Size"
-                placeholder="4"
-                key={form.key('serving_size')}
-                {...form.getInputProps('serving_size')}
-                min={1}
-                max={50}
-                suffix=" servings"
-                leftSection={<IconUsers size="1.1rem" />}
-                variant="filled"
+              {/* Quick Add Button & Keyboard Hint */}
+              <Button
+                variant="subtle"
+                color="orange"
+                size="xs"
                 radius="md"
-                withAsterisk
-              />
-
-              <Box>
-                <Title order={5} size="xs" mb="xs" c="dimmed">TAGS</Title>
-                <EditRecipeTags form={form} />
-              </Box>
+                fullWidth
+                leftSection={<IconPlus size={14} />}
+                onClick={handleAddIngredient}
+                styles={{
+                  root: {
+                    border: '1px dashed var(--mantine-color-orange-3)',
+                    height: '32px',
+                  },
+                }}
+              >
+                Add Ingredient
+              </Button>
+              <Text size="xs" c="dimmed" ta="center" visibleFrom="sm">
+                Tip: Press <Text span fw={600} inherit>Enter</Text> on any ingredient field to add the next item
+              </Text>
             </Stack>
           </Paper>
+        </Grid.Col>
 
-          {/* Desktop/Tablet Action Indicator or Help text */}
-          <Paper
-            p="md"
-            radius="md"
-            withBorder
-            style={{
-              borderStyle: 'dashed',
-              backgroundColor: 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
-            }}
-          >
-            <Stack gap="xs">
-              <Title order={6} fw={600}>Quick Tips</Title>
-              <Box size="sm" c="dimmed" component="div" m={0} style={{ fontSize: '0.85rem' }}>
-                Use the tabs to switch between ingredients and instructions. Drag and drop items to reorder them easily.
-              </Box>
+        {/* Right Column: Instructions & Method */}
+        <Grid.Col span={{ base: 12, md: 7 }}>
+          <Paper shadow="xs" p={{ base: 'sm', sm: 'md' }} radius="md" withBorder>
+            <Stack gap="sm">
+              {/* Header */}
+              <Group justify="space-between" align="center">
+                <Group gap="xs" align="center">
+                  <IconToolsKitchen size={18} color="var(--mantine-color-orange-6)" />
+                  <Title order={3} size="h5" fw={700}>
+                    Method & Steps
+                  </Title>
+                  <Badge variant="light" color="orange" size="sm" radius="xl">
+                    {instructionCount}
+                  </Badge>
+                </Group>
+
+                <Button
+                  variant="light"
+                  color="orange"
+                  size="xs"
+                  radius="md"
+                  leftSection={<IconPlus size={13} />}
+                  onClick={handleAddInstruction}
+                >
+                  Add Step
+                </Button>
+              </Group>
+
+              <Divider />
+
+              {/* Instructions List */}
+              <EditRecipeInstructions form={form} />
+
+              {/* Quick Add Button */}
+              <Button
+                variant="subtle"
+                color="orange"
+                size="xs"
+                radius="md"
+                fullWidth
+                leftSection={<IconPlus size={14} />}
+                onClick={handleAddInstruction}
+                styles={{
+                  root: {
+                    border: '1px dashed var(--mantine-color-orange-3)',
+                    height: '32px',
+                  },
+                }}
+              >
+                Add Instruction Step
+              </Button>
             </Stack>
           </Paper>
-        </Stack>
-      </Grid.Col>
-    </Grid>
+        </Grid.Col>
+      </Grid>
+    </Stack>
   );
 }

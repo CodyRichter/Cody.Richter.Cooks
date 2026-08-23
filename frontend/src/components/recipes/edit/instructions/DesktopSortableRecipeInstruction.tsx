@@ -1,20 +1,19 @@
+'use client';
+
 import {
   ActionIcon,
-  Button,
+  Badge,
   Group,
-  Popover,
+  Paper,
+  Stack,
   TextInput,
   Textarea,
-  Paper,
-  Text,
   Tooltip,
-  Stack,
 } from "@mantine/core";
 import {
-  IconExclamationMark,
   IconGripVertical,
-  IconTrash,
   IconNotes,
+  IconTrash,
 } from "@tabler/icons-react";
 
 import { CSS } from "@dnd-kit/utilities";
@@ -29,17 +28,19 @@ interface DesktopSortableRecipeInstructionProps {
 }
 
 /**
- * Desktop layout for a sortable instruction card.
- * Uses Mantine Form's uncontrolled mode for inputs.
+ * Desktop layout for a structured, accessible sortable instruction card.
  */
 export default function DesktopSortableRecipeInstruction({
   form,
   index,
   instructionId,
 }: DesktopSortableRecipeInstructionProps) {
+  const totalCount = form.getValues().instructions?.length || 0;
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: instructionId,
+      disabled: totalCount <= 1,
     });
 
   return (
@@ -48,94 +49,113 @@ export default function DesktopSortableRecipeInstruction({
       p="md"
       radius="md"
       withBorder
-      mb="md"
-      shadow={isDragging ? "md" : "sm"}
+      mb="sm"
+      shadow={isDragging ? "lg" : "xs"}
       style={{
         transform: CSS.Transform.toString(
-          transform ? { ...transform, x: 0 } : null
+          transform ? { ...transform, x: 0, scaleY: isDragging ? 1.02 : 1 } : null
         ),
         transition: transition,
-        backgroundColor: isDragging ? 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))' : 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
+        backgroundColor: isDragging
+          ? 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))'
+          : 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7))',
         zIndex: isDragging ? 100 : 1,
-        opacity: isDragging ? 0.8 : 1,
-        border: isDragging ? '1px solid var(--mantine-color-orange-4)' : undefined,
+        opacity: isDragging ? 0.9 : 1,
+        borderColor: isDragging ? 'var(--mantine-color-orange-5)' : undefined,
       }}
       className="sortableItem"
     >
       <Group align="flex-start" wrap="nowrap" gap="md">
-        <Stack gap="xs" align="center" style={{ width: '40px' }}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            className="sortableMoveIcon"
-            {...attributes}
-            {...listeners}
-            size="lg"
-            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        {/* Step Indicator & Drag Handle */}
+        <Stack gap={6} align="center" style={{ width: '44px', flexShrink: 0 }}>
+          <Tooltip
+            label={totalCount > 1 ? "Drag to reorder step" : "Add more steps to reorder"}
+            position="left"
+            withArrow
           >
-            <IconGripVertical size={20} />
-          </ActionIcon>
-          <Text fw={700} size="xl" c="orange.6" style={{ userSelect: 'none' }}>
+            <ActionIcon
+              variant="subtle"
+              color={isDragging ? "orange" : "gray"}
+              className="sortableMoveIcon"
+              {...attributes}
+              {...listeners}
+              size="md"
+              radius="sm"
+              style={{
+                cursor: totalCount <= 1 ? 'default' : isDragging ? 'grabbing' : 'grab',
+                opacity: totalCount <= 1 ? 0.35 : 0.8,
+              }}
+              aria-label="Drag step to reorder"
+            >
+              <IconGripVertical size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <Badge
+            variant="filled"
+            color="orange"
+            size="lg"
+            radius="xl"
+            style={{
+              width: '28px',
+              height: '28px',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+            }}
+          >
             {index + 1}
-          </Text>
+          </Badge>
         </Stack>
 
+        {/* Inputs */}
         <Stack gap="xs" style={{ flex: 1 }}>
           <TextInput
-            placeholder="Step Title (e.g. Sautéing the aromatics) *"
-            size="md"
+            placeholder="Step title (e.g. Sear the Salmon)"
+            size="sm"
             radius="md"
-            variant="unstyled"
             withAsterisk
-            styles={{ input: { fontSize: '1.2rem', fontWeight: 700, padding: 0 } }}
+            styles={{
+              input: {
+                fontWeight: 600,
+                fontSize: '0.95rem',
+              },
+            }}
             key={form.key(`instructions.${index}.title`)}
             {...form.getInputProps(`instructions.${index}.title`)}
           />
 
           <Textarea
-            placeholder="Tell us what to do in this step... *"
+            placeholder="Describe what to do in this step..."
             withAsterisk
             autosize
             size="sm"
             radius="md"
-            variant="unstyled"
             minRows={2}
-            leftSection={<IconNotes size="1rem" color="var(--mantine-color-gray-5)" />}
-            leftSectionProps={{ style: { alignItems: 'flex-start', paddingTop: '4px' } }}
-            styles={{ input: { paddingLeft: '32px' } }}
+            leftSection={<IconNotes size={15} color="var(--mantine-color-dimmed)" />}
+            leftSectionProps={{ style: { alignItems: 'flex-start', paddingTop: '8px' } }}
             key={form.key(`instructions.${index}.description`)}
             {...form.getInputProps(`instructions.${index}.description`)}
           />
         </Stack>
 
-        <Stack gap="xs" justify="flex-start" h="100%">
-          <Popover position="left" withArrow trapFocus shadow="md">
-            <Popover.Target>
-              <Tooltip label="Delete Step">
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  size="md"
-                  radius="md"
-                >
-                  <IconTrash size={18} />
-                </ActionIcon>
-              </Tooltip>
-            </Popover.Target>
-            <Popover.Dropdown p="xs">
-              <Button
-                color="red"
-                size="xs"
-                onClick={() => {
-                  form.removeListItem('instructions', index);
-                }}
-                leftSection={<IconExclamationMark size={14} />}
-              >
-                Confirm Delete
-              </Button>
-            </Popover.Dropdown>
-          </Popover>
-        </Stack>
+        {/* Delete Step Action */}
+        <Tooltip label="Delete Step" position="top" withArrow>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            size="md"
+            radius="md"
+            onClick={() => {
+              form.removeListItem('instructions', index);
+            }}
+            aria-label="Delete step"
+          >
+            <IconTrash size={18} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
     </Paper>
   );

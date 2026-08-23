@@ -1,18 +1,19 @@
+'use client';
+
 import {
   ActionIcon,
-  Button,
+  Collapse,
   Group,
   NumberInput,
-  Popover,
-  Stack,
-  Text,
-  TextInput,
   Paper,
+  Stack,
+  TextInput,
+  Tooltip,
 } from "@mantine/core";
 import {
-  IconExclamationMark,
   IconGripVertical,
-  IconInfoCircle,
+  IconNotes,
+  IconNotesOff,
   IconTrash,
 } from "@tabler/icons-react";
 
@@ -29,152 +30,155 @@ interface MobileSortableRecipeIngredientProps {
 }
 
 /**
- * Mobile layout for a sortable ingredient card.
- * Uses Mantine Form's uncontrolled mode for inputs.
+ * Clean, compact mobile layout for a sortable ingredient row with ergonomic touch targets.
  */
 export default function MobileSortableRecipeIngredient({
   form,
   index,
   ingredientId,
 }: MobileSortableRecipeIngredientProps) {
-  // Track subtext for display - updated by form.watch callback
-  const [subtext, setSubtext] = useState(
-    () => form.getValues().ingredients[index]?.subtext || ''
-  );
-
-  form.watch(`ingredients.${index}.subtext`, ({ value }) => {
-    setSubtext(value || '');
-  });
+  const initialSubtext = form.getValues().ingredients[index]?.subtext;
+  const [showSubtext, setShowSubtext] = useState<boolean>(!!initialSubtext);
+  const totalCount = form.getValues().ingredients?.length || 0;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: ingredientId,
+      disabled: totalCount <= 1,
     });
 
   return (
     <Paper
       ref={setNodeRef}
-      p="sm"
+      p="xs"
       radius="md"
       withBorder
-      mb="sm"
-      shadow={isDragging ? "md" : "xs"}
+      mb="xs"
+      shadow={isDragging ? "lg" : "none"}
       style={{
         transform: CSS.Transform.toString(
-          transform ? { ...transform, x: 0 } : null
+          transform ? { ...transform, x: 0, scaleY: isDragging ? 1.02 : 1 } : null
         ),
         transition: transition,
-        backgroundColor: isDragging ? 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))' : 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
+        backgroundColor: isDragging
+          ? 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))'
+          : 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7))',
         zIndex: isDragging ? 100 : 1,
         opacity: isDragging ? 0.9 : 1,
-        border: isDragging ? '1px solid var(--mantine-color-orange-4)' : undefined,
+        borderColor: isDragging ? 'var(--mantine-color-orange-5)' : undefined,
       }}
       className="sortableItem"
     >
-      <Group gap="sm" align="flex-start" wrap="nowrap">
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          className="sortableMoveIcon"
-          {...attributes}
-          {...listeners}
-          size="lg"
-          mt={4} // Align with top row
-          style={{ touchAction: "none", cursor: isDragging ? 'grabbing' : 'grab' }}
-        >
-          <IconGripVertical size={20} />
-        </ActionIcon>
+      <Stack gap={4}>
+        {/* Single compact row for mobile with comfortable touch targets */}
+        <Group gap={4} wrap="nowrap" align="center">
+          {/* Drag Handle with generous touch area */}
+          <ActionIcon
+            variant="subtle"
+            color={isDragging ? "orange" : "gray"}
+            className="sortableMoveIcon"
+            {...attributes}
+            {...listeners}
+            size="md"
+            radius="sm"
+            style={{
+              touchAction: "none",
+              cursor: totalCount <= 1 ? 'default' : isDragging ? 'grabbing' : 'grab',
+              opacity: totalCount <= 1 ? 0.35 : 0.8,
+              flexShrink: 0,
+              minWidth: '32px',
+              minHeight: '32px',
+            }}
+            aria-label="Drag ingredient to reorder"
+          >
+            <IconGripVertical size={18} />
+          </ActionIcon>
 
-        <Stack gap="xs" style={{ flex: 1 }}>
-          {/* Row 1: Quantity, Unit, Spacer, Actions */}
-          <Group gap="sm" wrap="nowrap" align="center">
-            <NumberInput
-              placeholder="0"
-              withAsterisk
-              allowNegative={false}
-              size="sm"
-              radius="md"
-              variant="default" // Added visual boundary
-              hideControls={false} // Keep controls for mobile ease of use
-              styles={{ input: { fontWeight: 700, width: '70px', textAlign: 'center' } }}
-              key={form.key(`ingredients.${index}.quantity`)}
-              {...form.getInputProps(`ingredients.${index}.quantity`)}
-            />
-            <TextInput
-              placeholder="Unit"
-              size="sm"
-              radius="md"
-              variant="default" // Added visual boundary
-              withAsterisk
-              style={{ flex: 1 }}
-              styles={{ input: { fontWeight: 500, fontStyle: 'italic' } }}
-              key={form.key(`ingredients.${index}.unit`)}
-              {...form.getInputProps(`ingredients.${index}.unit`)}
-            />
-
-            {/* Spacer removed to let Unit fill space */}
-
-            <Group gap={4} wrap="nowrap">
-              <Popover width={280} position="bottom-end" withArrow trapFocus shadow="md">
-                <Popover.Target>
-                  <ActionIcon variant="subtle" color={subtext ? "blue" : "gray"} size="lg">
-                    <IconInfoCircle size={20} />
-                  </ActionIcon>
-                </Popover.Target>
-                <Popover.Dropdown p="md">
-                  <TextInput
-                    label="Notes"
-                    placeholder="e.g. Can substitute with..."
-                    size="sm"
-                    radius="md"
-                    key={form.key(`ingredients.${index}.subtext`)}
-                    {...form.getInputProps(`ingredients.${index}.subtext`)}
-                  />
-                </Popover.Dropdown>
-              </Popover>
-
-              <Popover position="bottom-end" withArrow trapFocus shadow="md">
-                <Popover.Target>
-                  <ActionIcon variant="subtle" color="red" size="lg">
-                    <IconTrash size={20} />
-                  </ActionIcon>
-                </Popover.Target>
-                <Popover.Dropdown p="xs">
-                  <Button
-                    color="red"
-                    size="xs"
-                    onClick={() => {
-                      form.removeListItem('ingredients', index);
-                    }}
-                    leftSection={<IconExclamationMark size={14} />}
-                  >
-                    Delete
-                  </Button>
-                </Popover.Dropdown>
-              </Popover>
-            </Group>
-          </Group>
-
-          {/* Row 2: Ingredient Name */}
-          <TextInput
-            placeholder="Ingredient Name"
-            size="md" // Larger text for name
-            radius="md"
-            variant="default"
+          {/* Qty */}
+          <NumberInput
+            placeholder="0"
             withAsterisk
-            styles={{ input: { fontWeight: 600 } }}
+            hideControls
+            allowNegative={false}
+            decimalScale={2}
+            min={0}
+            size="xs"
+            radius="md"
+            w={50}
+            styles={{ input: { fontWeight: 700, textAlign: 'center', paddingLeft: 2, paddingRight: 2, height: '32px' } }}
+            key={form.key(`ingredients.${index}.quantity`)}
+            {...form.getInputProps(`ingredients.${index}.quantity`)}
+          />
+
+          {/* Unit */}
+          <TextInput
+            placeholder="Unit"
+            size="xs"
+            radius="md"
+            withAsterisk
+            w={62}
+            styles={{ input: { fontWeight: 500, paddingLeft: 6, paddingRight: 6, height: '32px' } }}
+            key={form.key(`ingredients.${index}.unit`)}
+            {...form.getInputProps(`ingredients.${index}.unit`)}
+          />
+
+          {/* Name */}
+          <TextInput
+            placeholder="e.g. Garlic cloves"
+            size="xs"
+            radius="md"
+            withAsterisk
+            style={{ flex: 1, minWidth: 80 }}
+            styles={{ input: { fontWeight: 600, height: '32px' } }}
             key={form.key(`ingredients.${index}.name`)}
             {...form.getInputProps(`ingredients.${index}.name`)}
           />
 
-          {/* Row 3: Subtext display (if present) */}
-          {subtext && (
-            <Text size="xs" c="dimmed" fs="italic">
-               Note: {subtext}
-            </Text>
-          )}
-        </Stack>
-      </Group>
+          {/* Actions */}
+          <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+            <Tooltip label={showSubtext ? "Hide note" : "Add note"} position="top" withArrow>
+              <ActionIcon
+                variant={showSubtext ? "light" : "subtle"}
+                color={showSubtext ? "orange" : "gray"}
+                size="md"
+                radius="md"
+                onClick={() => setShowSubtext((prev) => !prev)}
+                aria-label="Toggle note"
+              >
+                {showSubtext ? <IconNotesOff size={16} /> : <IconNotes size={16} />}
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label="Delete ingredient" position="top" withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                size="md"
+                radius="md"
+                onClick={() => {
+                  form.removeListItem('ingredients', index);
+                }}
+                aria-label="Remove ingredient"
+              >
+                <IconTrash size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+
+        {/* Collapsible Subtext / Note */}
+        <Collapse expanded={showSubtext}>
+          <TextInput
+            placeholder="Optional prep note (e.g. minced)..."
+            size="xs"
+            radius="md"
+            variant="filled"
+            leftSection={<IconNotes size={12} color="var(--mantine-color-dimmed)" />}
+            key={form.key(`ingredients.${index}.subtext`)}
+            {...form.getInputProps(`ingredients.${index}.subtext`)}
+          />
+        </Collapse>
+      </Stack>
     </Paper>
   );
 }

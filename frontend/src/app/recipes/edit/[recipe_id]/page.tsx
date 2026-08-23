@@ -1,24 +1,15 @@
 'use client';
 
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { useEffect, useMemo, useRef } from "react";
+import { Container, Stack } from "@mantine/core";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
-import { IconChevronLeft, IconDeviceFloppy, IconShieldCheck } from "@tabler/icons-react";
+import RecipeEditHeader from "@/components/recipes/edit/header/RecipeEditHeader";
 import { ApiErrorAlert } from "@/components/error-handling";
 import { RecipeDetail, RecipeUpdate } from "@/types/Recipe";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
-import { isRecipeValid } from '@/utils/recipeUtils';
+import { getRecipeValidationStatus, isRecipeValid } from "@/utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
 import { formatNotificationError } from "@/utils/notificationUtils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +17,19 @@ import { useParams } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useRecipe, useUpdateRecipe } from "@/hooks/useRecipes";
 import { useRecipePermissions, useUserRecipePermissions } from "@/hooks/useRecipePermissions";
+
+/**
+ * Normalizes instruction description by stripping raw HTML paragraph/break tags into plain text for editing.
+ */
+function cleanDescriptionForEditing(desc?: string): string {
+  if (!desc) return '';
+  return desc
+    .replace(/<br\s*[\/]?>/gi, '\n')
+    .replace(/<\/p>\s*<p>/gi, '\n\n')
+    .replace(/<p>/gi, '')
+    .replace(/<\/p>/gi, '')
+    .trim();
+}
 
 export default function EditRecipePage() {
   const params = useParams();
@@ -66,40 +70,54 @@ export default function EditRecipePage() {
     },
   });
 
+  const [validationStatus, setValidationStatus] = useState(() =>
+    getRecipeValidationStatus(form.getValues())
+  );
+
+  // Keep validation status updated
+  form.watch('title', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
+  form.watch('description', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
+  form.watch('ingredients', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
+  form.watch('instructions', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
+
   // Update mutation
   const { mutate: updateRecipe, isPending: isUpdating } = useUpdateRecipe();
 
-  // Sync originalRecipe to form once loaded
+  // Sync originalRecipe to form once loaded (with normalized instruction descriptions)
   const hasInitialized = useRef(false);
   useEffect(() => {
     if (originalRecipe && !hasInitialized.current) {
-      form.initialize(originalRecipe);
+      const normalizedRecipe: RecipeDetail = {
+        ...originalRecipe,
+        instructions: (originalRecipe.instructions || []).map((inst) => ({
+          ...inst,
+          description: cleanDescriptionForEditing(inst.description),
+        })),
+      };
+      form.initialize(normalizedRecipe);
+      setValidationStatus(getRecipeValidationStatus(normalizedRecipe));
       hasInitialized.current = true;
     }
   }, [originalRecipe, form]);
 
-  // Check if user has permission to edit this recipe
   const hasPermission = auth.isAuthenticated && canEdit;
 
-  // Handle back navigation with optimistic updates
   const handleBackClick = () => {
     navigateToRecipe(recipe_id, form.getValues());
   };
 
-  // Save the recipe to the server
   const handleSaveRecipe = async () => {
     const values = form.getValues();
 
     if (!isRecipeValid(values)) {
       notifications.show({
-        title: "Invalid Recipe",
-        message: "Please ensure all fields are filled out correctly before updating the recipe.",
+        title: "Incomplete Recipe",
+        message: "Please ensure all required fields are filled out correctly before saving.",
         color: "red",
       });
       return;
     }
 
-    // Convert RecipeDetail to RecipeUpdate format
     const updateData: RecipeUpdate & { id: string } = {
       id: values.id,
       title: values.title,
@@ -112,14 +130,14 @@ export default function EditRecipePage() {
         quantity: ing.quantity,
         unit: ing.unit,
         subtext: ing.subtext,
-        order_index: ing.order_index
+        order_index: ing.order_index,
       })),
       instructions: values.instructions.map((inst) => ({
         title: inst.title,
         description: inst.description,
         step_number: inst.step_number,
-        timing: inst.timing
-      }))
+        timing: inst.timing,
+      })),
     };
 
     updateRecipe(updateData, {
@@ -137,7 +155,7 @@ export default function EditRecipePage() {
           message: formatNotificationError(err),
           color: "red",
         });
-      }
+      },
     });
   };
 
@@ -148,7 +166,7 @@ export default function EditRecipePage() {
   if (!hasPermission) {
     const permissionError = new Error('You do not have permission to edit this recipe.');
     return (
-      <Container size="md" py="xl">
+      <Container size="xl" py="xl">
         <ApiErrorAlert
           error={permissionError}
           showRetry={false}
@@ -160,7 +178,7 @@ export default function EditRecipePage() {
 
   if (error || !originalRecipe) {
     return (
-      <Container size="md" py="xl">
+      <Container size="xl" py="xl">
         <ApiErrorAlert
           error={error}
           onRetry={refetch}
@@ -171,63 +189,20 @@ export default function EditRecipePage() {
   }
 
   return (
-    <Container size="xl" px="md">
-      <Stack gap="lg">
-        <Group justify="space-between" align="center">
-          <Group gap="sm">
-            <Tooltip label="Back to Recipe">
-              <ActionIcon
-                onClick={handleBackClick}
-                variant="light"
-                size="lg"
-                color="gray"
-                radius="md"
-              >
-                <IconChevronLeft size={20} />
-              </ActionIcon>
-            </Tooltip>
-            <Text fw={800} size="xl" style={{ letterSpacing: '-0.02em' }}>
-              Edit Recipe
-            </Text>
-            {isAdminOverride && (
-              <Tooltip
-                label={`Admin override active${authorName ? ` (Owned by ${authorName})` : ''}`}
-                withArrow
-              >
-                <Badge
-                  leftSection={<IconShieldCheck size="0.75rem" stroke={2} />}
-                  color="red"
-                  variant="filled"
-                  size="xs"
-                  radius="sm"
-                  style={{ textTransform: 'none', fontWeight: 600, cursor: 'default' }}
-                >
-                  Admin Override
-                </Badge>
-              </Tooltip>
-            )}
-          </Group>
-        </Group>
+    <Container size="xl" px="md" pb="xl">
+      <Stack gap="md">
+        <RecipeEditHeader
+          title="Edit Recipe"
+          mode="edit"
+          isPending={isUpdating}
+          validationStatus={validationStatus}
+          onSave={handleSaveRecipe}
+          onBack={handleBackClick}
+          isAdminOverride={isAdminOverride}
+          authorName={authorName}
+        />
 
         <EditRecipe form={form} />
-
-        <Group justify="flex-end">
-          <Button
-            size="lg"
-            radius="md"
-            color="orange"
-            variant="filled"
-            w="200px"
-            leftSection={<IconDeviceFloppy size={20} />}
-            loading={isUpdating}
-            onClick={handleSaveRecipe}
-            style={{
-              boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)',
-            }}
-          >
-            Save Recipe
-          </Button>
-        </Group>
       </Stack>
     </Container>
   );

@@ -7,27 +7,24 @@ import {
 import { Ingredient } from "@/types/Ingredient";
 import { RecipeDetail } from "@/types/Recipe";
 import SortableRecipeIngredient from "@/components/recipes/edit/ingredients/SortableRecipeIngredient";
-import { Grid, Text, Box } from "@mantine/core";
+import { Box, Group, Text, UnstyledButton } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
-import { useMediaQuery } from "@mantine/hooks";
+import { IconPlus } from "@tabler/icons-react";
 
 interface EditRecipeIngredientsProps {
   form: UseFormReturnType<RecipeDetail>;
 }
 
 /**
- * The EditRecipeIngredients component renders the sortable list of ingredients.
- * Uses form.watch() to react to list changes (add/remove/reorder).
+ * Renders the sortable list of ingredients with column header markers and drag-and-drop.
  */
 export default function EditRecipeIngredients({
   form,
 }: EditRecipeIngredientsProps) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  // Subscribe to ingredients changes - this makes the component reactive to form updates
+  // Subscribe to ingredients changes
   form.watch('ingredients', () => {});
 
-  // Get current ingredients from form
-  const ingredients = form.getValues().ingredients;
+  const ingredients = form.getValues().ingredients || [];
 
   const reorderIngredients = (e: DragEndEvent) => {
     const { active, over } = e;
@@ -42,36 +39,75 @@ export default function EditRecipeIngredients({
     }
   };
 
+  const handleAddFirst = () => {
+    const currentRecipe = form.getValues();
+    form.insertListItem('ingredients', {
+      id: crypto.randomUUID(),
+      quantity: 0,
+      name: "",
+      unit: "",
+      subtext: "",
+      order_index: currentRecipe.ingredients?.length || 0,
+      recipe_id: currentRecipe.id,
+    });
+  };
+
   return (
     <Box>
-      {ingredients.length > 0 && !isMobile && (
-        <Grid gap="xs" px="lg" mb="xs" style={{ paddingLeft: '64px', paddingRight: '120px' }}>
-          <Grid.Col span={2}>
-            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Qty <Text span c="red" inherit>*</Text></Text>
-          </Grid.Col>
-          <Grid.Col span={3}>
-            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Unit <Text span c="red" inherit>*</Text></Text>
-          </Grid.Col>
-          <Grid.Col span={7}>
-            <Text size="xs" fw={700} c="dimmed" tt="uppercase">Ingredient Name <Text span c="red" inherit>*</Text></Text>
-          </Grid.Col>
-        </Grid>
+      {ingredients.length > 0 && (
+        <Group gap="xs" px="xs" mb={4} wrap="nowrap" visibleFrom="sm">
+          <Box w={28} />
+          <Text size="xs" fw={700} c="dimmed" w={55} ta="center">
+            QTY <Text span c="red" inherit>*</Text>
+          </Text>
+          <Text size="xs" fw={700} c="dimmed" w={70} pl={4}>
+            UNIT <Text span c="red" inherit>*</Text>
+          </Text>
+          <Text size="xs" fw={700} c="dimmed" style={{ flex: 1 }} pl={4}>
+            INGREDIENT NAME <Text span c="red" inherit>*</Text>
+          </Text>
+          <Box w={56} />
+        </Group>
       )}
-      <DndContext onDragEnd={reorderIngredients}>
-        <SortableContext
-          items={ingredients}
-          strategy={verticalListSortingStrategy}
+
+      {ingredients.length === 0 ? (
+        <UnstyledButton
+          onClick={handleAddFirst}
+          p="lg"
+          w="100%"
+          ta="center"
+          style={{
+            border: '1px dashed var(--mantine-color-default-border)',
+            borderRadius: 'var(--mantine-radius-md)',
+            backgroundColor: 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7))',
+            cursor: 'pointer',
+            transition: 'border-color 150ms ease, background-color 150ms ease',
+          }}
         >
-          {ingredients.map((ingredient: Ingredient, index: number) => (
-            <SortableRecipeIngredient
-              key={ingredient.id}
-              form={form}
-              index={index}
-              ingredientId={ingredient.id}
-            />
-          ))}
-        </SortableContext>
-      </DndContext>
+          <Group justify="center" gap="xs">
+            <IconPlus size={16} color="var(--mantine-color-orange-6)" />
+            <Text size="sm" c="dimmed" fw={500}>
+              Click to add your first ingredient
+            </Text>
+          </Group>
+        </UnstyledButton>
+      ) : (
+        <DndContext onDragEnd={reorderIngredients}>
+          <SortableContext
+            items={ingredients}
+            strategy={verticalListSortingStrategy}
+          >
+            {ingredients.map((ingredient: Ingredient, index: number) => (
+              <SortableRecipeIngredient
+                key={ingredient.id}
+                form={form}
+                index={index}
+                ingredientId={ingredient.id}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+      )}
     </Box>
   );
 }
