@@ -2,7 +2,6 @@
 
 import {
   ActionIcon,
-  Alert,
   Badge,
   Button,
   Container,
@@ -174,20 +173,6 @@ export default function EditRecipePage() {
   return (
     <Container size="xl" px="md">
       <Stack gap="lg">
-        {/* Admin Editing Banner */}
-        {isAdminOverride && (
-          <Alert
-            icon={<IconShieldCheck size="1.25rem" />}
-            title="Admin Editing Mode"
-            color="blue"
-            variant="light"
-            radius="md"
-          >
-            You are editing this recipe using Administrator permissions.
-            {authorName ? ` This recipe is owned by ${authorName}.` : ' This recipe is owned by another user.'}
-          </Alert>
-        )}
-
         <Group justify="space-between" align="center">
           <Group gap="sm">
             <Tooltip label="Back to Recipe">
@@ -205,16 +190,21 @@ export default function EditRecipePage() {
               Edit Recipe
             </Text>
             {isAdminOverride && (
-              <Badge
-                leftSection={<IconShieldCheck size="0.85rem" stroke={2} />}
-                color="blue"
-                variant="light"
-                size="sm"
-                radius="sm"
-                style={{ textTransform: 'none', fontWeight: 600 }}
+              <Tooltip
+                label={`Admin override active${authorName ? ` (Owned by ${authorName})` : ''}`}
+                withArrow
               >
-                Admin Mode
-              </Badge>
+                <Badge
+                  leftSection={<IconShieldCheck size="0.75rem" stroke={2} />}
+                  color="red"
+                  variant="filled"
+                  size="xs"
+                  radius="sm"
+                  style={{ textTransform: 'none', fontWeight: 600, cursor: 'default' }}
+                >
+                  Admin Override
+                </Badge>
+              </Tooltip>
             )}
           </Group>
         </Group>

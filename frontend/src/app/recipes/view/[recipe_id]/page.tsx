@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Alert,
   Badge,
   Box,
   Button,
@@ -13,6 +12,7 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconChefHat,
@@ -109,24 +109,6 @@ export default function ViewRecipe() {
           bg={isMobile ? "transparent" : undefined}
         >
           <Stack gap="md">
-            {/* Admin Override Notice Banner */}
-            {isAdminOverride && (
-              <Alert
-                icon={<IconShieldCheck size="1.25rem" />}
-                title="Administrator Access"
-                color="blue"
-                variant="light"
-                radius="md"
-              >
-                You have full access to view, edit, share, and delete this recipe because you are an Administrator.
-                {authorName && (
-                  <Text component="span" fw={600}>
-                    {' '}(Owned by {authorName})
-                  </Text>
-                )}
-              </Alert>
-            )}
-
             {/* Top Bar: Title & Desktop Actions */}
             <Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
               <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
@@ -149,22 +131,6 @@ export default function ViewRecipe() {
                           By {authorName}
                         </Text>
                       </Group>
-                      <Text size="xs" c="gray.4" fw={700}>•</Text>
-                    </>
-                  )}
-
-                  {isAdminOverride && (
-                    <>
-                      <Badge
-                        leftSection={<IconShieldCheck size="0.85rem" stroke={2} />}
-                        color="blue"
-                        variant="light"
-                        size="sm"
-                        radius="sm"
-                        style={{ textTransform: 'none', fontWeight: 600 }}
-                      >
-                        Admin Permissions
-                      </Badge>
                       <Text size="xs" c="gray.4" fw={700}>•</Text>
                     </>
                   )}
@@ -220,94 +186,159 @@ export default function ViewRecipe() {
                 )}
               </Stack>
 
-              {/* Desktop Action Buttons with matching outlines */}
+              {/* Desktop Action Buttons (encapsulated with subtle red dotted border if admin override) */}
               {hasActions && (
-                <Group gap="xs" visibleFrom="sm" style={{ flexShrink: 0 }}>
-                  {canEdit && (
-                    <>
-                      <Button
-                        variant="light"
-                        color="orange"
-                        size="sm"
-                        radius="md"
-                        leftSection={<IconEdit size="1rem" stroke={1.75} />}
-                        onClick={handleEditClick}
-                        style={{ fontWeight: 600 }}
+                <Box
+                  visibleFrom="sm"
+                  style={{
+                    flexShrink: 0,
+                    ...(isAdminOverride && {
+                      border: '1.5px dashed var(--mantine-color-red-6)',
+                      borderRadius: 'var(--mantine-radius-md)',
+                      padding: '6px 8px',
+                      backgroundColor: 'var(--mantine-color-red-light)',
+                    }),
+                  }}
+                >
+                  <Stack gap={4} align="flex-end">
+                    {isAdminOverride && (
+                      <Tooltip
+                        label={`Admin override active${authorName ? ` (Owned by ${authorName})` : ''}`}
+                        withArrow
+                        position="top-end"
                       >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        radius="md"
-                        leftSection={<IconUserPlus size="1rem" stroke={1.75} />}
-                        onClick={openShare}
-                        style={{ fontWeight: 600 }}
-                      >
-                        Share
-                      </Button>
-                    </>
-                  )}
+                        <Badge
+                          size="xs"
+                          variant="filled"
+                          color="red"
+                          leftSection={<IconShieldCheck size="0.75rem" stroke={2} />}
+                          style={{ textTransform: 'none', fontWeight: 600, cursor: 'default' }}
+                        >
+                          Admin Override
+                        </Badge>
+                      </Tooltip>
+                    )}
+                    <Group gap="xs" wrap="nowrap">
+                      {canEdit && (
+                        <>
+                          <Button
+                            variant="light"
+                            color="orange"
+                            size="sm"
+                            radius="md"
+                            leftSection={<IconEdit size="1rem" stroke={1.75} />}
+                            onClick={handleEditClick}
+                            style={{ fontWeight: 600 }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            radius="md"
+                            leftSection={<IconUserPlus size="1rem" stroke={1.75} />}
+                            onClick={openShare}
+                            style={{ fontWeight: 600 }}
+                          >
+                            Share
+                          </Button>
+                        </>
+                      )}
 
-                  {canDelete && (
-                    <Button
-                      variant="default"
-                      c="red.6"
-                      size="sm"
-                      radius="md"
-                      leftSection={<IconTrash size="1rem" stroke={1.75} />}
-                      onClick={openDelete}
-                      style={{ fontWeight: 600 }}
-                    >
-                      Delete
-                    </Button>
-                  )}
-                </Group>
+                      {canDelete && (
+                        <Button
+                          variant="default"
+                          c="red.6"
+                          size="sm"
+                          radius="md"
+                          leftSection={<IconTrash size="1rem" stroke={1.75} />}
+                          onClick={openDelete}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </Group>
+                  </Stack>
+                </Box>
               )}
             </Group>
 
-            {/* Mobile Action Bar with matching outlines */}
+            {/* Mobile Action Bar (encapsulated with subtle red dotted border if admin override) */}
             {hasActions && (
-              <Group gap="xs" grow hiddenFrom="sm" mt="xs">
-                {canEdit && (
-                  <>
-                    <Button
-                      variant="light"
-                      color="orange"
-                      size="sm"
-                      radius="md"
-                      leftSection={<IconEdit size="1rem" stroke={1.75} />}
-                      onClick={handleEditClick}
-                      style={{ fontWeight: 600 }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      radius="md"
-                      leftSection={<IconUserPlus size="1rem" stroke={1.75} />}
-                      onClick={openShare}
-                      style={{ fontWeight: 600 }}
-                    >
-                      Share
-                    </Button>
-                  </>
-                )}
-                {canDelete && (
-                  <Button
-                    variant="default"
-                    c="red.6"
-                    size="sm"
-                    radius="md"
-                    leftSection={<IconTrash size="1rem" stroke={1.75} />}
-                    onClick={openDelete}
-                    style={{ fontWeight: 600 }}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </Group>
+              <Box
+                hiddenFrom="sm"
+                mt="xs"
+                style={{
+                  ...(isAdminOverride && {
+                    border: '1.5px dashed var(--mantine-color-red-6)',
+                    borderRadius: 'var(--mantine-radius-md)',
+                    padding: '8px 10px',
+                    backgroundColor: 'var(--mantine-color-red-light)',
+                  }),
+                }}
+              >
+                <Stack gap={6}>
+                  {isAdminOverride && (
+                    <Group justify="space-between" align="center">
+                      <Badge
+                        size="xs"
+                        variant="filled"
+                        color="red"
+                        leftSection={<IconShieldCheck size="0.75rem" stroke={2} />}
+                        style={{ textTransform: 'none', fontWeight: 600 }}
+                      >
+                        Admin Override
+                      </Badge>
+                      {authorName && (
+                        <Text size="xs" c="dimmed" fw={500}>
+                          Owned by {authorName}
+                        </Text>
+                      )}
+                    </Group>
+                  )}
+                  <Group gap="xs" grow>
+                    {canEdit && (
+                      <>
+                        <Button
+                          variant="light"
+                          color="orange"
+                          size="sm"
+                          radius="md"
+                          leftSection={<IconEdit size="1rem" stroke={1.75} />}
+                          onClick={handleEditClick}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          radius="md"
+                          leftSection={<IconUserPlus size="1rem" stroke={1.75} />}
+                          onClick={openShare}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Share
+                        </Button>
+                      </>
+                    )}
+                    {canDelete && (
+                      <Button
+                        variant="default"
+                        c="red.6"
+                        size="sm"
+                        radius="md"
+                        leftSection={<IconTrash size="1rem" stroke={1.75} />}
+                        onClick={openDelete}
+                        style={{ fontWeight: 600 }}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </Group>
+                </Stack>
+              </Box>
             )}
 
             {/* Description Section */}
