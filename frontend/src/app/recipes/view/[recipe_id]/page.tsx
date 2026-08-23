@@ -76,15 +76,16 @@ export default function ViewRecipe() {
   }
 
   return (
-    <Container size="xl" px={{ base: "xs", sm: "md" }}>
+    <Container size="xl" px={{ base: "sm", sm: "md" }} py={{ base: "xs", sm: "md" }}>
       <Stack gap="lg">
         <Paper
-          shadow="lg"
-          p={{ base: "md", sm: "lg" }}
-          radius="lg"
-          withBorder
+          shadow={isMobile ? "none" : "lg"}
+          p={{ base: 0, sm: "lg" }}
+          radius={isMobile ? 0 : "lg"}
+          withBorder={!isMobile}
+          bg={isMobile ? "transparent" : undefined}
           style={{
-            borderLeft: "4px solid var(--mantine-color-orange-4)",
+            borderLeft: isMobile ? undefined : "4px solid var(--mantine-color-orange-4)",
           }}
         >
           <Stack gap="lg">
@@ -132,7 +133,7 @@ export default function ViewRecipe() {
                         <Group gap="4px">
                           <IconUsers size="0.9rem" stroke={1.5} />
                           <Text size="xs" fw={600} style={{ fontVariantNumeric: 'tabular-nums' }}>
-                            {Math.round(recipe.serving_size * scaleFactor)} servings
+                            {recipe.serving_size} {recipe.serving_size === 1 ? 'serving' : 'servings'}
                           </Text>
                         </Group>
                       </>

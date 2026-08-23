@@ -199,6 +199,16 @@ code {
   color: var(--mantine-color-text) !important;
 }
 
+.recipe-ingredient-row {
+  transition: background-color 0.15s ease;
+}
+
+.recipe-ingredient-row:hover,
+.recipe-ingredient-row:focus-visible {
+  background-color: var(--mantine-color-default-hover);
+  outline: none;
+}
+
 img {
   max-width: 100%;
   height: auto;
