@@ -21,10 +21,10 @@ A modern full-stack recipe management application built with FastAPI (backend) a
 
 ```bash
 # Start backend services (database + API)
-./scripts/dev-start.sh
+./scripts/local/start.sh
 
-# Run database migrations
-./scripts/migrate.sh
+# Run local database migrations
+./scripts/local/migrate.sh
 ```
 
 The backend will be available at `http://localhost:8000`
@@ -53,7 +53,7 @@ The frontend will be available at `http://localhost:3000`
 
 1. **Start backend services:**
    ```bash
-   ./scripts/dev-start.sh
+   ./scripts/local/start.sh
    ```
 
 2. **Start frontend:**
@@ -69,14 +69,14 @@ The frontend will be available at `http://localhost:3000`
 ### Backend Development
 
 - **View logs:** `docker-compose logs -f backend`
-- **Run tests:** `./scripts/test.sh`
-- **Create migration:** `./scripts/migrate-create.sh "Description"`
-- **Apply migrations:** `./scripts/migrate.sh`
+- **Run tests:** `./scripts/local/test.sh`
+- **Create migration:** `./scripts/local/migrate-create.sh "Description"`
+- **Apply local migrations:** `./scripts/local/migrate.sh`
+- **Seed sample recipes:** `./scripts/local/create-test-recipes.sh`
 
 ### Frontend Development
 
 - **Build for production:** `npm run build`
-- **Analyze bundle:** `npm run analyze`
 - **Lint code:** `npm run lint`
 
 ## Project Structure
@@ -88,12 +88,14 @@ The frontend will be available at `http://localhost:3000`
 │   ├── tests/              # Backend tests
 │   └── requirements.txt    # Python dependencies
 ├── frontend/               # Next.js frontend
-│   ├── src/               # Source code
-│   ├── public/            # Static assets
-│   └── package.json       # Node dependencies
-├── scripts/               # Development scripts
-├── infrastructure/        # Database setup
-└── docker-compose.yml     # Docker services
+│   ├── src/                # Source code
+│   ├── public/             # Static assets
+│   └── package.json        # Node dependencies
+├── scripts/                # Development & deployment scripts
+│   ├── local/              # Local environment scripts
+│   └── prod/               # Production & GCP deployment scripts
+├── infrastructure/         # Database and Cloud Run configs
+└── docker-compose.yml      # Docker services
 ```
 
 ## Key Features
@@ -124,7 +126,7 @@ The frontend will be available at `http://localhost:3000`
 
 ## Environment Configuration
 
-### Backend (.env in backend/)
+### Backend (.env in project root or backend/)
 ```env
 SECRET_KEY=your_256_bit_secret_key_here
 DATABASE_URL=postgresql://recipe_user:recipe_password@localhost:5432/recipe_db
@@ -147,21 +149,23 @@ When the backend is running, visit:
 ### Backend Tests
 ```bash
 # Run all tests
-./scripts/test.sh
+./scripts/local/test.sh
 
 # Run specific test types
-./scripts/test.sh -t unit
-./scripts/test.sh -t integration
-./scripts/test.sh -t api
+./scripts/local/test.sh -t unit
+./scripts/local/test.sh -t integration
+./scripts/local/test.sh -t api
+./scripts/local/test.sh -t security
 
 # Run with coverage
-./scripts/test.sh -c
+./scripts/local/test.sh -c
 ```
 
-### Frontend Tests
+### Frontend Verification
 ```bash
 cd frontend
-npm run test  # (when implemented)
+npm run lint
+npm run build
 ```
 
 ## Deployment
@@ -183,25 +187,25 @@ npm run test  # (when implemented)
 gcloud auth login
 
 # 3. Run setup script (enables required APIs)
-./scripts/setup-gcp.sh --project YOUR_PROJECT_ID
+./scripts/prod/setup-gcp.sh --project YOUR_PROJECT_ID
+
+# 4. Configure Secret Manager IAM permissions
+./scripts/prod/setup-secret-permissions.sh --project YOUR_PROJECT_ID
 ```
 
 **Deploy:**
 ```bash
-./scripts/deploy-cloudrun.sh --project YOUR_PROJECT_ID
+./scripts/prod/deploy.sh --project YOUR_PROJECT_ID
 ```
 
-**Environment Variables (set in Cloud Run Console):**
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | Supabase PostgreSQL connection string |
-| `SECRET_KEY` | JWT secret (256-bit hex) |
-| `CORS_ORIGINS` | Allowed origins, e.g., `["https://your-app.vercel.app"]` |
+**Remote Database Migrations:**
+```bash
+./scripts/prod/migrate.sh "postgresql://user:password@host:port/dbname"
+```
 
 ### Frontend (Vercel)
 - Optimized for Vercel deployment
 - Set `NEXT_PUBLIC_API_BASE_URL` to your Cloud Run URL
-- Bundle optimization and code splitting
 
 ## Troubleshooting
 
@@ -214,8 +218,8 @@ gcloud auth login
 
 2. **Docker issues:**
    ```bash
-   ./scripts/cleanup.sh --all
-   ./scripts/build.sh --force
+   ./scripts/local/cleanup.sh --all
+   ./scripts/local/build.sh --force
    ```
 
 3. **Database connection:**
@@ -227,13 +231,13 @@ gcloud auth login
 ### Fresh Start
 ```bash
 # Stop everything and clean up
-./scripts/dev-stop.sh --cleanup --volumes
-./scripts/cleanup.sh --all
+./scripts/local/stop.sh --cleanup --volumes
+./scripts/local/cleanup.sh --all
 
 # Rebuild and restart
-./scripts/build.sh --force
-./scripts/dev-start.sh
-./scripts/migrate.sh
+./scripts/local/build.sh --force
+./scripts/local/start.sh
+./scripts/local/migrate.sh
 
 # Start frontend
 cd frontend && npm run dev

@@ -2,6 +2,7 @@
 Application configuration management using Pydantic settings.
 """
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -14,8 +15,14 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Database settings
-    # Database settings
     database_url: str = "postgresql://postgres:postgres@localhost:5432/postgres"
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: str) -> str:
+        if isinstance(v, str) and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
 
     # CORS settings
     cors_origins: str = (
@@ -43,7 +50,6 @@ class Settings(BaseSettings):
         # Handle comma-separated format
         return [origin.strip() for origin in self.cors_origins.split(",")]
 
-    # Security settings
     # Security settings
     secret_key: str = "insecure-default-secret-key-for-development-only-12345"
     algorithm: str = "HS256"
