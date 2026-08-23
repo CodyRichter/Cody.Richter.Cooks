@@ -3,6 +3,7 @@ import {
   Checkbox,
   CopyButton,
   Group,
+  SegmentedControl,
   Stack,
   Text,
   Title,
@@ -19,6 +20,8 @@ import { convertToFractionalRepresentation } from "@/utils/recipeUtils";
 interface RecipeIngredientCardProps {
   ingredients: Ingredient[];
   scaleFactor?: number;
+  onScaleChange?: (scale: number) => void;
+  servingSize?: number;
 }
 
 
@@ -34,6 +37,8 @@ const formatIngredient = (ingredient: Ingredient, scaleFactor: number) => {
 export default function RecipeIngredientCard({
   ingredients,
   scaleFactor = 1,
+  onScaleChange,
+  servingSize,
 }: RecipeIngredientCardProps) {
   const [checkedIngredientIds, setCheckedIngredientIds] = useState<Set<string>>(
     new Set()
@@ -131,9 +136,34 @@ export default function RecipeIngredientCard({
 
   return (
     <>
-      <Group gap="xs" mb="sm">
-        <Title order={4}>Ingredients</Title>
-        <Group gap="xs">
+      <Group justify="space-between" align="center" mb="sm" wrap="wrap" gap="xs">
+        <Group gap="xs" align="center">
+          <Title order={4}>Ingredients</Title>
+          {servingSize ? (
+            <Text size="xs" c="dimmed" fw={600} style={{ fontVariantNumeric: 'tabular-nums' }}>
+              ({Math.round(servingSize * scaleFactor)} servings)
+            </Text>
+          ) : null}
+        </Group>
+
+        <Group gap="xs" align="center" wrap="nowrap">
+          {onScaleChange && (
+            <SegmentedControl
+              size="xs"
+              value={scaleFactor.toString()}
+              onChange={(val) => onScaleChange(Number(val))}
+              data={[
+                { label: '0.5x', value: '0.5' },
+                { label: '1x', value: '1' },
+                { label: '2x', value: '2' },
+                { label: '3x', value: '3' },
+              ]}
+              color="orange"
+              radius="md"
+              transitionDuration={200}
+            />
+          )}
+
           <CopyButton value={formattedIngredientsAsString} timeout={2000}>
             {({ copied, copy }) => (
               <Tooltip
@@ -143,12 +173,13 @@ export default function RecipeIngredientCard({
                     : "Copy Ingredients"
                 }
                 withArrow
-                position="right"
+                position="left"
               >
                 <ActionIcon
                   color={copied ? "teal" : "gray"}
                   variant="subtle"
                   onClick={copy}
+                  aria-label="Copy ingredients"
                 >
                   {copied ? (
                     <IconClipboardCheck size={16} />

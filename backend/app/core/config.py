@@ -3,7 +3,6 @@ Application configuration management using Pydantic settings.
 """
 
 from pydantic_settings import BaseSettings
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -23,11 +22,11 @@ class Settings(BaseSettings):
         "https://cooking.cody.richter.codes,http://localhost:3000,http://127.0.0.1:3000"
     )
     cors_allow_credentials: bool = True
-    cors_allow_methods: List[str] = ["*"]
-    cors_allow_headers: List[str] = ["*"]
+    cors_allow_methods: list[str] = ["*"]
+    cors_allow_headers: list[str] = ["*"]
 
     @property
-    def cors_origins_list(self) -> List[str]:
+    def cors_origins_list(self) -> list[str]:
         """Convert CORS origins string or JSON list to list."""
         if not self.cors_origins:
             return []

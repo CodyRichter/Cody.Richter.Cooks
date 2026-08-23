@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, ActionIcon, Box, Tooltip, SegmentedControl, Button } from "@mantine/core";
+import { Badge, Divider, Group, Paper, Text, Title, Container, Stack, Button } from "@mantine/core";
 import { IconEdit, IconTrash, IconClock, IconUsers, IconChefHat, IconUserPlus } from "@tabler/icons-react";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useState, useMemo } from "react";
@@ -76,11 +76,11 @@ export default function ViewRecipe() {
   }
 
   return (
-    <Container size="xl" px="md">
+    <Container size="xl" px={{ base: "xs", sm: "md" }}>
       <Stack gap="lg">
         <Paper
           shadow="lg"
-          p="lg"
+          p={{ base: "md", sm: "lg" }}
           radius="lg"
           withBorder
           style={{
@@ -89,14 +89,15 @@ export default function ViewRecipe() {
         >
           <Stack gap="lg">
             {/* Header Section */}
-            <Group justify="space-between" align="flex-start" wrap="nowrap" style={{ alignItems: isMobile ? 'center' : 'flex-start' }}>
-              <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
-                <Title order={isMobile ? 3 : 2} fw={700} style={{ wordBreak: 'break-word' }}>{recipe.title}</Title>
+            <Stack gap="sm">
+              <Group justify="space-between" align="flex-start" wrap="nowrap">
+                <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+                  <Title order={isMobile ? 3 : 2} fw={700} style={{ wordBreak: 'break-word' }}>
+                    {recipe.title}
+                  </Title>
 
-                {/* Recipe metadata */}
-                <Stack gap="6px">
-                  {/* Row 1: General Info */}
-                  <Group gap="xs" c="dimmed">
+                  {/* Recipe metadata */}
+                  <Group gap="xs" c="dimmed" wrap="wrap">
                     {authorName && (
                       <>
                         <Group gap="4px">
@@ -124,118 +125,45 @@ export default function ViewRecipe() {
                     <Text size="xs" fw={600}>
                       {new Date(recipe.created_at).toLocaleDateString()}
                     </Text>
+
+                    {recipe.serving_size && (
+                      <>
+                        <Text size="xs" c="gray.4" fw={700}>•</Text>
+                        <Group gap="4px">
+                          <IconUsers size="0.9rem" stroke={1.5} />
+                          <Text size="xs" fw={600} style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {Math.round(recipe.serving_size * scaleFactor)} servings
+                          </Text>
+                        </Group>
+                      </>
+                    )}
                   </Group>
 
-                  {recipe.serving_size && (
-                    <Group gap="xs" align="center" c="dimmed" wrap={isMobile ? "wrap" : "nowrap"}>
-                      <Group gap="4px" style={{ flexShrink: 0, minWidth: isMobile ? 'unset' : '95px' }}>
-                        <IconUsers size="0.9rem" stroke={1.5} />
-                        <Text size="xs" fw={600} style={{ fontVariantNumeric: 'tabular-nums' }}>
-                          {Math.round(recipe.serving_size * scaleFactor)} servings
-                        </Text>
-                      </Group>
-
-                      <Text size="xs" c="gray.4" fw={700} visibleFrom="sm">•</Text>
-
-                      <Group gap="xs" align="center" wrap="nowrap" style={{ flex: isMobile ? '1 1 100%' : 'unset', minWidth: 0 }}>
-                        <Text size="xs" fw={600} style={{ flexShrink: 0 }}>Scale:</Text>
-                        <SegmentedControl
-                          fullWidth={isMobile}
-                          size={isMobile ? "xs" : "xs"}
-                          value={scaleFactor.toString()}
-                          onChange={(val) => setScaleFactor(Number(val))}
-                          data={[
-                            { label: '1x', value: '1' },
-                            { label: '2x', value: '2' },
-                            { label: '3x', value: '3' },
-                            { label: '4x', value: '4' },
-                            { label: '5x', value: '5' },
-                          ]}
+                  {/* Tags */}
+                  {recipe.tags && recipe.tags.length > 0 && (
+                    <Group gap="6px" mt="xs" wrap="wrap">
+                      {recipe.tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="light"
                           color="orange"
                           radius="md"
-                          transitionDuration={200}
-                          style={{ flex: isMobile ? 1 : 'unset' }}
-                        />
-                      </Group>
+                          size="sm"
+                          style={{
+                            textTransform: "none",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {titleize(tag)}
+                        </Badge>
+                      ))}
                     </Group>
                   )}
                 </Stack>
 
-                {/* Tags */}
-                {recipe.tags && recipe.tags.length > 0 && (
-                  <Group gap="6px" mt="xs">
-                    {recipe.tags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="light"
-                        color="orange"
-                        radius="md"
-                        size="sm"
-                        style={{
-                          textTransform: "none",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {titleize(tag)}
-                      </Badge>
-                    ))}
-                  </Group>
-                )}
-              </Stack>
-
-              {/* Action Buttons */}
-              {auth.isAuthenticated && (
-                <Box style={{ flexShrink: 0 }}>
-                  {/* Mobile Actions (Stack) */}
-                  <Stack gap="xs" hiddenFrom="sm">
-                    {canEdit && (
-                      <>
-                        <Tooltip label="Edit">
-                          <ActionIcon
-                            variant="filled"
-                            color="blue"
-                            size="lg"
-                            radius="xl"
-                            onClick={handleEditClick}
-                            style={{ transition: "all 0.2s ease" }}
-                          >
-                            <IconEdit size="1.2rem" stroke={1.5} />
-                          </ActionIcon>
-                        </Tooltip>
-
-                        <Tooltip label="Share">
-                          <ActionIcon
-                            variant="filled"
-                            color="teal"
-                            size="lg"
-                            radius="xl"
-                            onClick={openShare}
-                            style={{ transition: "all 0.2s ease" }}
-                          >
-                            <IconUserPlus size="1.2rem" stroke={1.5} />
-                          </ActionIcon>
-                        </Tooltip>
-                      </>
-                    )}
-
-                    {canDelete && (
-                      <Tooltip label="Delete">
-                        <ActionIcon
-                          variant="filled"
-                          color="red"
-                          size="lg"
-                          radius="xl"
-                          onClick={openDelete}
-                          style={{ transition: "all 0.2s ease" }}
-                        >
-                          <IconTrash size="1.2rem" stroke={1.5} />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                  </Stack>
-
-                  {/* Desktop Actions (Group) */}
-                  <Group gap="xs" visibleFrom="sm">
+                {/* Desktop Action Buttons */}
+                {auth.isAuthenticated && (
+                  <Group gap="xs" visibleFrom="sm" style={{ flexShrink: 0 }}>
                     {canEdit && (
                       <>
                         <Button
@@ -289,15 +217,60 @@ export default function ViewRecipe() {
                       </Button>
                     )}
                   </Group>
-                </Box>
+                )}
+              </Group>
+
+              {/* Mobile Action Buttons (Full-Width Segment / Clean Bar) */}
+              {auth.isAuthenticated && (canEdit || canDelete) && (
+                <Group gap="xs" grow hiddenFrom="sm" mt="xs">
+                  {canEdit && (
+                    <>
+                      <Button
+                        variant="light"
+                        color="blue"
+                        size="sm"
+                        radius="md"
+                        leftSection={<IconEdit size="1.1rem" stroke={1.5} />}
+                        onClick={handleEditClick}
+                        style={{ fontWeight: 600 }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="light"
+                        color="teal"
+                        size="sm"
+                        radius="md"
+                        leftSection={<IconUserPlus size="1.1rem" stroke={1.5} />}
+                        onClick={openShare}
+                        style={{ fontWeight: 600 }}
+                      >
+                        Share
+                      </Button>
+                    </>
+                  )}
+                  {canDelete && (
+                    <Button
+                      variant="light"
+                      color="red"
+                      size="sm"
+                      radius="md"
+                      leftSection={<IconTrash size="1.1rem" stroke={1.5} />}
+                      onClick={openDelete}
+                      style={{ fontWeight: 600 }}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </Group>
               )}
-            </Group>
+            </Stack>
 
             <Divider />
 
             {/* Description Section */}
             {recipe.description && (
-              <Box>
+              <div>
                 <div
                   dangerouslySetInnerHTML={{ __html: recipe.description }}
                   onClick={handleDescriptionClick}
@@ -306,16 +279,18 @@ export default function ViewRecipe() {
                     fontSize: "16px",
                     fontFamily: "inherit",
                     fontWeight: 400,
-                    cursor: "auto", // Ensure standard cursor behavior unless hovering over links
+                    cursor: "auto",
                   }}
                 />
-              </Box>
+              </div>
             )}
 
             {/* Ingredients Section */}
             <RecipeIngredientCard
               ingredients={recipe.ingredients || []}
               scaleFactor={scaleFactor}
+              onScaleChange={setScaleFactor}
+              servingSize={recipe.serving_size}
             />
 
             {/* Instructions Section */}
