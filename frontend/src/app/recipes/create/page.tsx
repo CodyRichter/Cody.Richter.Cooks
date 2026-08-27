@@ -63,18 +63,10 @@ export default function CreateRecipe() {
   }, [form]);
 
   // Keep validation status updated via form watchers
-  useEffect(() => {
-    const unsubscribers = [
-      form.watch('title', updateValidation),
-      form.watch('description', updateValidation),
-      form.watch('ingredients', updateValidation),
-      form.watch('instructions', updateValidation),
-    ];
-
-    return () => {
-      unsubscribers.forEach((unsub) => unsub());
-    };
-  }, [form, updateValidation]);
+  form.watch('title', updateValidation);
+  form.watch('description', updateValidation);
+  form.watch('ingredients', updateValidation);
+  form.watch('instructions', updateValidation);
 
   const { mutateAsync: createRecipe, isPending } = useCreateRecipe();
 

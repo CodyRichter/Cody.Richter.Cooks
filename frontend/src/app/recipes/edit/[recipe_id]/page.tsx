@@ -1,7 +1,7 @@
 'use client';
 
 import { Container, Stack } from "@mantine/core";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
@@ -56,84 +56,117 @@ function getRecipeSnapshot(recipe: RecipeDetail): string {
   });
 }
 
-export default function EditRecipePage() {
-  const params = useParams();
-  const { navigateToRecipe } = useAppNavigation();
-  const auth = useAuth();
-  const recipe_id = params?.recipe_id as string;
+interface EditRecipeFormProps {
+  recipe: RecipeDetail;
+  isAdminOverride: boolean;
+  authorName: string | null;
+  onBack: (values: RecipeDetail) => void;
+}
 
-  // Load the recipe data
-  const { data: originalRecipe, isLoading, error, refetch } = useRecipe(recipe_id);
-
-  // Get user permissions for this recipe
-  const { canEdit, isAdminOverride } = useUserRecipePermissions(recipe_id);
-  const { data: permissions } = useRecipePermissions(recipe_id);
-
-  const authorName = useMemo(() => {
-    if (!permissions || !Array.isArray(permissions)) return null;
-    const owner = permissions.find((p) => p.role === 'owner');
-    return owner ? owner.user_username : null;
-  }, [permissions]);
-
-  // Auto-save state
+function EditRecipeForm({
+  recipe,
+  isAdminOverride,
+  authorName,
+  onBack,
+}: EditRecipeFormProps) {
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
-  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const lastSavedSnapshotRef = useRef<string>('');
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(() =>
+    recipe.updated_at ? new Date(recipe.updated_at) : new Date()
+  );
+  const initialSnapshot = useMemo(() => getRecipeSnapshot(recipe), [recipe]);
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState<string>(initialSnapshot);
+  const [currentSnapshot, setCurrentSnapshot] = useState<string>(initialSnapshot);
 
-  // Initialize form
   const form = useForm<RecipeDetail>({
     mode: 'uncontrolled',
-    initialValues: originalRecipe || {
-      id: '',
-      title: '',
-      description: '',
-      tags: [],
-      ingredients: [],
-      instructions: [],
-      cooking_time: undefined,
-      serving_size: undefined,
-      created_at: '',
-      updated_at: '',
-    },
+    initialValues: recipe,
     validate: {
       title: (value: string) => (value?.trim().length < 3 ? 'Title must be at least 3 characters' : null),
     },
   });
 
   const [validationStatus, setValidationStatus] = useState(() =>
-    getRecipeValidationStatus(form.getValues())
+    getRecipeValidationStatus(recipe)
   );
 
-  // Sync originalRecipe to form once loaded (with normalized instruction descriptions)
-  const hasInitialized = useRef(false);
-  useEffect(() => {
-    if (originalRecipe && !hasInitialized.current) {
-      const normalizedRecipe: RecipeDetail = {
-        ...originalRecipe,
-        instructions: (originalRecipe.instructions || []).map((inst) => ({
-          ...inst,
-          description: cleanDescriptionForEditing(inst.description),
-        })),
-      };
-      form.initialize(normalizedRecipe);
-      setValidationStatus(getRecipeValidationStatus(normalizedRecipe));
-      lastSavedSnapshotRef.current = getRecipeSnapshot(normalizedRecipe);
-      setAutoSaveStatus('saved');
-      setLastSavedAt(new Date(normalizedRecipe.updated_at || Date.now()));
-      hasInitialized.current = true;
-    }
-  }, [originalRecipe, form]);
+  // Update validation, snapshot, and unsaved state when form values change
+  const handleFormChange = useCallback(() => {
+    const values = form.getValues();
+    setValidationStatus(getRecipeValidationStatus(values));
+    const nextSnapshot = getRecipeSnapshot(values);
+    setCurrentSnapshot(nextSnapshot);
+    setAutoSaveStatus((prev) => {
+      if (nextSnapshot === lastSavedSnapshot) {
+        return prev === 'unsaved' ? 'saved' : prev;
+      }
+      return 'unsaved';
+    });
+  }, [form, lastSavedSnapshot]);
 
-  // Performs background auto-save or manual Cmd+S save
-  const performAutoSave = useCallback(async () => {
+  // Set up form watchers
+  form.watch('title', handleFormChange);
+  form.watch('description', handleFormChange);
+  form.watch('tags', handleFormChange);
+  form.watch('cooking_time', handleFormChange);
+  form.watch('serving_size', handleFormChange);
+  form.watch('ingredients', handleFormChange);
+  form.watch('instructions', handleFormChange);
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!currentSnapshot || currentSnapshot === lastSavedSnapshot) return;
+
     const values = form.getValues();
     if (!values.id || !isRecipeValid(values)) {
       return;
     }
 
-    const currentSnapshot = getRecipeSnapshot(values);
-    if (currentSnapshot === lastSavedSnapshotRef.current) {
+    const timer = setTimeout(async () => {
+      setAutoSaveStatus('saving');
+
+      const updateData: RecipeUpdate = {
+        title: values.title,
+        description: values.description,
+        tags: values.tags,
+        cooking_time: values.cooking_time,
+        serving_size: values.serving_size,
+        ingredients: values.ingredients.map((ing) => ({
+          name: ing.name,
+          quantity: Number(ing.quantity) || 0,
+          unit: ing.unit,
+          subtext: ing.subtext,
+          order_index: ing.order_index,
+        })),
+        instructions: values.instructions.map((inst) => ({
+          title: inst.title,
+          description: inst.description,
+          step_number: inst.step_number,
+          timing: inst.timing,
+        })),
+      };
+
+      try {
+        await recipeApi.updateRecipe(values.id, updateData);
+        setLastSavedSnapshot(currentSnapshot);
+        setAutoSaveStatus('saved');
+        setLastSavedAt(new Date());
+      } catch {
+        setAutoSaveStatus('error');
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [currentSnapshot, lastSavedSnapshot, form]);
+
+  // Performs manual Cmd+S save
+  const performManualSave = useCallback(async () => {
+    const values = form.getValues();
+    if (!values.id || !isRecipeValid(values)) {
+      return;
+    }
+
+    const snap = getRecipeSnapshot(values);
+    if (snap === lastSavedSnapshot) {
       return;
     }
 
@@ -162,95 +195,83 @@ export default function EditRecipePage() {
 
     try {
       await recipeApi.updateRecipe(values.id, updateData);
-      lastSavedSnapshotRef.current = getRecipeSnapshot(form.getValues());
+      setLastSavedSnapshot(snap);
       setAutoSaveStatus('saved');
       setLastSavedAt(new Date());
     } catch {
       setAutoSaveStatus('error');
     }
-  }, [form]);
-
-  // Watch for form changes to trigger debounced auto-save and update validation HUD
-  const handleFormChange = useCallback(() => {
-    if (!hasInitialized.current) return;
-
-    const values = form.getValues();
-    setValidationStatus(getRecipeValidationStatus(values));
-
-    const currentSnapshot = getRecipeSnapshot(values);
-    if (currentSnapshot === lastSavedSnapshotRef.current) {
-      if (autoSaveStatus === 'unsaved') {
-        setAutoSaveStatus('saved');
-      }
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = null;
-      }
-      return;
-    }
-
-    // Mark as unsaved
-    setAutoSaveStatus('unsaved');
-
-    // Debounce auto-save (1200ms)
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-    }
-    autoSaveTimerRef.current = setTimeout(() => {
-      performAutoSave();
-    }, 1200);
-  }, [form, autoSaveStatus, performAutoSave]);
-
-  // Set up form watchers in an effect to avoid reading refs during render
-  useEffect(() => {
-    const unsubscribers = [
-      form.watch('title', handleFormChange),
-      form.watch('description', handleFormChange),
-      form.watch('tags', handleFormChange),
-      form.watch('cooking_time', handleFormChange),
-      form.watch('serving_size', handleFormChange),
-      form.watch('ingredients', handleFormChange),
-      form.watch('instructions', handleFormChange),
-    ];
-
-    return () => {
-      unsubscribers.forEach((unsub) => unsub());
-    };
-  }, [form, handleFormChange]);
+  }, [form, lastSavedSnapshot]);
 
   // Keyboard shortcut: Cmd+S / Ctrl+S to trigger immediate save
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        if (autoSaveTimerRef.current) {
-          clearTimeout(autoSaveTimerRef.current);
-          autoSaveTimerRef.current = null;
-        }
-        performAutoSave();
+        performManualSave();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [performAutoSave]);
+  }, [performManualSave]);
 
-  // Clean up auto-save timer on unmount
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
+  return (
+    <Container size="xl" px="md" pb="xl">
+      <Stack gap="md">
+        <RecipeEditHeader
+          title="Edit Recipe"
+          mode="edit"
+          validationStatus={validationStatus}
+          autoSaveStatus={autoSaveStatus}
+          lastSavedAt={lastSavedAt}
+          onBack={() => onBack(form.getValues())}
+          isAdminOverride={isAdminOverride}
+          authorName={authorName}
+        />
+        <EditRecipe form={form} />
+      </Stack>
+    </Container>
+  );
+}
+
+export default function EditRecipePage() {
+  const params = useParams();
+  const { navigateToRecipe } = useAppNavigation();
+  const auth = useAuth();
+  const recipe_id = params?.recipe_id as string;
+
+  // Load the recipe data
+  const { data: originalRecipe, isLoading, error, refetch } = useRecipe(recipe_id);
+
+  // Get user permissions for this recipe
+  const { canEdit, isAdminOverride, isLoading: isPermissionsLoading } = useUserRecipePermissions(recipe_id);
+  const { data: permissions } = useRecipePermissions(recipe_id);
+
+  const authorName = useMemo(() => {
+    if (!permissions || !Array.isArray(permissions)) return null;
+    const owner = permissions.find((p) => p.role === 'owner');
+    return owner ? owner.user_username : null;
+  }, [permissions]);
+
+  const normalizedRecipe = useMemo<RecipeDetail | null>(() => {
+    if (!originalRecipe) return null;
+    return {
+      ...originalRecipe,
+      instructions: (originalRecipe.instructions || []).map((inst) => ({
+        ...inst,
+        description: cleanDescriptionForEditing(inst.description),
+      })),
     };
-  }, []);
+  }, [originalRecipe]);
 
   const hasPermission = auth.isAuthenticated && canEdit;
 
-  const handleBackClick = () => {
-    navigateToRecipe(recipe_id, form.getValues());
-  };
+  const handleBackClick = useCallback((values: RecipeDetail) => {
+    navigateToRecipe(recipe_id, values);
+  }, [navigateToRecipe, recipe_id]);
 
-  if (isLoading) {
+  if (isLoading || isPermissionsLoading) {
     return <RecipeLoadingSkeleton />;
   }
 
@@ -267,7 +288,7 @@ export default function EditRecipePage() {
     );
   }
 
-  if (error || !originalRecipe) {
+  if (error || !normalizedRecipe) {
     return (
       <Container size="xl" py="xl">
         <ApiErrorAlert
@@ -280,20 +301,12 @@ export default function EditRecipePage() {
   }
 
   return (
-    <Container size="xl" px="md" pb="xl">
-      <Stack gap="md">
-        <RecipeEditHeader
-          title="Edit Recipe"
-          mode="edit"
-          validationStatus={validationStatus}
-          autoSaveStatus={autoSaveStatus}
-          lastSavedAt={lastSavedAt}
-          onBack={handleBackClick}
-          isAdminOverride={isAdminOverride}
-          authorName={authorName}
-        />
-        <EditRecipe form={form} />
-      </Stack>
-    </Container>
+    <EditRecipeForm
+      key={normalizedRecipe.id}
+      recipe={normalizedRecipe}
+      isAdminOverride={isAdminOverride}
+      authorName={authorName}
+      onBack={handleBackClick}
+    />
   );
 }

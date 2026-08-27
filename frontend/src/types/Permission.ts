@@ -59,4 +59,5 @@ export interface UserRecipePermissions {
   userRole: PermissionRole | null
   isOwner: boolean
   isAdminOverride: boolean
+  isLoading: boolean
 }

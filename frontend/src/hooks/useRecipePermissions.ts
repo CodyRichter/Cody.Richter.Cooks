@@ -34,19 +34,33 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
         userRole: null,
         isOwner: false,
         isAdminOverride: false,
+        isLoading: false,
       }
     }
 
     const isAdmin = Boolean(auth.user.is_admin)
 
-    // If we're still loading or there's an error, allow admin fallback
-    if (isLoading || error) {
+    // While loading, do not assume admin override as the user might be the owner/editor
+    if (isLoading) {
+      return {
+        canEdit: isAdmin,
+        canDelete: isAdmin,
+        userRole: null,
+        isOwner: false,
+        isAdminOverride: false,
+        isLoading: true,
+      }
+    }
+
+    // On error, allow admin fallback
+    if (error) {
       return {
         canEdit: isAdmin,
         canDelete: isAdmin,
         userRole: null,
         isOwner: false,
         isAdminOverride: isAdmin,
+        isLoading: false,
       }
     }
 
@@ -62,6 +76,7 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
         userRole: null,
         isOwner: false,
         isAdminOverride: isAdmin,
+        isLoading: false,
       }
     }
 
@@ -74,6 +89,7 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
       userRole: userPermission.role,
       isOwner: isOwner,
       isAdminOverride: isAdmin && !isOwner,
+      isLoading: false,
     }
   }, [auth.isAuthenticated, auth.user, permissions, isLoading, error])
 }
