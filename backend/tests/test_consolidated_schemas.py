@@ -5,17 +5,22 @@ from pydantic import ValidationError
 
 from app.schemas.ingredient import (
     IngredientSchema,
+    IngredientCreate,
+    IngredientPatch,
     IngredientListCreate,
     IngredientListResponse,
 )
 from app.schemas.instruction import (
     InstructionSchema,
+    InstructionCreate,
+    InstructionPatch,
     InstructionListCreate,
     InstructionListResponse,
 )
 from app.schemas.recipe import (
     RecipeDetail,
     RecipeCreate,
+    RecipePatch,
     RecipeSearchParams,
     RecipeListItem,
     RecipeList,
@@ -159,6 +164,18 @@ class TestConsolidatedRecipeSchema:
         assert recipe.cooking_time == 45
         assert recipe.description is None
 
+    def test_recipe_patch_scenario(self):
+        """Test RecipePatch schema for partial updates."""
+        patch_data = {
+            "title": "Patched Title",
+            "cooking_time": 40,
+        }
+        patch = RecipePatch(**patch_data)
+        assert patch.title == "Patched Title"
+        assert patch.cooking_time == 40
+        assert patch.description is None
+        assert patch.tags is None
+
     def test_recipe_html_validation(self):
         """Test HTML validation in recipe description."""
         # Valid HTML
@@ -195,6 +212,27 @@ class TestConsolidatedIngredientSchema:
         assert ingredient.quantity == 2.0
         assert ingredient.recipe_id == "R123456789"
         assert ingredient.id is None  # Not set for creation
+
+    def test_ingredient_create_model(self):
+        """Test IngredientCreate schema."""
+        data = {
+            "name": "Sugar",
+            "quantity": 1.5,
+            "unit": "tbsp",
+        }
+        item = IngredientCreate(**data)
+        assert item.name == "Sugar"
+        assert item.quantity == 1.5
+        assert item.order_index is None
+
+    def test_ingredient_patch_model(self):
+        """Test IngredientPatch schema."""
+        data = {
+            "quantity": 3.0,
+        }
+        item = IngredientPatch(**data)
+        assert item.quantity == 3.0
+        assert item.name is None
 
     def test_ingredient_response_scenario(self):
         """Test IngredientSchema used for API responses."""
@@ -239,6 +277,27 @@ class TestConsolidatedInstructionSchema:
         assert instruction.step_number == 1
         assert instruction.recipe_id == "R123456789"
         assert instruction.id is None  # Not set for creation
+
+    def test_instruction_create_model(self):
+        """Test InstructionCreate schema."""
+        data = {
+            "title": "Preheat",
+            "description": "<p>Preheat the oven.</p>",
+            "timing": 15,
+        }
+        item = InstructionCreate(**data)
+        assert item.title == "Preheat"
+        assert item.description == "<p>Preheat the oven.</p>"
+        assert item.step_number is None
+
+    def test_instruction_patch_model(self):
+        """Test InstructionPatch schema."""
+        data = {
+            "timing": 20,
+        }
+        item = InstructionPatch(**data)
+        assert item.timing == 20
+        assert item.description is None
 
     def test_instruction_response_scenario(self):
         """Test InstructionSchema used for API responses."""
@@ -346,13 +405,18 @@ class TestSchemaExamplesAndDiscoverability:
         [
             RecipeDetail,
             RecipeCreate,
+            RecipePatch,
             RecipeSearchParams,
             RecipeListItem,
             RecipeList,
             IngredientSchema,
+            IngredientCreate,
+            IngredientPatch,
             IngredientListCreate,
             IngredientListResponse,
             InstructionSchema,
+            InstructionCreate,
+            InstructionPatch,
             InstructionListCreate,
             InstructionListResponse,
             UserSchema,
@@ -391,7 +455,14 @@ class TestSchemaExamplesAndDiscoverability:
             ("/api/v1/recipes/", "get"),
             ("/api/v1/recipes/{recipe_id}/", "get"),
             ("/api/v1/recipes/{recipe_id}/", "put"),
+            ("/api/v1/recipes/{recipe_id}/", "patch"),
             ("/api/v1/recipes/{recipe_id}/", "delete"),
+            ("/api/v1/recipes/{recipe_id}/instructions/", "post"),
+            ("/api/v1/recipes/{recipe_id}/instructions/{step_or_id}/", "patch"),
+            ("/api/v1/recipes/{recipe_id}/instructions/{step_or_id}/", "delete"),
+            ("/api/v1/recipes/{recipe_id}/ingredients/", "post"),
+            ("/api/v1/recipes/{recipe_id}/ingredients/{ingredient_id}/", "patch"),
+            ("/api/v1/recipes/{recipe_id}/ingredients/{ingredient_id}/", "delete"),
             ("/api/v1/recipes/my-recipes/", "get"),
             ("/api/v1/users/register/", "post"),
             ("/api/v1/users/login/", "post"),
@@ -402,11 +473,17 @@ class TestSchemaExamplesAndDiscoverability:
         for path, method in paths_to_check:
             assert (
                 path in openapi["paths"]
-            ), f"Endpoint path {path} not found in OpenAPI"
-            op = openapi["paths"][path][method]
+            ), f"Endpoint path '{path}' not in OpenAPI schema"
+            operation = openapi["paths"][path].get(method)
             assert (
-                "summary" in op and len(op["summary"]) > 0
+                operation is not None
+            ), f"Method '{method.upper()}' for '{path}' not in OpenAPI schema"
+            assert operation.get(
+                "summary"
             ), f"Summary missing for {method.upper()} {path}"
-            assert (
-                "description" in op and len(op["description"]) > 0
+            assert operation.get(
+                "description"
             ), f"Description missing for {method.upper()} {path}"
+            assert (
+                len(operation["description"]) >= 20
+            ), f"Description too brief for {method.upper()} {path}"

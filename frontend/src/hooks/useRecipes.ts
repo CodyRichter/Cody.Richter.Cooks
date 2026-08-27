@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RecipeCreate, RecipeUpdate, RecipeSearchParams } from '@/types/Recipe'
+import { RecipeCreate, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
+import { InstructionCreate, InstructionPatch } from '@/types/InstructionStep'
+import { IngredientCreate, IngredientPatch } from '@/types/Ingredient'
 import { recipeApi } from '@/services/apiServices'
 
 // Custom debounce hook
@@ -21,7 +23,7 @@ export const useRecipes = (params?: RecipeSearchParams) => {
     queryKey: ['recipes', params],
     queryFn: () => recipeApi.getRecipes(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000 // 10 minutes (renamed from cacheTime)
+    gcTime: 10 * 60 * 1000 // 10 minutes
   })
 }
 
@@ -59,7 +61,7 @@ export const useCreateRecipe = () => {
   })
 }
 
-// Hook to update a recipe
+// Hook to update a full recipe
 export const useUpdateRecipe = () => {
   const queryClient = useQueryClient()
 
@@ -70,6 +72,109 @@ export const useUpdateRecipe = () => {
       queryClient.invalidateQueries({ queryKey: ['recipe', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
       queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
+    }
+  })
+}
+
+// Hook to partially update recipe metadata
+export const usePatchRecipe = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: RecipePatch }) =>
+      recipeApi.patchRecipe(id, patch),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', variables.id] })
+      queryClient.invalidateQueries({ queryKey: ['recipes'] })
+      queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
+    }
+  })
+}
+
+// Granular Instruction Hooks
+export const useAddInstruction = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ recipeId, data }: { recipeId: string; data: InstructionCreate }) =>
+      recipeApi.addInstruction(recipeId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', variables.recipeId] })
+    }
+  })
+}
+
+export const usePatchInstruction = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      recipeId,
+      stepOrId,
+      data
+    }: {
+      recipeId: string
+      stepOrId: string | number
+      data: InstructionPatch
+    }) => recipeApi.patchInstruction(recipeId, stepOrId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', variables.recipeId] })
+    }
+  })
+}
+
+export const useDeleteInstruction = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ recipeId, stepOrId }: { recipeId: string; stepOrId: string | number }) =>
+      recipeApi.deleteInstruction(recipeId, stepOrId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', variables.recipeId] })
+    }
+  })
+}
+
+// Granular Ingredient Hooks
+export const useAddIngredient = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ recipeId, data }: { recipeId: string; data: IngredientCreate }) =>
+      recipeApi.addIngredient(recipeId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', variables.recipeId] })
+    }
+  })
+}
+
+export const usePatchIngredient = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      recipeId,
+      ingredientId,
+      data
+    }: {
+      recipeId: string
+      ingredientId: string | number
+      data: IngredientPatch
+    }) => recipeApi.patchIngredient(recipeId, ingredientId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', variables.recipeId] })
+    }
+  })
+}
+
+export const useDeleteIngredient = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ recipeId, ingredientId }: { recipeId: string; ingredientId: string | number }) =>
+      recipeApi.deleteIngredient(recipeId, ingredientId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', variables.recipeId] })
     }
   })
 }
@@ -88,8 +193,6 @@ export const useDeleteRecipe = () => {
     }
   })
 }
-
-
 
 // Hook for search with debouncing
 export const useRecipeSearch = (query: string) => {

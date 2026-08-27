@@ -1,7 +1,7 @@
 'use client';
 
 import { Container, Stack } from "@mantine/core";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm, UseFormReturnType } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
@@ -58,15 +58,27 @@ export default function CreateRecipe() {
     getRecipeValidationStatus(form.getValues())
   );
 
-  // Keep validation status updated
-  form.watch('title', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
-  form.watch('description', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
-  form.watch('ingredients', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
-  form.watch('instructions', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
+  const updateValidation = useCallback(() => {
+    setValidationStatus(getRecipeValidationStatus(form.getValues()));
+  }, [form]);
+
+  // Keep validation status updated via form watchers
+  useEffect(() => {
+    const unsubscribers = [
+      form.watch('title', updateValidation),
+      form.watch('description', updateValidation),
+      form.watch('ingredients', updateValidation),
+      form.watch('instructions', updateValidation),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsub) => unsub());
+    };
+  }, [form, updateValidation]);
 
   const { mutateAsync: createRecipe, isPending } = useCreateRecipe();
 
-  const handleCreateRecipe = async () => {
+  const handleCreateRecipe = useCallback(async () => {
     const values = form.getValues();
 
     if (!isRecipeValid(values)) {
@@ -116,7 +128,20 @@ export default function CreateRecipe() {
         });
       },
     });
-  };
+  }, [form, createRecipe, router]);
+
+  // Keyboard shortcut: Cmd+S / Ctrl+S to trigger creation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleCreateRecipe();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleCreateRecipe]);
 
   const handleBack = () => {
     router.back();

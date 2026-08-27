@@ -5,6 +5,8 @@ import {
   Badge,
   Button,
   Group,
+  Kbd,
+  Loader,
   Paper,
   Popover,
   Stack,
@@ -13,10 +15,12 @@ import {
   Tooltip,
 } from '@mantine/core';
 import {
+  IconAlertCircle,
   IconArrowLeft,
   IconCheck,
-  IconDeviceFloppy,
-  IconInfoCircle,
+  IconCloudCheck,
+  IconCloudUpload,
+  IconListCheck,
   IconPlus,
   IconShieldCheck,
   IconX,
@@ -25,12 +29,16 @@ import { RecipeValidationStatus } from '@/utils/recipeUtils';
 import { useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
 
+export type AutoSaveStatus = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error';
+
 interface RecipeEditHeaderProps {
   title: string;
   mode: 'create' | 'edit';
-  isPending: boolean;
+  isPending?: boolean;
   validationStatus: RecipeValidationStatus;
-  onSave: () => void;
+  autoSaveStatus?: AutoSaveStatus;
+  lastSavedAt?: Date | null;
+  onSave?: () => void;
   onBack: () => void;
   isAdminOverride?: boolean;
   authorName?: string | null;
@@ -39,8 +47,10 @@ interface RecipeEditHeaderProps {
 export default function RecipeEditHeader({
   title,
   mode,
-  isPending,
+  isPending = false,
   validationStatus,
+  autoSaveStatus = 'idle',
+  lastSavedAt,
   onSave,
   onBack,
   isAdminOverride,
@@ -51,6 +61,11 @@ export default function RecipeEditHeader({
   });
   const [popoverOpened, setPopoverOpened] = useState(false);
   const { isValid, completionCount, totalCount, issues } = validationStatus;
+
+  // Format time for auto-save badge
+  const formattedSavedTime = lastSavedAt
+    ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : null;
 
   return (
     <Paper
@@ -118,36 +133,106 @@ export default function RecipeEditHeader({
             </Group>
             {!isMobile && (
               <Text size="xs" c="dimmed">
-                {mode === 'create' ? 'Drafting new recipe' : 'Making recipe revisions'}
+                {mode === 'create' ? 'Drafting new recipe' : 'Auto-saving enabled'}
               </Text>
             )}
           </Stack>
         </Group>
 
-        {/* Center/Right Actions */}
-        <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
-          {/* Real-time Validation Status HUD */}
+        {/* Right Side: Status Badges & Actions */}
+        <Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
+          {/* Auto-save Status Badge (Shown in edit mode) */}
+          {mode === 'edit' && autoSaveStatus !== 'idle' && (
+            <>
+              {autoSaveStatus === 'saving' && (
+                <Badge
+                  size={isMobile ? 'sm' : 'md'}
+                  radius="md"
+                  variant="light"
+                  color="blue"
+                  leftSection={<Loader size={10} color="blue" />}
+                  style={{ textTransform: 'none', fontWeight: 600 }}
+                >
+                  {isMobile ? 'Saving' : 'Saving...'}
+                </Badge>
+              )}
+              {autoSaveStatus === 'saved' && (
+                <Tooltip
+                  label={
+                    <Stack gap={2} align="center">
+                      <Text size="xs">{formattedSavedTime ? `Saved at ${formattedSavedTime}` : 'All changes saved'}</Text>
+                      <Text size="xs" c="dimmed">Press ⌘S or Ctrl+S to save anytime</Text>
+                    </Stack>
+                  }
+                  withArrow
+                >
+                  <Badge
+                    size={isMobile ? 'sm' : 'md'}
+                    radius="md"
+                    variant="light"
+                    color="teal"
+                    leftSection={<IconCloudCheck size={14} stroke={2.2} />}
+                    style={{ textTransform: 'none', fontWeight: 600, cursor: 'default' }}
+                  >
+                    {isMobile ? 'Saved' : formattedSavedTime ? `Saved ${formattedSavedTime}` : 'Saved'}
+                  </Badge>
+                </Tooltip>
+              )}
+              {autoSaveStatus === 'unsaved' && (
+                <Tooltip
+                  label={
+                    <Stack gap={2} align="center">
+                      <Text size="xs">Unsaved changes</Text>
+                      <Text size="xs" c="dimmed">Auto-saves momentarily or press ⌘S</Text>
+                    </Stack>
+                  }
+                  withArrow
+                >
+                  <Badge
+                    size={isMobile ? 'sm' : 'md'}
+                    radius="md"
+                    variant="light"
+                    color="yellow"
+                    leftSection={<IconCloudUpload size={14} stroke={2} />}
+                    style={{ textTransform: 'none', fontWeight: 600, cursor: 'default' }}
+                  >
+                    {isMobile ? 'Unsaved' : 'Unsaved changes'}
+                  </Badge>
+                </Tooltip>
+              )}
+              {autoSaveStatus === 'error' && (
+                <Tooltip label="Auto-save failed. Press ⌘S / Ctrl+S to retry." withArrow>
+                  <Badge
+                    size={isMobile ? 'sm' : 'md'}
+                    radius="md"
+                    variant="light"
+                    color="red"
+                    leftSection={<IconAlertCircle size={14} stroke={2} />}
+                    style={{ textTransform: 'none', fontWeight: 600, cursor: 'default' }}
+                  >
+                    {isMobile ? 'Error' : 'Save failed'}
+                  </Badge>
+                </Tooltip>
+              )}
+            </>
+          )}
+
+          {/* Validation Checklist Popover Button */}
           <Popover
             opened={popoverOpened}
             onChange={setPopoverOpened}
             position="bottom-end"
             withArrow
             shadow="md"
-            width={280}
+            width={300}
           >
             <Popover.Target>
               <Badge
-                size={isMobile ? 'md' : 'lg'}
+                size={isMobile ? 'sm' : 'md'}
                 radius="md"
                 variant="light"
                 color={isValid ? 'teal' : completionCount > 0 ? 'orange' : 'gray'}
-                leftSection={
-                  isValid ? (
-                    <IconCheck size={13} stroke={2.5} />
-                  ) : (
-                    <IconInfoCircle size={13} />
-                  )
-                }
+                leftSection={<IconListCheck size={14} stroke={2} />}
                 style={{
                   cursor: 'pointer',
                   userSelect: 'none',
@@ -157,19 +242,20 @@ export default function RecipeEditHeader({
                 onClick={() => setPopoverOpened((o) => !o)}
               >
                 {isMobile
-                  ? isValid
-                    ? 'Ready'
-                    : `${completionCount}/${totalCount}`
-                  : isValid
-                  ? 'Ready to Save'
-                  : `${completionCount}/${totalCount} Complete`}
+                  ? `Checklist (${completionCount}/${totalCount})`
+                  : `Validation Checklist (${completionCount}/${totalCount})`}
               </Badge>
             </Popover.Target>
             <Popover.Dropdown p="sm">
               <Stack gap="xs">
-                <Text size="xs" fw={700} c="dimmed" tt="uppercase">
-                  Recipe Completion Checklist
-                </Text>
+                <Group justify="space-between" align="center">
+                  <Text size="xs" fw={700} c="dimmed" tt="uppercase">
+                    Validation Checklist
+                  </Text>
+                  <Badge size="xs" color={isValid ? 'teal' : 'orange'} variant="subtle">
+                    {completionCount}/{totalCount} Complete
+                  </Badge>
+                </Group>
                 <Group gap="xs">
                   <ThemeIcon
                     size="xs"
@@ -223,34 +309,47 @@ export default function RecipeEditHeader({
                   </Text>
                 </Group>
 
-                {issues.length > 0 && (
+                {issues.length > 0 ? (
                   <Text size="xs" c="orange.7" mt={4} fw={500}>
                     Missing: {issues[0]}
                   </Text>
+                ) : (
+                  <Text size="xs" c="teal" mt={4} fw={500}>
+                    All validation requirements met.
+                  </Text>
+                )}
+
+                {mode === 'edit' && (
+                  <Group gap={4} mt={6} justify="center">
+                    <Text size="xs" c="dimmed">Save shortcut:</Text>
+                    <Kbd size="xs">⌘</Kbd>
+                    <Text size="xs" c="dimmed">+</Text>
+                    <Kbd size="xs">S</Kbd>
+                  </Group>
                 )}
               </Stack>
             </Popover.Dropdown>
           </Popover>
 
-          {/* Primary Save Button */}
-          <Button
-            size={isMobile ? 'xs' : 'sm'}
-            radius="md"
-            color="orange"
-            variant="filled"
-            leftSection={
-              mode === 'create' ? <IconPlus size={15} /> : <IconDeviceFloppy size={15} />
-            }
-            loading={isPending}
-            disabled={!isValid || isPending}
-            onClick={onSave}
-            style={{
-              boxShadow: isValid ? '0 3px 10px rgba(255, 145, 0, 0.25)' : undefined,
-              fontWeight: 600,
-            }}
-          >
-            {isMobile ? (mode === 'create' ? 'Create' : 'Save') : mode === 'create' ? 'Create Recipe' : 'Save Changes'}
-          </Button>
+          {/* Primary Create Button (Only shown in Create mode) */}
+          {mode === 'create' && (
+            <Button
+              size={isMobile ? 'xs' : 'sm'}
+              radius="md"
+              color="orange"
+              variant="filled"
+              leftSection={<IconPlus size={15} />}
+              loading={isPending}
+              disabled={!isValid || isPending}
+              onClick={onSave}
+              style={{
+                boxShadow: isValid ? '0 3px 10px rgba(255, 145, 0, 0.25)' : undefined,
+                fontWeight: 600,
+              }}
+            >
+              {isMobile ? 'Create' : 'Create Recipe'}
+            </Button>
+          )}
         </Group>
       </Group>
     </Paper>

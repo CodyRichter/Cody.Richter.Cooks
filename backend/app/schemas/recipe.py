@@ -162,6 +162,42 @@ class RecipeCreate(BaseModel):
         return validate_recipe_description(v)
 
 
+class RecipePatch(BaseModel):
+    """Schema for partial recipe metadata updates."""
+
+    title: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Recipe title"
+    )
+    description: Optional[str] = Field(
+        None, description="HTML description with embedded images"
+    )
+    tags: Optional[List[str]] = Field(
+        None, description="Recipe tags for categorization"
+    )
+    cooking_time: Optional[int] = Field(
+        None, ge=1, description="Cooking time in minutes"
+    )
+    serving_size: Optional[int] = Field(None, ge=1, description="Number of servings")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "Classic Spaghetti Carbonara (Updated)",
+                "cooking_time": 30,
+                "tags": ["pasta", "italian", "comfort-food"],
+            }
+        }
+    )
+
+    @field_validator("description")
+    @classmethod
+    def validate_html_content(cls, v):
+        """Validate HTML content using centralized validator if provided."""
+        if v is not None:
+            return validate_recipe_description(v)
+        return v
+
+
 class RecipeSearchParams(BaseModel):
     """Schema for recipe search parameters."""
 
@@ -246,6 +282,9 @@ class RecipeList(BaseModel):
         }
     )
 
+
+# Type alias
+RecipeUpdate = RecipePatch
 
 # Import here to avoid circular imports
 from app.schemas.ingredient import IngredientSchema  # noqa: E402

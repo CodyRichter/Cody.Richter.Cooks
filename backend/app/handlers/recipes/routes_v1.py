@@ -1,23 +1,51 @@
-from typing import List, Optional
+"""
+Recipe API routes - Version 1.
+"""
 
-from fastapi import APIRouter, Depends, status, Query
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models.user import User
+from app.schemas.recipe import (
+    RecipeCreate,
+    RecipeDetail,
+    RecipePatch,
+    RecipeList,
+)
+from app.schemas.instruction import (
+    InstructionCreate,
+    InstructionPatch,
+    InstructionSchema,
+)
+from app.schemas.ingredient import (
+    IngredientCreate,
+    IngredientPatch,
+    IngredientSchema,
+)
+from app.schemas.recipe_permission import (
+    RecipePermissionDetail,
+    GrantPermissionRequest,
+)
+from app.utils.auth import get_current_active_user, get_current_user_optional
 from app.handlers.recipes.impl_v1 import (
     create_recipe_internal,
+    update_recipe_internal,
+    patch_recipe_internal,
+    delete_recipe_internal,
     get_recipe_internal,
     list_recipes_internal,
-    update_recipe_internal,
-    delete_recipe_internal,
     list_recipe_permissions_internal,
     grant_recipe_permission_internal,
     revoke_recipe_permission_internal,
+    add_instruction_internal,
+    patch_instruction_internal,
+    delete_instruction_internal,
+    add_ingredient_internal,
+    patch_ingredient_internal,
+    delete_ingredient_internal,
 )
-from app.models.user import User
-from app.schemas.recipe import RecipeCreate, RecipeDetail, RecipeList
-from app.schemas.recipe_permission import RecipePermissionDetail, GrantPermissionRequest
-from app.utils.auth import get_current_active_user, get_current_user_optional
 
 router = APIRouter(prefix="/api/v1/recipes", tags=["recipes"])
 
@@ -27,7 +55,7 @@ router = APIRouter(prefix="/api/v1/recipes", tags=["recipes"])
     response_model=RecipeDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new recipe",
-    description="Create a complete new recipe including title, description (HTML), tags, cooking time, serving size, ingredients, and instructions. The authenticated user is automatically assigned as the recipe owner. Use this tool when you have fully drafted recipe details ready to save.",
+    description="Create a complete recipe with initial metadata, optional ingredients, and optional instructions. The authenticated caller is automatically assigned as the recipe owner. Use this tool when authoring a new recipe from scratch.",
 )
 async def create_recipe(
     recipe_data: RecipeCreate,
@@ -35,7 +63,7 @@ async def create_recipe(
     db: Session = Depends(get_db),
 ):
     """
-    Create a new recipe. The current user becomes the owner.
+    Create a new recipe with ingredients and instructions.
 
     Args:
         recipe_data: Recipe creation data
@@ -43,7 +71,7 @@ async def create_recipe(
         db: Database session
 
     Returns:
-        Created recipe information
+        Created recipe with ingredients and instructions
     """
     return create_recipe_internal(recipe_data, current_user, db)
 
@@ -51,32 +79,33 @@ async def create_recipe(
 @router.get(
     "/my-recipes/",
     response_model=RecipeList,
-    summary="List current user recipes",
-    description="Retrieve a paginated list of recipes owned by or accessible to the currently authenticated user. Use this tool to view or manage the user's personal recipe collection.",
+    summary="List recipes owned by the authenticated user",
+    description="Retrieve a paginated list of all recipes where the authenticated user is the owner or editor. Requires authentication. Use this tool to list the user's personal recipe collection.",
 )
 async def get_my_recipes(
-    current_user: User = Depends(get_current_active_user),
     page: int = Query(1, ge=1, description="Page number for pagination"),
     limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """
-    Get recipes for the authenticated user. Shows all recipes the user has permission to view.
+    Get recipes belonging to the current user (where user is owner or editor).
+    Requires authentication.
 
     Args:
-        current_user: Current authenticated user
         page: Page number for pagination
         limit: Number of items per page
+        current_user: Current authenticated user
         db: Database session
 
     Returns:
-        List of recipe summaries for the current user
+        Paginated list of user's recipes
     """
     return list_recipes_internal(
         db=db,
+        user_id_filter=current_user.id,
         page=page,
         limit=limit,
-        user_id_filter=current_user.id,
     )
 
 
@@ -133,6 +162,33 @@ async def update_recipe(
     return update_recipe_internal(recipe_id, recipe_data, current_user, db)
 
 
+@router.patch(
+    "/{recipe_id}/",
+    response_model=RecipeDetail,
+    summary="Partially update recipe metadata",
+    description="Update specific metadata fields of a recipe (such as title, description, tags, cooking time, or serving size) without affecting its ingredients or instructions. Caller must be the recipe owner or an editor. Use this tool for targeted metadata changes or real-time auto-saving.",
+)
+async def patch_recipe(
+    recipe_id: str,
+    patch_data: RecipePatch,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Partially update recipe metadata without overwriting nested ingredients or instructions.
+
+    Args:
+        recipe_id: Recipe ID
+        patch_data: Recipe metadata patch data
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Updated recipe information
+    """
+    return patch_recipe_internal(recipe_id, patch_data, current_user, db)
+
+
 @router.delete(
     "/{recipe_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -156,6 +212,131 @@ async def delete_recipe(
         HTTPException: If recipe not found or user is not the owner
     """
     delete_recipe_internal(recipe_id, current_user, db)
+
+
+# --- Granular Instruction Endpoints ---
+
+
+@router.post(
+    "/{recipe_id}/instructions/",
+    response_model=InstructionSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add an instruction step to a recipe",
+    description="Add a single instruction step to an existing recipe. If step_number is omitted, it will automatically append to the end of the instructions list. Caller must be the recipe owner or an editor. Use this tool to insert a new step without re-sending the whole recipe.",
+)
+async def add_instruction(
+    recipe_id: str,
+    instruction_data: InstructionCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Add a single instruction step to a recipe.
+    """
+    return add_instruction_internal(recipe_id, instruction_data, current_user, db)
+
+
+@router.patch(
+    "/{recipe_id}/instructions/{step_or_id}/",
+    response_model=InstructionSchema,
+    summary="Update an instruction step",
+    description="Update fields of a specific instruction step identified by either instruction ID (e.g. 'INS-12345') or step number (e.g. '1', '2'). Caller must be the recipe owner or an editor. Use this tool to update instruction title, description, or timing.",
+)
+async def patch_instruction(
+    recipe_id: str,
+    step_or_id: str,
+    instruction_data: InstructionPatch,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Partially update a single instruction step by ID or step number.
+    """
+    return patch_instruction_internal(
+        recipe_id, step_or_id, instruction_data, current_user, db
+    )
+
+
+@router.delete(
+    "/{recipe_id}/instructions/{step_or_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an instruction step",
+    description="Remove a specific instruction step from a recipe by instruction ID or step number. Remaining steps are automatically re-sequenced. Caller must be the recipe owner or an editor. Use this tool to remove a step.",
+)
+async def delete_instruction(
+    recipe_id: str,
+    step_or_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete a single instruction step by ID or step number.
+    """
+    delete_instruction_internal(recipe_id, step_or_id, current_user, db)
+
+
+# --- Granular Ingredient Endpoints ---
+
+
+@router.post(
+    "/{recipe_id}/ingredients/",
+    response_model=IngredientSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add an ingredient to a recipe",
+    description="Add a single ingredient to an existing recipe. If order_index is omitted, it will automatically append to the end of the ingredient list. Caller must be the recipe owner or an editor. Use this tool to add an ingredient without replacing the entire recipe.",
+)
+async def add_ingredient(
+    recipe_id: str,
+    ingredient_data: IngredientCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Add a single ingredient to a recipe.
+    """
+    return add_ingredient_internal(recipe_id, ingredient_data, current_user, db)
+
+
+@router.patch(
+    "/{recipe_id}/ingredients/{ingredient_id}/",
+    response_model=IngredientSchema,
+    summary="Update an ingredient",
+    description="Update fields of a specific ingredient identified by ingredient ID (e.g. 'I-12345') or order index. Caller must be the recipe owner or an editor. Use this tool to update ingredient quantity, unit, name, or notes.",
+)
+async def patch_ingredient(
+    recipe_id: str,
+    ingredient_id: str,
+    ingredient_data: IngredientPatch,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Partially update a single ingredient by ID or order index.
+    """
+    return patch_ingredient_internal(
+        recipe_id, ingredient_id, ingredient_data, current_user, db
+    )
+
+
+@router.delete(
+    "/{recipe_id}/ingredients/{ingredient_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an ingredient",
+    description="Remove a specific ingredient from a recipe by ingredient ID or order index. Remaining ingredients are automatically re-indexed. Caller must be the recipe owner or an editor. Use this tool to remove an ingredient.",
+)
+async def delete_ingredient(
+    recipe_id: str,
+    ingredient_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete a single ingredient by ID or order index.
+    """
+    delete_ingredient_internal(recipe_id, ingredient_id, current_user, db)
+
+
+# --- Recipe List & Permission Endpoints ---
 
 
 @router.get(
@@ -260,39 +441,11 @@ async def grant_recipe_permission(
     )
 
 
-@router.delete(
-    "/{recipe_id}/permissions/{user_id}/",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Revoke recipe permission from user",
-    description="Revoke an existing recipe permission from a user by user ID. Only the recipe owner can revoke permissions (cannot revoke own ownership). Use this tool to remove collaborator access from a recipe.",
-)
-async def revoke_recipe_permission(
-    recipe_id: str,
-    user_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
-):
-    """
-    Revoke permission from a user for a recipe. Only the owner can revoke permissions.
-    The owner cannot revoke their own permission.\n\n    Args:
-        recipe_id: Recipe ID
-        user_id: User ID of user that will have permission revoked
-        current_user: Current authenticated user
-        db: Database session
-
-    Raises:
-        HTTPException: If recipe not found, user is not owner, or permission not found
-    """
-    return revoke_recipe_permission_internal(
-        recipe_id=recipe_id, target_user_id=user_id, current_user=current_user, db=db
-    )
-
-
 @router.get(
     "/{recipe_id}/permissions/",
     response_model=List[RecipePermissionDetail],
-    summary="List recipe permissions",
-    description="List all permission grants and collaborator details for a recipe. Requires owner or editor permission on the recipe. Use this tool to inspect access rights and collaborator lists before changing permissions.",
+    summary="List users with permission for recipe",
+    description="Retrieve the list of users with access permissions to this recipe. Recipe owners and editors see all collaborators including emails; public users see only the owner.",
 )
 async def list_recipe_permissions(
     recipe_id: str,
@@ -300,17 +453,46 @@ async def list_recipe_permissions(
     db: Session = Depends(get_db),
 ):
     """
-    List all permissions for a recipe. User must have permission to view the recipe.
+    List all permissions for a recipe.
+    Public endpoint - anyone can see who has permissions, but sensitive details
+    like email are only shown to users with recipe access (owner/editor).
 
     Args:
         recipe_id: Recipe ID
-        current_user: Current authenticated user
+        current_user: Current authenticated user (optional)
         db: Database session
 
     Returns:
-        List of permissions with user details
+        List of recipe permissions with user information
 
     Raises:
-        HTTPException: If recipe not found or user doesn't have permission
+        HTTPException: If recipe not found
     """
     return list_recipe_permissions_internal(recipe_id, current_user, db)
+
+
+@router.delete(
+    "/{recipe_id}/permissions/{target_user_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revoke recipe permission from user",
+    description="Revoke an editor or co-owner's permission from a recipe. Only the recipe owner can revoke permissions, and owners cannot revoke their own primary ownership. Use this tool when managing recipe collaborators.",
+)
+async def revoke_recipe_permission(
+    recipe_id: str,
+    target_user_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Revoke permission from a user for a recipe. Only the owner can revoke permissions.
+
+    Args:
+        recipe_id: Recipe ID
+        target_user_id: User ID to revoke permission from
+        current_user: Current authenticated user
+        db: Database session
+
+    Raises:
+        HTTPException: If recipe not found, user is not owner, target user not found, or trying to revoke own permission
+    """
+    revoke_recipe_permission_internal(recipe_id, target_user_id, current_user, db)

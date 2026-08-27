@@ -148,6 +148,7 @@ def test_recipe(db_session: Session, test_user: User) -> Recipe:
     recipe = Recipe(
         title="Test Recipe",
         description="<p>This is a test recipe description</p>",
+        tags=["test", "recipe"],
         cooking_time=30,
         serving_size=4,
     )
@@ -157,12 +158,91 @@ def test_recipe(db_session: Session, test_user: User) -> Recipe:
 
     # Add owner permission
     permission = RecipePermission(
-        user_id=test_user.id, recipe_id=recipe.id, role=PermissionRole.OWNER
+        recipe_id=recipe.id, user_id=test_user.id, role=PermissionRole.OWNER
     )
     db_session.add(permission)
     db_session.commit()
 
     return recipe
+
+
+@pytest.fixture
+def test_recipe_with_details(db_session: Session, test_user: User) -> Recipe:
+    """Create a test recipe with ingredients and instructions."""
+    recipe = Recipe(
+        title="Detailed Test Recipe",
+        description="<p>This is a detailed test recipe description</p>",
+        tags=["test", "detailed"],
+        cooking_time=45,
+        serving_size=6,
+    )
+    db_session.add(recipe)
+    db_session.commit()
+    db_session.refresh(recipe)
+
+    # Add owner permission
+    permission = RecipePermission(
+        recipe_id=recipe.id, user_id=test_user.id, role=PermissionRole.OWNER
+    )
+    db_session.add(permission)
+
+    # Add ingredients
+    ingredients = [
+        Ingredient(
+            recipe_id=recipe.id,
+            name="Flour",
+            quantity=2.0,
+            unit="cups",
+            subtext="all-purpose",
+            order_index=0,
+        ),
+        Ingredient(
+            recipe_id=recipe.id,
+            name="Sugar",
+            quantity=1.0,
+            unit="cup",
+            subtext="granulated",
+            order_index=1,
+        ),
+    ]
+    for ingredient in ingredients:
+        db_session.add(ingredient)
+
+    # Add instructions
+    instructions = [
+        Instruction(
+            recipe_id=recipe.id,
+            step_number=1,
+            title="Mix dry ingredients",
+            description="<p>Mix flour and sugar in a bowl</p>",
+            timing=5,
+        ),
+        Instruction(
+            recipe_id=recipe.id,
+            step_number=2,
+            title="Bake",
+            description="<p>Bake in preheated oven at 350°F</p>",
+            timing=30,
+        ),
+    ]
+    for instruction in instructions:
+        db_session.add(instruction)
+
+    db_session.commit()
+    db_session.refresh(recipe)
+    return recipe
+
+
+@pytest.fixture
+def sample_recipe_data() -> dict:
+    """Create sample recipe payload for tests."""
+    return {
+        "title": "New Test Recipe",
+        "description": "<p>A delicious recipe</p>",
+        "tags": ["dinner", "easy"],
+        "cooking_time": 30,
+        "serving_size": 4,
+    }
 
 
 @pytest.fixture
@@ -180,108 +260,27 @@ def auth_headers_user2(test_user2: User) -> dict:
 
 
 @pytest.fixture
-def auth_headers_admin(admin_user: User) -> dict:
+def admin_auth_headers(admin_user: User) -> dict:
     """Create authentication headers for admin user."""
     access_token = create_access_token(data={"sub": admin_user.username})
     return {"Authorization": f"Bearer {access_token}"}
 
 
-# Common test data fixtures
 @pytest.fixture
-def sample_recipe_data() -> dict:
-    """Sample recipe data for testing."""
-    return {
-        "title": "Test Recipe",
-        "description": "<p>This is a test recipe description</p>",
-        "cooking_time": 30,
-        "serving_size": 4,
-        "tags": ["test", "sample"],
-    }
-
-
-@pytest.fixture
-def sample_ingredient_data() -> dict:
-    """Sample ingredient data for testing."""
-    return {
-        "name": "Test Ingredient",
-        "quantity": 1.0,
-        "unit": "cup",
-        "subtext": "fresh",
-        "order_index": 0,
-    }
-
-
-@pytest.fixture
-def sample_instruction_data() -> dict:
-    """Sample instruction data for testing."""
-    return {
-        "title": "Test Step",
-        "description": "<p>Do something</p>",
-        "step_number": 1,
-        "timing": 5,
-    }
+def auth_headers_admin(admin_auth_headers: dict) -> dict:
+    """Alias for admin_auth_headers."""
+    return admin_auth_headers
 
 
 @pytest.fixture
 def mock_request():
-    """Create a mock FastAPI request object."""
-    mock_req = Mock()
-    mock_req.headers = {"user-agent": "Test Browser"}
-    mock_req.method = "POST"
-    mock_req.url.path = "/test"
-    mock_req.client.host = "192.168.1.100"
-    return mock_req
-
-
-@pytest.fixture
-def recipe_with_nested_data(db_session: Session, test_user: User) -> Recipe:
-    """Create a recipe with ingredients and instructions for testing."""
-    recipe = Recipe(
-        title="Complete Test Recipe",
-        description="<p>Recipe with nested data</p>",
-        cooking_time=45,
-        serving_size=6,
-    )
-    db_session.add(recipe)
-    db_session.commit()
-    db_session.refresh(recipe)
-
-    # Add owner permission
-    permission = RecipePermission(
-        user_id=test_user.id, recipe_id=recipe.id, role=PermissionRole.OWNER
-    )
-    db_session.add(permission)
-
-    # Add ingredients
-    ingredient1 = Ingredient(
-        name="Flour",
-        quantity=2.0,
-        unit="cups",
-        subtext="all-purpose",
-        order_index=0,
-        recipe_id=recipe.id,
-    )
-    ingredient2 = Ingredient(
-        name="Sugar", quantity=1.0, unit="cup", order_index=1, recipe_id=recipe.id
-    )
-    db_session.add_all([ingredient1, ingredient2])
-
-    # Add instructions
-    instruction1 = Instruction(
-        title="Mix Ingredients",
-        description="<p>Combine dry ingredients</p>",
-        step_number=1,
-        timing=5,
-        recipe_id=recipe.id,
-    )
-    instruction2 = Instruction(
-        title="Bake",
-        description="<p>Bake in preheated oven</p>",
-        step_number=2,
-        timing=25,
-        recipe_id=recipe.id,
-    )
-    db_session.add_all([instruction1, instruction2])
-
-    db_session.commit()
-    return recipe
+    """Create a mock Request object for testing."""
+    request = Mock()
+    request.client = Mock()
+    request.client.host = "127.0.0.1"
+    request.headers = {"user-agent": "test-agent"}
+    request.method = "POST"
+    request.url = Mock()
+    request.url.path = "/test"
+    request.session = {}
+    return request

@@ -1,22 +1,21 @@
 'use client';
 
 import { Container, Stack } from "@mantine/core";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
-import RecipeEditHeader from "@/components/recipes/edit/header/RecipeEditHeader";
+import RecipeEditHeader, { AutoSaveStatus } from "@/components/recipes/edit/header/RecipeEditHeader";
 import { ApiErrorAlert } from "@/components/error-handling";
 import { RecipeDetail, RecipeUpdate } from "@/types/Recipe";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
 import { getRecipeValidationStatus, isRecipeValid } from "@/utils/recipeUtils";
-import { notifications } from "@mantine/notifications";
-import { formatNotificationError } from "@/utils/notificationUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
-import { useRecipe, useUpdateRecipe } from "@/hooks/useRecipes";
+import { useRecipe } from "@/hooks/useRecipes";
 import { useRecipePermissions, useUserRecipePermissions } from "@/hooks/useRecipePermissions";
+import { recipeApi } from "@/services/apiServices";
 
 /**
  * Normalizes instruction description by stripping raw HTML paragraph/break tags into plain text for editing.
@@ -29,6 +28,32 @@ function cleanDescriptionForEditing(desc?: string): string {
     .replace(/<p>/gi, '')
     .replace(/<\/p>/gi, '')
     .trim();
+}
+
+/**
+ * Serializes recipe state for change deduplication and dirty checking.
+ */
+function getRecipeSnapshot(recipe: RecipeDetail): string {
+  return JSON.stringify({
+    title: recipe.title?.trim() || '',
+    description: recipe.description?.trim() || '',
+    tags: [...(recipe.tags || [])].sort(),
+    cooking_time: recipe.cooking_time ?? null,
+    serving_size: recipe.serving_size ?? null,
+    ingredients: (recipe.ingredients || []).map((ing) => ({
+      name: ing.name?.trim() || '',
+      quantity: Number(ing.quantity) || 0,
+      unit: ing.unit?.trim() || '',
+      subtext: ing.subtext?.trim() || '',
+      order_index: Number(ing.order_index) || 0,
+    })),
+    instructions: (recipe.instructions || []).map((inst) => ({
+      title: inst.title?.trim() || '',
+      description: inst.description?.trim() || '',
+      step_number: Number(inst.step_number) || 0,
+      timing: Number(inst.timing) || 0,
+    })),
+  });
 }
 
 export default function EditRecipePage() {
@@ -49,6 +74,12 @@ export default function EditRecipePage() {
     const owner = permissions.find((p) => p.role === 'owner');
     return owner ? owner.user_username : null;
   }, [permissions]);
+
+  // Auto-save state
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const lastSavedSnapshotRef = useRef<string>('');
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize form
   const form = useForm<RecipeDetail>({
@@ -74,15 +105,6 @@ export default function EditRecipePage() {
     getRecipeValidationStatus(form.getValues())
   );
 
-  // Keep validation status updated
-  form.watch('title', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
-  form.watch('description', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
-  form.watch('ingredients', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
-  form.watch('instructions', () => setValidationStatus(getRecipeValidationStatus(form.getValues())));
-
-  // Update mutation
-  const { mutate: updateRecipe, isPending: isUpdating } = useUpdateRecipe();
-
   // Sync originalRecipe to form once loaded (with normalized instruction descriptions)
   const hasInitialized = useRef(false);
   useEffect(() => {
@@ -96,30 +118,28 @@ export default function EditRecipePage() {
       };
       form.initialize(normalizedRecipe);
       setValidationStatus(getRecipeValidationStatus(normalizedRecipe));
+      lastSavedSnapshotRef.current = getRecipeSnapshot(normalizedRecipe);
+      setAutoSaveStatus('saved');
+      setLastSavedAt(new Date(normalizedRecipe.updated_at || Date.now()));
       hasInitialized.current = true;
     }
   }, [originalRecipe, form]);
 
-  const hasPermission = auth.isAuthenticated && canEdit;
-
-  const handleBackClick = () => {
-    navigateToRecipe(recipe_id, form.getValues());
-  };
-
-  const handleSaveRecipe = async () => {
+  // Performs background auto-save or manual Cmd+S save
+  const performAutoSave = useCallback(async () => {
     const values = form.getValues();
-
-    if (!isRecipeValid(values)) {
-      notifications.show({
-        title: "Incomplete Recipe",
-        message: "Please ensure all required fields are filled out correctly before saving.",
-        color: "red",
-      });
+    if (!values.id || !isRecipeValid(values)) {
       return;
     }
 
-    const updateData: RecipeUpdate & { id: string } = {
-      id: values.id,
+    const currentSnapshot = getRecipeSnapshot(values);
+    if (currentSnapshot === lastSavedSnapshotRef.current) {
+      return;
+    }
+
+    setAutoSaveStatus('saving');
+
+    const updateData: RecipeUpdate = {
       title: values.title,
       description: values.description,
       tags: values.tags,
@@ -127,7 +147,7 @@ export default function EditRecipePage() {
       serving_size: values.serving_size,
       ingredients: values.ingredients.map((ing) => ({
         name: ing.name,
-        quantity: ing.quantity,
+        quantity: Number(ing.quantity) || 0,
         unit: ing.unit,
         subtext: ing.subtext,
         order_index: ing.order_index,
@@ -140,23 +160,94 @@ export default function EditRecipePage() {
       })),
     };
 
-    updateRecipe(updateData, {
-      onSuccess: () => {
-        notifications.show({
-          title: "Recipe Updated",
-          message: "The recipe has been updated successfully.",
-          color: "teal",
-        });
-        navigateToRecipe(values.id, values);
-      },
-      onError: (err) => {
-        notifications.show({
-          title: "Error Updating Recipe",
-          message: formatNotificationError(err),
-          color: "red",
-        });
-      },
-    });
+    try {
+      await recipeApi.updateRecipe(values.id, updateData);
+      lastSavedSnapshotRef.current = getRecipeSnapshot(form.getValues());
+      setAutoSaveStatus('saved');
+      setLastSavedAt(new Date());
+    } catch {
+      setAutoSaveStatus('error');
+    }
+  }, [form]);
+
+  // Watch for form changes to trigger debounced auto-save and update validation HUD
+  const handleFormChange = useCallback(() => {
+    if (!hasInitialized.current) return;
+
+    const values = form.getValues();
+    setValidationStatus(getRecipeValidationStatus(values));
+
+    const currentSnapshot = getRecipeSnapshot(values);
+    if (currentSnapshot === lastSavedSnapshotRef.current) {
+      if (autoSaveStatus === 'unsaved') {
+        setAutoSaveStatus('saved');
+      }
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Mark as unsaved
+    setAutoSaveStatus('unsaved');
+
+    // Debounce auto-save (1200ms)
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    autoSaveTimerRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 1200);
+  }, [form, autoSaveStatus, performAutoSave]);
+
+  // Set up form watchers in an effect to avoid reading refs during render
+  useEffect(() => {
+    const unsubscribers = [
+      form.watch('title', handleFormChange),
+      form.watch('description', handleFormChange),
+      form.watch('tags', handleFormChange),
+      form.watch('cooking_time', handleFormChange),
+      form.watch('serving_size', handleFormChange),
+      form.watch('ingredients', handleFormChange),
+      form.watch('instructions', handleFormChange),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsub) => unsub());
+    };
+  }, [form, handleFormChange]);
+
+  // Keyboard shortcut: Cmd+S / Ctrl+S to trigger immediate save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (autoSaveTimerRef.current) {
+          clearTimeout(autoSaveTimerRef.current);
+          autoSaveTimerRef.current = null;
+        }
+        performAutoSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [performAutoSave]);
+
+  // Clean up auto-save timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const hasPermission = auth.isAuthenticated && canEdit;
+
+  const handleBackClick = () => {
+    navigateToRecipe(recipe_id, form.getValues());
   };
 
   if (isLoading) {
@@ -194,14 +285,13 @@ export default function EditRecipePage() {
         <RecipeEditHeader
           title="Edit Recipe"
           mode="edit"
-          isPending={isUpdating}
           validationStatus={validationStatus}
-          onSave={handleSaveRecipe}
+          autoSaveStatus={autoSaveStatus}
+          lastSavedAt={lastSavedAt}
           onBack={handleBackClick}
           isAdminOverride={isAdminOverride}
           authorName={authorName}
         />
-
         <EditRecipe form={form} />
       </Stack>
     </Container>

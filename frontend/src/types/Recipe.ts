@@ -63,10 +63,18 @@ export interface RecipeUpdate {
   instructions?: InstructionForRecipe[];
 }
 
-// Recipe response interfaces matching backend schemas
-export type RecipeResponse = Recipe
+export interface RecipePatch {
+  title?: string;
+  description?: string;
+  tags?: string[];
+  cooking_time?: number;
+  serving_size?: number;
+}
 
-export type RecipeDetailResponse = RecipeDetail
+// Recipe response interfaces matching backend schemas
+export type RecipeResponse = Recipe;
+
+export type RecipeDetailResponse = RecipeDetail;
 
 // Search parameters matching backend RecipeSearchParams
 export interface RecipeSearchParams {

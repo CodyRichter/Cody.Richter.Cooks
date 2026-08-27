@@ -10,7 +10,23 @@ from app.models.instruction import Instruction
 from app.models.recipe import Recipe
 from app.models.recipe_permission import RecipePermission, PermissionRole
 from app.models.user import User
-from app.schemas.recipe import RecipeCreate, RecipeDetail, RecipeListItem, RecipeList
+from app.schemas.recipe import (
+    RecipeCreate,
+    RecipeDetail,
+    RecipePatch,
+    RecipeListItem,
+    RecipeList,
+)
+from app.schemas.instruction import (
+    InstructionCreate,
+    InstructionPatch,
+    InstructionSchema,
+)
+from app.schemas.ingredient import (
+    IngredientCreate,
+    IngredientPatch,
+    IngredientSchema,
+)
 from app.schemas.recipe_permission import RecipePermissionDetail
 from app.utils.helpers import enforce_recipe_permissions, get_user_recipe_permission
 
@@ -114,6 +130,363 @@ def update_recipe_internal(
     db.refresh(recipe)
 
     return RecipeDetail.model_validate(recipe)
+
+
+def patch_recipe_internal(
+    recipe_id: str, patch_data: RecipePatch, current_user: User, db: Session
+) -> RecipeDetail:
+    """
+    Partially update recipe metadata.
+    """
+    enforce_recipe_permissions(
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
+    )
+
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
+
+    update_data = patch_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(recipe, field, value)
+
+    db.commit()
+    db.refresh(recipe)
+
+    return get_recipe_internal(recipe_id, db)
+
+
+def add_instruction_internal(
+    recipe_id: str,
+    instruction_data: InstructionCreate,
+    current_user: User,
+    db: Session,
+) -> InstructionSchema:
+    """
+    Add a single instruction step to a recipe.
+    """
+    enforce_recipe_permissions(
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
+    )
+
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
+
+    existing_instructions = (
+        db.query(Instruction)
+        .filter(Instruction.recipe_id == recipe_id)
+        .order_by(Instruction.step_number.asc())
+        .all()
+    )
+
+    step_number = instruction_data.step_number
+    if step_number is None:
+        max_step = max([i.step_number for i in existing_instructions], default=0)
+        step_number = max_step + 1
+    else:
+        # Shift existing steps with step_number >= new step_number
+        for existing in existing_instructions:
+            if existing.step_number >= step_number:
+                existing.step_number += 1
+
+    new_instruction = Instruction(
+        title=instruction_data.title,
+        description=instruction_data.description,
+        step_number=step_number,
+        timing=instruction_data.timing,
+        recipe_id=recipe_id,
+    )
+
+    db.add(new_instruction)
+    db.commit()
+    db.refresh(new_instruction)
+
+    return InstructionSchema.model_validate(new_instruction)
+
+
+def patch_instruction_internal(
+    recipe_id: str,
+    step_or_id: str,
+    instruction_data: InstructionPatch,
+    current_user: User,
+    db: Session,
+) -> InstructionSchema:
+    """
+    Partially update a specific instruction step by instruction ID or step number.
+    """
+    enforce_recipe_permissions(
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
+    )
+
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
+
+    instruction = (
+        db.query(Instruction)
+        .filter(Instruction.recipe_id == recipe_id, Instruction.id == step_or_id)
+        .first()
+    )
+    if not instruction and step_or_id.isdigit():
+        instruction = (
+            db.query(Instruction)
+            .filter(
+                Instruction.recipe_id == recipe_id,
+                Instruction.step_number == int(step_or_id),
+            )
+            .first()
+        )
+
+    if not instruction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Instruction not found"
+        )
+
+    update_data = instruction_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(instruction, field, value)
+
+    db.commit()
+    db.refresh(instruction)
+
+    return InstructionSchema.model_validate(instruction)
+
+
+def delete_instruction_internal(
+    recipe_id: str,
+    step_or_id: str,
+    current_user: User,
+    db: Session,
+) -> None:
+    """
+    Delete a specific instruction step and re-sequence remaining steps.
+    """
+    enforce_recipe_permissions(
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
+    )
+
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
+
+    instruction = (
+        db.query(Instruction)
+        .filter(Instruction.recipe_id == recipe_id, Instruction.id == step_or_id)
+        .first()
+    )
+    if not instruction and step_or_id.isdigit():
+        instruction = (
+            db.query(Instruction)
+            .filter(
+                Instruction.recipe_id == recipe_id,
+                Instruction.step_number == int(step_or_id),
+            )
+            .first()
+        )
+
+    if not instruction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Instruction not found"
+        )
+
+    deleted_id = instruction.id
+    db.delete(instruction)
+    db.flush()
+
+    # Re-sequence remaining instructions
+    remaining = (
+        db.query(Instruction)
+        .filter(Instruction.recipe_id == recipe_id, Instruction.id != deleted_id)
+        .order_by(Instruction.step_number.asc())
+        .all()
+    )
+    for idx, inst in enumerate(remaining, start=1):
+        inst.step_number = idx
+
+    db.commit()
+
+
+def add_ingredient_internal(
+    recipe_id: str,
+    ingredient_data: IngredientCreate,
+    current_user: User,
+    db: Session,
+) -> IngredientSchema:
+    """
+    Add a single ingredient to a recipe.
+    """
+    enforce_recipe_permissions(
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
+    )
+
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
+
+    existing_ingredients = (
+        db.query(Ingredient)
+        .filter(Ingredient.recipe_id == recipe_id)
+        .order_by(Ingredient.order_index.asc())
+        .all()
+    )
+
+    order_index = ingredient_data.order_index
+    if order_index is None:
+        max_order = max([i.order_index for i in existing_ingredients], default=-1)
+        order_index = max_order + 1
+
+    new_ingredient = Ingredient(
+        name=ingredient_data.name,
+        quantity=ingredient_data.quantity,
+        unit=ingredient_data.unit,
+        subtext=ingredient_data.subtext,
+        order_index=order_index,
+        recipe_id=recipe_id,
+    )
+
+    db.add(new_ingredient)
+    db.commit()
+    db.refresh(new_ingredient)
+
+    return IngredientSchema.model_validate(new_ingredient)
+
+
+def patch_ingredient_internal(
+    recipe_id: str,
+    ingredient_id: str,
+    ingredient_data: IngredientPatch,
+    current_user: User,
+    db: Session,
+) -> IngredientSchema:
+    """
+    Partially update a specific ingredient.
+    """
+    enforce_recipe_permissions(
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
+    )
+
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
+
+    ingredient = (
+        db.query(Ingredient)
+        .filter(Ingredient.recipe_id == recipe_id, Ingredient.id == ingredient_id)
+        .first()
+    )
+    if not ingredient and ingredient_id.isdigit():
+        ingredient = (
+            db.query(Ingredient)
+            .filter(
+                Ingredient.recipe_id == recipe_id,
+                Ingredient.order_index == int(ingredient_id),
+            )
+            .first()
+        )
+
+    if not ingredient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found"
+        )
+
+    update_data = ingredient_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(ingredient, field, value)
+
+    db.commit()
+    db.refresh(ingredient)
+
+    return IngredientSchema.model_validate(ingredient)
+
+
+def delete_ingredient_internal(
+    recipe_id: str,
+    ingredient_id: str,
+    current_user: User,
+    db: Session,
+) -> None:
+    """
+    Delete a specific ingredient from a recipe.
+    """
+    enforce_recipe_permissions(
+        db,
+        current_user,
+        recipe_id,
+        required_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
+    )
+
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found"
+        )
+
+    ingredient = (
+        db.query(Ingredient)
+        .filter(Ingredient.recipe_id == recipe_id, Ingredient.id == ingredient_id)
+        .first()
+    )
+    if not ingredient and ingredient_id.isdigit():
+        ingredient = (
+            db.query(Ingredient)
+            .filter(
+                Ingredient.recipe_id == recipe_id,
+                Ingredient.order_index == int(ingredient_id),
+            )
+            .first()
+        )
+
+    if not ingredient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found"
+        )
+
+    deleted_id = ingredient.id
+    db.delete(ingredient)
+    db.flush()
+
+    # Re-sequence remaining ingredients order_index
+    remaining = (
+        db.query(Ingredient)
+        .filter(Ingredient.recipe_id == recipe_id, Ingredient.id != deleted_id)
+        .order_by(Ingredient.order_index.asc())
+        .all()
+    )
+    for idx, ing in enumerate(remaining):
+        ing.order_index = idx
+
+    db.commit()
 
 
 def delete_recipe_internal(

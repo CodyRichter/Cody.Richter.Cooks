@@ -52,6 +52,70 @@ class IngredientSchema(BaseModel):
     )
 
 
+class IngredientCreate(BaseModel):
+    """Schema for adding a single ingredient to a recipe."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Name of the ingredient"
+    )
+    quantity: float = Field(..., ge=0, description="Quantity of the ingredient")
+    unit: str = Field(
+        ..., min_length=1, max_length=50, description="Unit of measurement"
+    )
+    subtext: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Additional ingredient notes or preparation instructions",
+    )
+    order_index: Optional[int] = Field(
+        None, ge=0, description="Order of ingredient in the recipe"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Pecorino Romano",
+                "quantity": 50.0,
+                "unit": "g",
+                "subtext": "finely grated",
+                "order_index": 2,
+            }
+        }
+    )
+
+
+class IngredientPatch(BaseModel):
+    """Schema for partially updating an ingredient."""
+
+    name: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Name of the ingredient"
+    )
+    quantity: Optional[float] = Field(
+        None, ge=0, description="Quantity of the ingredient"
+    )
+    unit: Optional[str] = Field(
+        None, min_length=1, max_length=50, description="Unit of measurement"
+    )
+    subtext: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Additional ingredient notes or preparation instructions",
+    )
+    order_index: Optional[int] = Field(
+        None, ge=0, description="Order of ingredient in the recipe"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "quantity": 75.0,
+                "unit": "g",
+                "subtext": "freshly grated",
+            }
+        }
+    )
+
+
 class IngredientListCreate(BaseModel):
     """Schema for creating multiple ingredients at once."""
 
@@ -107,6 +171,5 @@ class IngredientListResponse(BaseModel):
 
 
 # Convenience type aliases for clarity
-IngredientCreate = IngredientSchema
-IngredientUpdate = IngredientSchema
+IngredientUpdate = IngredientPatch
 IngredientResponse = IngredientSchema

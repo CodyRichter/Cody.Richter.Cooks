@@ -1,7 +1,9 @@
 import { apiClient } from '@/utils/apiClient'
 import { createApiService } from '@/utils/createApiService'
 import { User, UserRegistration, TokenResponse, LoginRequest, UserUpdate, TokenRefreshResponse } from '@/types/User'
-import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipeSearchParams } from '@/types/Recipe'
+import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
+import { InstructionStep, InstructionCreate, InstructionPatch } from '@/types/InstructionStep'
+import { Ingredient, IngredientCreate, IngredientPatch } from '@/types/Ingredient'
 
 // Auth API - specialized due to different patterns
 export const authApi = {
@@ -68,8 +70,31 @@ export const recipeApi = {
   updateRecipe: (id: string, recipeData: RecipeUpdate): Promise<RecipeDetail> =>
     baseRecipeService.update(id, recipeData) as Promise<RecipeDetail>,
 
+  patchRecipe: (id: string, patchData: RecipePatch): Promise<RecipeDetail> =>
+    apiClient.patch(`/api/v1/recipes/${id}`, patchData),
+
   deleteRecipe: (id: string): Promise<void> =>
-    baseRecipeService.delete(id)
+    baseRecipeService.delete(id),
+
+  // Granular Instruction methods
+  addInstruction: (recipeId: string, data: InstructionCreate): Promise<InstructionStep> =>
+    apiClient.post(`/api/v1/recipes/${recipeId}/instructions`, data),
+
+  patchInstruction: (recipeId: string, stepOrId: string | number, data: InstructionPatch): Promise<InstructionStep> =>
+    apiClient.patch(`/api/v1/recipes/${recipeId}/instructions/${stepOrId}`, data),
+
+  deleteInstruction: (recipeId: string, stepOrId: string | number): Promise<void> =>
+    apiClient.delete(`/api/v1/recipes/${recipeId}/instructions/${stepOrId}`),
+
+  // Granular Ingredient methods
+  addIngredient: (recipeId: string, data: IngredientCreate): Promise<Ingredient> =>
+    apiClient.post(`/api/v1/recipes/${recipeId}/ingredients`, data),
+
+  patchIngredient: (recipeId: string, ingredientId: string | number, data: IngredientPatch): Promise<Ingredient> =>
+    apiClient.patch(`/api/v1/recipes/${recipeId}/ingredients/${ingredientId}`, data),
+
+  deleteIngredient: (recipeId: string, ingredientId: string | number): Promise<void> =>
+    apiClient.delete(`/api/v1/recipes/${recipeId}/ingredients/${ingredientId}`)
 }
 
 export const recipePermissionApi = {

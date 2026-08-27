@@ -55,6 +55,79 @@ class InstructionSchema(BaseModel):
         return v
 
 
+class InstructionCreate(BaseModel):
+    """Schema for adding a single instruction step."""
+
+    title: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Title of the instruction step"
+    )
+    description: str = Field(
+        ..., min_length=1, description="HTML description of the instruction step"
+    )
+    step_number: Optional[int] = Field(
+        None,
+        ge=1,
+        description="Order of the instruction step (auto-assigned if omitted)",
+    )
+    timing: Optional[int] = Field(
+        None, ge=1, description="Optional timing for this step in minutes"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "Season with Black Pepper",
+                "description": "<p>Grind generous amounts of fresh black pepper over the pasta and serve immediately.</p>",
+                "step_number": 3,
+                "timing": 2,
+            }
+        }
+    )
+
+    @field_validator("description")
+    @classmethod
+    def validate_html_content(cls, v):
+        """Validate HTML content using centralized validator."""
+        if v is not None:
+            return validate_instruction_description(v)
+        return v
+
+
+class InstructionPatch(BaseModel):
+    """Schema for partially updating an instruction step."""
+
+    title: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Title of the instruction step"
+    )
+    description: Optional[str] = Field(
+        None, min_length=1, description="HTML description of the instruction step"
+    )
+    step_number: Optional[int] = Field(
+        None, ge=1, description="Order of the instruction step"
+    )
+    timing: Optional[int] = Field(
+        None, ge=1, description="Optional timing for this step in minutes"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "Crisp Guanciale & Toss Thoroughly",
+                "timing": 10,
+                "description": "<p>Crisp guanciale in a pan until golden and rendered, toss hot pasta off heat.</p>",
+            }
+        }
+    )
+
+    @field_validator("description")
+    @classmethod
+    def validate_html_content(cls, v):
+        """Validate HTML content using centralized validator."""
+        if v is not None:
+            return validate_instruction_description(v)
+        return v
+
+
 class InstructionListCreate(BaseModel):
     """Schema for creating multiple instructions at once."""
 
@@ -110,6 +183,5 @@ class InstructionListResponse(BaseModel):
 
 
 # Convenience type aliases for clarity
-InstructionCreate = InstructionSchema
-InstructionUpdate = InstructionSchema
+InstructionUpdate = InstructionPatch
 InstructionResponse = InstructionSchema
