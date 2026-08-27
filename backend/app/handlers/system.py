@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime, timezone
 
 from app.core.config import settings
@@ -17,13 +17,25 @@ class HealthcheckResponse(BaseModel):
     database_connected: bool
     service: str
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "status": "healthy",
+                "timestamp": "2026-01-15T12:00:00Z",
+                "version": "1.0.0",
+                "database_connected": True,
+                "service": "Cody Richter Cooks API",
+            }
+        }
+    )
+
 
 @router.get(
     "/health/",
     response_model=HealthcheckResponse,
     status_code=status.HTTP_200_OK,
-    summary="Health Check",
-    description="Check the health status of the API service and its dependencies",
+    summary="Check API and Database Health",
+    description="Check the operational health status of the API service and its database connectivity. Use this tool to verify system availability before executing recipe or authentication operations.",
 )
 async def health_check() -> HealthcheckResponse:
     """

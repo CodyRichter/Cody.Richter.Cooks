@@ -31,7 +31,59 @@ class RecipeDetail(BaseModel):
     created_at: datetime = Field(None, description="Creation timestamp")
     updated_at: datetime = Field(None, description="Last update timestamp")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "R-1GL2S-18XXB",
+                "title": "Classic Spaghetti Carbonara",
+                "description": "<p>A traditional Roman pasta dish made with eggs, Pecorino Romano, guanciale, and black pepper.</p>",
+                "tags": ["pasta", "italian", "dinner"],
+                "cooking_time": 25,
+                "serving_size": 4,
+                "ingredients": [
+                    {
+                        "id": "I-98765-43210",
+                        "name": "Spaghetti",
+                        "quantity": 400.0,
+                        "unit": "g",
+                        "subtext": "bronze-die cut preferred",
+                        "order_index": 0,
+                        "recipe_id": "R-1GL2S-18XXB",
+                    },
+                    {
+                        "id": "I-12345-67890",
+                        "name": "Guanciale",
+                        "quantity": 150.0,
+                        "unit": "g",
+                        "subtext": "diced into thick strips",
+                        "order_index": 1,
+                        "recipe_id": "R-1GL2S-18XXB",
+                    },
+                ],
+                "instructions": [
+                    {
+                        "id": "S-11111-22222",
+                        "title": "Boil Pasta",
+                        "description": "<p>Bring a large pot of salted water to a rolling boil and cook spaghetti until al dente.</p>",
+                        "step_number": 1,
+                        "timing": 10,
+                        "recipe_id": "R-1GL2S-18XXB",
+                    },
+                    {
+                        "id": "S-33333-44444",
+                        "title": "Crisp Guanciale & Toss",
+                        "description": "<p>Crisp guanciale in a pan, toss hot pasta with whisked eggs and cheese off heat.</p>",
+                        "step_number": 2,
+                        "timing": 8,
+                        "recipe_id": "R-1GL2S-18XXB",
+                    },
+                ],
+                "created_at": "2026-01-15T12:00:00Z",
+                "updated_at": "2026-01-15T12:30:00Z",
+            }
+        },
+    )
 
     @field_validator("description")
     @classmethod
@@ -61,6 +113,48 @@ class RecipeCreate(BaseModel):
         default_factory=list, description="Recipe instructions"
     )
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "Classic Spaghetti Carbonara",
+                "description": "<p>A traditional Roman pasta dish made with eggs, Pecorino Romano, guanciale, and black pepper.</p>",
+                "tags": ["pasta", "italian", "dinner"],
+                "cooking_time": 25,
+                "serving_size": 4,
+                "ingredients": [
+                    {
+                        "name": "Spaghetti",
+                        "quantity": 400.0,
+                        "unit": "g",
+                        "subtext": "bronze-die cut preferred",
+                        "order_index": 0,
+                    },
+                    {
+                        "name": "Guanciale",
+                        "quantity": 150.0,
+                        "unit": "g",
+                        "subtext": "diced into thick strips",
+                        "order_index": 1,
+                    },
+                ],
+                "instructions": [
+                    {
+                        "title": "Boil Pasta",
+                        "description": "<p>Bring a large pot of salted water to a rolling boil and cook spaghetti until al dente.</p>",
+                        "step_number": 1,
+                        "timing": 10,
+                    },
+                    {
+                        "title": "Crisp Guanciale & Toss",
+                        "description": "<p>Crisp guanciale in a pan, toss hot pasta with whisked eggs and cheese off heat.</p>",
+                        "step_number": 2,
+                        "timing": 8,
+                    },
+                ],
+            }
+        }
+    )
+
     @field_validator("description")
     @classmethod
     def validate_html_content(cls, v):
@@ -84,11 +178,35 @@ class RecipeSearchParams(BaseModel):
     page: int = Field(1, ge=1, description="Page number for pagination")
     limit: int = Field(20, ge=1, le=100, description="Number of items per page")
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "q": "carbonara",
+                "cooking_time_max": 30,
+                "serving_size_min": 2,
+                "serving_size_max": 6,
+                "page": 1,
+                "limit": 20,
+            }
+        }
+    )
+
 
 class RecipeListItem(BaseModel):
     """Schema for recipe list items (summary view)."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "R-1GL2S-18XXB",
+                "title": "Classic Spaghetti Carbonara",
+                "cooking_time": 25,
+                "serving_size": 4,
+                "created_at": "2026-01-15T12:00:00Z",
+            }
+        },
+    )
 
     id: str
     title: str
@@ -106,6 +224,27 @@ class RecipeList(BaseModel):
     total: int
     page: int
     limit: int
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "items": [
+                    {
+                        "id": "R-1GL2S-18XXB",
+                        "title": "Classic Spaghetti Carbonara",
+                        "cooking_time": 25,
+                        "serving_size": 4,
+                        "created_at": "2026-01-15T12:00:00Z",
+                    }
+                ],
+                "has_next": False,
+                "has_prev": False,
+                "total": 1,
+                "page": 1,
+                "limit": 20,
+            }
+        }
+    )
 
 
 # Import here to avoid circular imports

@@ -25,7 +25,19 @@ class UserSchema(BaseModel):
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "U-12345-ABCDE",
+                "username": "chef_cody",
+                "email": "cody@example.com",
+                "is_admin": False,
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z",
+            }
+        },
+    )
 
 
 class UserCreateSchema(BaseModel):
@@ -39,17 +51,47 @@ class UserCreateSchema(BaseModel):
         ..., min_length=8, max_length=128, description="User password"
     )
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "username": "chef_cody",
+                "email": "cody@example.com",
+                "password": "SuperSecretPassword123!",
+            }
+        }
+    )
+
 
 class UserUpdateSchema(UserCreateSchema):
     """Schema for updating user information."""
 
-    pass
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "username": "chef_cody_updated",
+                "email": "cody_new@example.com",
+                "password": "NewSecretPassword456!",
+            }
+        }
+    )
 
 
 class UserResponseSchema(BaseModel):
     """Schema for user API responses (excludes sensitive data)."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "U-12345-ABCDE",
+                "username": "chef_cody",
+                "email": "cody@example.com",
+                "is_admin": False,
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z",
+            }
+        },
+    )
 
     id: str
     username: str
@@ -65,6 +107,15 @@ class UserLogin(BaseModel):
     username: str = Field(..., description="Username or email for login")
     password: str = Field(..., description="User password")
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "username": "chef_cody",
+                "password": "SuperSecretPassword123!",
+            }
+        }
+    )
+
 
 class UserChangePassword(BaseModel):
     """Schema for password change requests."""
@@ -72,4 +123,13 @@ class UserChangePassword(BaseModel):
     current_password: str = Field(..., description="Current user password")
     new_password: str = Field(
         ..., min_length=8, max_length=128, description="New user password"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "current_password": "SuperSecretPassword123!",
+                "new_password": "BrandNewPassword789!",
+            }
+        }
     )

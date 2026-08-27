@@ -3,15 +3,47 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.ingredient import IngredientSchema
-from app.schemas.instruction import InstructionSchema
-from app.schemas.recipe import RecipeDetail
+from app.schemas.ingredient import (
+    IngredientSchema,
+    IngredientListCreate,
+    IngredientListResponse,
+)
+from app.schemas.instruction import (
+    InstructionSchema,
+    InstructionListCreate,
+    InstructionListResponse,
+)
+from app.schemas.recipe import (
+    RecipeDetail,
+    RecipeCreate,
+    RecipeSearchParams,
+    RecipeListItem,
+    RecipeList,
+)
 from app.schemas.recipe_permission import (
     RecipePermissionDetail,
     GrantPermissionRequest,
+    RevokePermissionRequest,
+    RecipePermissionList,
     PermissionRole,
 )
-from app.schemas.user import UserSchema
+from app.schemas.user import (
+    UserSchema,
+    UserCreateSchema,
+    UserUpdateSchema,
+    UserResponseSchema,
+    UserLogin,
+    UserChangePassword,
+)
+from app.schemas.auth import (
+    AuthTokenResponse,
+    AuthTokenRefreshRequest,
+    AuthTokenRefreshResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
+from app.handlers.system import HealthcheckResponse
+from app.main import app
 
 
 @pytest.mark.unit
@@ -303,3 +335,78 @@ class TestGrantPermissionRequest:
         request_data = {"username": "testuser"}
         request = GrantPermissionRequest(**request_data)
         assert request.role == PermissionRole.EDITOR  # Default value
+
+
+@pytest.mark.unit
+class TestSchemaExamplesAndDiscoverability:
+    """Test that all schemas have json_schema_extra examples for agent discoverability."""
+
+    @pytest.mark.parametrize(
+        "schema_cls",
+        [
+            RecipeDetail,
+            RecipeCreate,
+            RecipeSearchParams,
+            RecipeListItem,
+            RecipeList,
+            IngredientSchema,
+            IngredientListCreate,
+            IngredientListResponse,
+            InstructionSchema,
+            InstructionListCreate,
+            InstructionListResponse,
+            UserSchema,
+            UserCreateSchema,
+            UserUpdateSchema,
+            UserResponseSchema,
+            UserLogin,
+            UserChangePassword,
+            AuthTokenResponse,
+            AuthTokenRefreshRequest,
+            AuthTokenRefreshResponse,
+            ForgotPasswordRequest,
+            ResetPasswordRequest,
+            RecipePermissionDetail,
+            GrantPermissionRequest,
+            RevokePermissionRequest,
+            RecipePermissionList,
+            HealthcheckResponse,
+        ],
+    )
+    def test_schema_has_json_schema_extra_example(self, schema_cls):
+        """Verify that schema contains example documentation for autonomous agents."""
+        json_schema = schema_cls.model_json_schema()
+        assert (
+            "example" in json_schema or "examples" in json_schema
+        ), f"{schema_cls.__name__} is missing example in model_json_schema()"
+
+    def test_openapi_schema_endpoint_summaries_and_descriptions(self):
+        """Verify that OpenAPI spec contains semantic summaries and descriptions for endpoints."""
+        openapi = app.openapi()
+        assert "paths" in openapi
+
+        # Check key endpoints for summaries and descriptions
+        paths_to_check = [
+            ("/api/v1/recipes/", "post"),
+            ("/api/v1/recipes/", "get"),
+            ("/api/v1/recipes/{recipe_id}/", "get"),
+            ("/api/v1/recipes/{recipe_id}/", "put"),
+            ("/api/v1/recipes/{recipe_id}/", "delete"),
+            ("/api/v1/recipes/my-recipes/", "get"),
+            ("/api/v1/users/register/", "post"),
+            ("/api/v1/users/login/", "post"),
+            ("/api/v1/users/profile/", "get"),
+            ("/api/v1/system/health/", "get"),
+        ]
+
+        for path, method in paths_to_check:
+            assert (
+                path in openapi["paths"]
+            ), f"Endpoint path {path} not found in OpenAPI"
+            op = openapi["paths"][path][method]
+            assert (
+                "summary" in op and len(op["summary"]) > 0
+            ), f"Summary missing for {method.upper()} {path}"
+            assert (
+                "description" in op and len(op["description"]) > 0
+            ), f"Description missing for {method.upper()} {path}"

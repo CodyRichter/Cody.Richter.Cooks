@@ -22,7 +22,13 @@ from app.utils.auth import get_current_active_user, get_current_user_optional
 router = APIRouter(prefix="/api/v1/recipes", tags=["recipes"])
 
 
-@router.post("/", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=RecipeDetail,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new recipe",
+    description="Create a complete new recipe including title, description (HTML), tags, cooking time, serving size, ingredients, and instructions. The authenticated user is automatically assigned as the recipe owner. Use this tool when you have fully drafted recipe details ready to save.",
+)
 async def create_recipe(
     recipe_data: RecipeCreate,
     current_user: User = Depends(get_current_active_user),
@@ -42,7 +48,12 @@ async def create_recipe(
     return create_recipe_internal(recipe_data, current_user, db)
 
 
-@router.get("/my-recipes/", response_model=RecipeList)
+@router.get(
+    "/my-recipes/",
+    response_model=RecipeList,
+    summary="List current user recipes",
+    description="Retrieve a paginated list of recipes owned by or accessible to the currently authenticated user. Use this tool to view or manage the user's personal recipe collection.",
+)
 async def get_my_recipes(
     current_user: User = Depends(get_current_active_user),
     page: int = Query(1, ge=1, description="Page number for pagination"),
@@ -69,7 +80,12 @@ async def get_my_recipes(
     )
 
 
-@router.get("/{recipe_id}/", response_model=RecipeDetail)
+@router.get(
+    "/{recipe_id}/",
+    response_model=RecipeDetail,
+    summary="Get recipe details by ID",
+    description="Retrieve full details for a single recipe by its ID, including complete ingredient lists, ordered instruction steps, metadata, and timestamps. Public endpoint. Use this tool when you have a recipe ID and need its full recipe instructions or ingredient breakdown.",
+)
 async def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
     """
     Get a recipe by ID with all ingredients and instructions. Public endpoint - anyone can view recipes.
@@ -87,7 +103,12 @@ async def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
     return get_recipe_internal(recipe_id, db)
 
 
-@router.put("/{recipe_id}/", response_model=RecipeDetail)
+@router.put(
+    "/{recipe_id}/",
+    response_model=RecipeDetail,
+    summary="Update entire recipe",
+    description="Update all details of an existing recipe by ID. Caller must be the recipe owner or an editor. Use this tool to replace or update recipe metadata, tags, ingredients, or instructions.",
+)
 async def update_recipe(
     recipe_id: str,
     recipe_data: RecipeDetail,
@@ -112,7 +133,12 @@ async def update_recipe(
     return update_recipe_internal(recipe_id, recipe_data, current_user, db)
 
 
-@router.delete("/{recipe_id}/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{recipe_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete recipe by ID",
+    description="Permanently delete a recipe and all associated ingredients, instructions, and permissions. Only the recipe owner can perform this operation. Use this tool when a user explicitly requests deleting a recipe.",
+)
 async def delete_recipe(
     recipe_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -132,7 +158,12 @@ async def delete_recipe(
     delete_recipe_internal(recipe_id, current_user, db)
 
 
-@router.get("/", response_model=RecipeList)
+@router.get(
+    "/",
+    response_model=RecipeList,
+    summary="Search and list public recipes",
+    description="Search and browse public recipes with pagination. Supports fuzzy search on recipe titles using the 'q' parameter. Use this tool for recipe discovery, browsing, or title searching.",
+)
 async def list_recipes(
     q: Optional[str] = Query(None, description="Search query for recipe title"),
     page: int = Query(1, ge=1, description="Page number for pagination"),
@@ -160,7 +191,12 @@ async def list_recipes(
     )
 
 
-@router.get("/user/{user_id}/", response_model=RecipeList)
+@router.get(
+    "/user/{user_id}/",
+    response_model=RecipeList,
+    summary="List recipes by author user ID",
+    description="Retrieve a paginated list of public recipes created by a specific user ID. Use this tool to explore all recipes authored by a specific user.",
+)
 async def list_recipes_for_user(
     user_id: str,
     page: int = Query(1, ge=1, description="Page number for pagination"),
@@ -191,6 +227,8 @@ async def list_recipes_for_user(
     "/{recipe_id}/permissions/",
     response_model=RecipePermissionDetail,
     status_code=status.HTTP_201_CREATED,
+    summary="Grant recipe permission to user",
+    description="Grant 'editor' or 'owner' permission for a recipe to another user by their username. Only the recipe owner can grant permissions. Use this tool when sharing collaborative recipe editing access.",
 )
 async def grant_recipe_permission(
     recipe_id: str,
@@ -223,7 +261,10 @@ async def grant_recipe_permission(
 
 
 @router.delete(
-    "/{recipe_id}/permissions/{user_id}/", status_code=status.HTTP_204_NO_CONTENT
+    "/{recipe_id}/permissions/{user_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revoke recipe permission from user",
+    description="Revoke an existing recipe permission from a user by user ID. Only the recipe owner can revoke permissions (cannot revoke own ownership). Use this tool to remove collaborator access from a recipe.",
 )
 async def revoke_recipe_permission(
     recipe_id: str,
@@ -233,9 +274,7 @@ async def revoke_recipe_permission(
 ):
     """
     Revoke permission from a user for a recipe. Only the owner can revoke permissions.
-    The owner cannot revoke their own permission.
-
-    Args:
+    The owner cannot revoke their own permission.\n\n    Args:
         recipe_id: Recipe ID
         user_id: User ID of user that will have permission revoked
         current_user: Current authenticated user
@@ -249,7 +288,12 @@ async def revoke_recipe_permission(
     )
 
 
-@router.get("/{recipe_id}/permissions/", response_model=List[RecipePermissionDetail])
+@router.get(
+    "/{recipe_id}/permissions/",
+    response_model=List[RecipePermissionDetail],
+    summary="List recipe permissions",
+    description="List all permission grants and collaborator details for a recipe. Requires owner or editor permission on the recipe. Use this tool to inspect access rights and collaborator lists before changing permissions.",
+)
 async def list_recipe_permissions(
     recipe_id: str,
     current_user: Optional[User] = Depends(get_current_user_optional),

@@ -4,7 +4,7 @@ RecipePermission Pydantic schemas for API serialization and validation.
 
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 
 
@@ -39,7 +39,20 @@ class RecipePermissionDetail(BaseModel):
         None, description="Email of the user with permission"
     )
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "RP-12345-ABCDE",
+                "role": "editor",
+                "user_id": "U-98765-XYZWV",
+                "recipe_id": "R-1GL2S-18XXB",
+                "granted_at": "2026-01-15T12:00:00Z",
+                "user_username": "sous_chef",
+                "user_email": "souschef@example.com",
+            }
+        },
+    )
 
 
 class GrantPermissionRequest(BaseModel):
@@ -50,12 +63,43 @@ class GrantPermissionRequest(BaseModel):
         default=PermissionRole.EDITOR, description="Permission role to grant"
     )
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "username": "sous_chef",
+                "role": "editor",
+            }
+        }
+    )
+
 
 class RevokePermissionRequest(BaseModel):
     """Schema for revoking recipe permissions."""
 
     user_id: str = Field(..., description="ID of user to revoke permission from")
 
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"user_id": "U-98765-XYZWV"}}
+    )
+
 
 class RecipePermissionList(BaseModel):
-    permissions: list[RecipePermissionDetail]
+    permissions: List[RecipePermissionDetail]
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "permissions": [
+                    {
+                        "id": "RP-12345-ABCDE",
+                        "role": "editor",
+                        "user_id": "U-98765-XYZWV",
+                        "recipe_id": "R-1GL2S-18XXB",
+                        "granted_at": "2026-01-15T12:00:00Z",
+                        "user_username": "sous_chef",
+                        "user_email": "souschef@example.com",
+                    }
+                ]
+            }
+        }
+    )

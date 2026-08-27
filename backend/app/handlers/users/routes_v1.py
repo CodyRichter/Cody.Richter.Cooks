@@ -38,7 +38,11 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.post(
-    "/register/", response_model=UserResponseSchema, status_code=status.HTTP_201_CREATED
+    "/register/",
+    response_model=UserResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register new user account",
+    description="Create a new user account with a unique username, email address, and strong password. Use this tool when registering a new user before authenticating.",
 )
 async def register_user(
     user_data: UserCreateSchema, request: Request, db: Session = Depends(get_db)
@@ -60,7 +64,12 @@ async def register_user(
     return register_user_internal(user_data, request, db)
 
 
-@router.post("/login/", response_model=AuthTokenResponse)
+@router.post(
+    "/login/",
+    response_model=AuthTokenResponse,
+    summary="User login and JWT token generation",
+    description="Authenticate with username/email and password to receive JWT access and refresh tokens along with user information. Use this tool to establish an authenticated session.",
+)
 async def login_user(
     login_data: UserLogin, request: Request, db: Session = Depends(get_db)
 ):
@@ -81,7 +90,12 @@ async def login_user(
     return login_user_internal(login_data, request, db)
 
 
-@router.get("/profile/", response_model=UserResponseSchema)
+@router.get(
+    "/profile/",
+    response_model=UserResponseSchema,
+    summary="Get current user profile",
+    description="Retrieve the profile details (ID, username, email, admin status, creation timestamp) of the currently authenticated user. Use this tool to verify authentication or retrieve user details.",
+)
 async def get_user_profile(current_user: User = Depends(get_current_active_user)):
     """
     Get current user's profile information.
@@ -95,7 +109,12 @@ async def get_user_profile(current_user: User = Depends(get_current_active_user)
     return get_user_profile_internal(current_user)
 
 
-@router.put("/profile/", response_model=UserResponseSchema)
+@router.put(
+    "/profile/",
+    response_model=UserResponseSchema,
+    summary="Update current user profile",
+    description="Update profile information such as username and email for the currently authenticated user. Use this tool when modifying account details.",
+)
 async def update_user_profile(
     profile_data: UserSchema,
     request: Request,
@@ -120,7 +139,12 @@ async def update_user_profile(
     return update_user_profile_internal(profile_data, request, current_user, db)
 
 
-@router.post("/change-password/", response_model=UserResponseSchema)
+@router.post(
+    "/change-password/",
+    response_model=UserResponseSchema,
+    summary="Change user password",
+    description="Change the password of the currently authenticated user by validating current password and supplying a new strong password. Use this tool when the authenticated user requests a password change.",
+)
 async def change_password(
     change_password_data: UserChangePassword,
     request: Request,
@@ -145,7 +169,12 @@ async def change_password(
     return change_password_internal(change_password_data, request, current_user, db)
 
 
-@router.post("/refresh/", response_model=AuthTokenRefreshResponse)
+@router.post(
+    "/refresh/",
+    response_model=AuthTokenRefreshResponse,
+    summary="Refresh JWT access token",
+    description="Exchange a valid JWT refresh token for a fresh JWT access token. Use this tool to maintain an active session when the access token has expired without re-authenticating with credentials.",
+)
 async def refresh_token(
     refresh_data: AuthTokenRefreshRequest,
     request: Request,
@@ -168,7 +197,11 @@ async def refresh_token(
     return refresh_token_internal(refresh_data, request, db)
 
 
-@router.post("/forgot-password/")
+@router.post(
+    "/forgot-password/",
+    summary="Request password reset email",
+    description="Initiate a password reset request for a given email address with captcha verification. Sends a password reset link to the email if the account exists.",
+)
 @router.post("/forgot-password", include_in_schema=False)
 async def forgot_password(
     request_data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)
@@ -176,12 +209,15 @@ async def forgot_password(
     """
     Handle forgot password requests.
     Sends a password reset email if the user exists.
-    Always returns a success message to prevent user enumeration.
-    """
+    Always returns a success message to prevent user enumeration.\n"""
     return await forgot_password_internal(request_data, request, db)
 
 
-@router.post("/reset-password/")
+@router.post(
+    "/reset-password/",
+    summary="Reset password with token",
+    description="Reset a user's password by submitting a valid password reset JWT token received via email and specifying a new strong password.",
+)
 @router.post("/reset-password", include_in_schema=False)
 async def reset_password(
     request_data: ResetPasswordRequest, request: Request, db: Session = Depends(get_db)
@@ -193,7 +229,11 @@ async def reset_password(
     return reset_password_internal(request_data, request, db)
 
 
-@router.get("/reset-password/verify/")
+@router.get(
+    "/reset-password/verify/",
+    summary="Verify password reset token",
+    description="Verify the authenticity and validity of a password reset token and return the associated username. Use this tool before prompting the user for the new password.",
+)
 @router.get("/reset-password/verify", include_in_schema=False)
 async def verify_reset_password_token(token: str, db: Session = Depends(get_db)):
     """

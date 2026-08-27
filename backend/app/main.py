@@ -72,7 +72,12 @@ app.include_router(recipes_router)
 
 
 # Root endpoint
-@app.get("/", tags=["root"])
+@app.get(
+    "/",
+    tags=["root"],
+    summary="Root API info",
+    description="Returns service name, current API version, and documentation URL if debug mode is active.",
+)
 async def root():
     """Root endpoint returning basic API information."""
     return {

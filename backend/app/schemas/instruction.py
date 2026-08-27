@@ -32,7 +32,19 @@ class InstructionSchema(BaseModel):
     # Response-only fields
     id: Optional[str] = Field(None, description="Instruction ID")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "S-11111-22222",
+                "title": "Preheat Oven & Prepare Pan",
+                "description": "<p>Preheat oven to 375°F (190°C). Grease a 9x13-inch baking pan with butter.</p>",
+                "step_number": 1,
+                "timing": 10,
+                "recipe_id": "R-1GL2S-18XXB",
+            }
+        },
+    )
 
     @field_validator("description")
     @classmethod
@@ -50,12 +62,50 @@ class InstructionListCreate(BaseModel):
         ..., description="List of instructions to create"
     )
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "instructions": [
+                    {
+                        "title": "Preheat Oven",
+                        "description": "<p>Preheat oven to 375°F (190°C).</p>",
+                        "step_number": 1,
+                        "timing": 10,
+                    },
+                    {
+                        "title": "Mix Dry Ingredients",
+                        "description": "<p>Whisk flour, baking powder, and salt in a bowl.</p>",
+                        "step_number": 2,
+                        "timing": 5,
+                    },
+                ]
+            }
+        }
+    )
+
 
 class InstructionListResponse(BaseModel):
     """Schema for multiple instruction responses."""
 
     instructions: List[InstructionSchema] = Field(
         ..., description="List of instructions"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "instructions": [
+                    {
+                        "id": "S-11111-22222",
+                        "title": "Preheat Oven",
+                        "description": "<p>Preheat oven to 375°F (190°C).</p>",
+                        "step_number": 1,
+                        "timing": 10,
+                        "recipe_id": "R-1GL2S-18XXB",
+                    }
+                ]
+            }
+        }
     )
 
 
