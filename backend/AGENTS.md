@@ -55,6 +55,8 @@ pip install -r requirements.txt
 ## 6. Testing Guidelines
 - **Coverage**: target 80%+.
 - **Fixtures**: Use `conftest.py` for DB sessions and test data.
+- **Test database**: Tests run on Postgres, never SQLite. `conftest.py` recreates `<DATABASE_URL db>_test` (override with `TEST_DATABASE_URL`) and builds it with `alembic upgrade head` once per session; tables are truncated after each test.
+- **Migrations**: `tests/test_migrations.py` runs `alembic check`; any model change without a migration fails the suite.
 - **Mocking**: Mock external APIs (Email, S3, etc.) to keep tests fast and deterministic.
 
 ## 7. Production Deployment (Cloud Run)
