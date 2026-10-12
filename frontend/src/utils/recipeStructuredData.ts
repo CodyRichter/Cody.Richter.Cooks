@@ -1,3 +1,5 @@
+import { FilterXSS } from 'xss'
+
 import { RecipeDetail } from '@/types/Recipe'
 import { convertToFractionalRepresentation } from '@/utils/recipeUtils'
 
@@ -10,12 +12,20 @@ const HTML_ENTITIES: Record<string, string> = {
   '&nbsp;': ' ',
 }
 
-/** Plain text from sanitized rich-text HTML, for meta descriptions and JSON-LD. */
+const BLOCK_BOUNDARY_TAGS = new Set(['br', 'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+
+// Parser-based stripping: a single regex pass can leave tags behind (e.g. `<<b>script>`)
+const textOnlyFilter = new FilterXSS({
+  whiteList: {},
+  stripIgnoreTagBody: ['script', 'style'],
+  onIgnoreTag: (tag) => (BLOCK_BOUNDARY_TAGS.has(tag.toLowerCase()) ? ' ' : ''),
+})
+
+/** Plain text from rich-text HTML, for meta descriptions and JSON-LD. */
 export function htmlToPlainText(html: string | undefined): string {
   if (!html) return ''
-  return html
-    .replace(/<(br|\/p|\/li|\/h[1-6])\s*\/?>/gi, ' ')
-    .replace(/<[^>]*>/g, '')
+  return textOnlyFilter
+    .process(html)
     .replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (entity) => HTML_ENTITIES[entity])
     .replace(/\s+/g, ' ')
     .trim()
