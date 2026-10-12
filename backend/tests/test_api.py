@@ -651,6 +651,90 @@ class TestRecipeAPI(APITestBase):
         )
         assert permission is None
 
+    def test_recipe_permission_role_change(
+        self,
+        client: TestClient,
+        test_recipe: Recipe,
+        test_user: User,
+        test_user2: User,
+        auth_headers: dict,
+    ):
+        """Granting a different role updates the existing permission."""
+        url = f"/api/v1/recipes/{test_recipe.id}/permissions"
+        client.post(
+            url,
+            json={"username": test_user2.username, "role": "editor"},
+            headers=auth_headers,
+        )
+        response = client.post(
+            url,
+            json={"username": test_user2.username, "role": "owner"},
+            headers=auth_headers,
+        )
+        data = self.assert_success_response(response, 201)
+        assert data["role"] == "owner"
+
+        response = client.post(
+            url,
+            json={"username": test_user.username, "role": "editor"},
+            headers=auth_headers,
+        )
+        self.assert_error_response(response, 400, "your own permissions")
+
+    def test_user_recipe_lists_are_scoped(
+        self,
+        client: TestClient,
+        db_session: Session,
+        test_recipe: Recipe,
+        test_user: User,
+        test_user2: User,
+        auth_headers: dict,
+        auth_headers_user2: dict,
+    ):
+        """my-recipes and user/{id} only return that user's recipes, once each."""
+        other = Recipe(title="Someone Else's Recipe", tags=[])
+        shared = Recipe(title="Shared Recipe", tags=[])
+        db_session.add_all([other, shared])
+        db_session.flush()
+        db_session.add_all(
+            [
+                RecipePermission(
+                    recipe_id=other.id, user_id=test_user2.id, role=PermissionRole.OWNER
+                ),
+                RecipePermission(
+                    recipe_id=shared.id,
+                    user_id=test_user2.id,
+                    role=PermissionRole.OWNER,
+                ),
+                RecipePermission(
+                    recipe_id=shared.id,
+                    user_id=test_user.id,
+                    role=PermissionRole.EDITOR,
+                ),
+            ]
+        )
+        db_session.commit()
+
+        def ids(data):
+            return sorted(item["id"] for item in data["items"])
+
+        mine = self.assert_success_response(
+            client.get("/api/v1/recipes/my-recipes", headers=auth_headers)
+        )
+        assert ids(mine) == sorted([test_recipe.id, shared.id])
+        assert mine["total"] == 2
+
+        public = self.assert_success_response(
+            client.get(f"/api/v1/recipes/user/{test_user.id}")
+        )
+        assert ids(public) == [test_recipe.id]
+        assert public["total"] == 1
+
+        user2 = self.assert_success_response(
+            client.get("/api/v1/recipes/my-recipes", headers=auth_headers_user2)
+        )
+        assert ids(user2) == sorted([other.id, shared.id])
+
     def test_recipe_permissions_visibility_levels(
         self,
         client: TestClient,

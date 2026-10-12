@@ -545,6 +545,7 @@ def list_recipes_internal(
     db: Session,
     title_search_query: Optional[str] = None,  # Fuzzy match of recipe title
     user_id_filter: Optional[str] = None,  # User ID to filter recipes for
+    user_roles: Optional[list[PermissionRole]] = None,  # Roles that count as a match
     page: int = 1,
     limit: int = 10,
 ) -> RecipeList:
@@ -552,7 +553,14 @@ def list_recipes_internal(
     limit = min(limit, settings.max_recipes_per_page)
 
     if user_id_filter:
-        query = query.join(RecipePermission, Recipe.id == RecipePermission.recipe_id)
+        query = query.filter(
+            Recipe.id.in_(
+                db.query(RecipePermission.recipe_id).filter(
+                    RecipePermission.user_id == user_id_filter,
+                    RecipePermission.role.in_(user_roles or [PermissionRole.OWNER]),
+                )
+            )
+        )
 
     if title_search_query:
         query = query.filter(Recipe.title.ilike(f"%{title_search_query}%"))
@@ -641,22 +649,31 @@ def grant_recipe_permission_internal(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    existing_permission = get_user_recipe_permission(db, target_user.id, recipe_id)
-    if existing_permission and existing_permission.role == target_role:
+    if target_user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You can not change your own permissions.",
+        )
+
+    permission = get_user_recipe_permission(db, target_user.id, recipe_id)
+    if permission and permission.role == target_role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User already has permission for this recipe",
         )
 
-    new_permission = RecipePermission(
-        user_id=target_user.id, recipe_id=recipe_id, role=target_role
-    )
+    if permission:
+        permission.role = target_role
+    else:
+        permission = RecipePermission(
+            user_id=target_user.id, recipe_id=recipe_id, role=target_role
+        )
+        db.add(permission)
 
-    db.add(new_permission)
     db.commit()
-    db.refresh(new_permission)
+    db.refresh(permission)
 
-    return RecipePermissionDetail.model_validate(new_permission)
+    return RecipePermissionDetail.model_validate(permission)
 
 
 def revoke_recipe_permission_internal(

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models.recipe_permission import PermissionRole
 from app.models.user import User
 from app.schemas.recipe import (
     RecipeCreate,
@@ -104,6 +105,7 @@ def get_my_recipes(
     return list_recipes_internal(
         db=db,
         user_id_filter=current_user.id,
+        user_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
         page=page,
         limit=limit,
     )
@@ -409,7 +411,7 @@ def list_recipes_for_user(
     response_model=RecipePermissionDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Grant recipe permission to user",
-    description="Grant 'editor' or 'owner' permission for a recipe to another user by their username. Only the recipe owner can grant permissions. Use this tool when sharing collaborative recipe editing access.",
+    description="Grant 'editor' or 'owner' permission for a recipe to another user by their username, or change their existing role. Only the recipe owner can grant permissions. Use this tool when sharing collaborative recipe editing access.",
 )
 def grant_recipe_permission(
     recipe_id: str,
