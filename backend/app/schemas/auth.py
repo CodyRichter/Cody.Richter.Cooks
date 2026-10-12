@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from app.schemas.user import UserSchema
 
 
@@ -43,12 +43,16 @@ class AuthTokenRefreshResponse(BaseModel):
     """Schema for token refresh responses."""
 
     access_token: str = Field(..., description="New JWT access token")
+    refresh_token: str = Field(
+        ..., description="New JWT refresh token; the submitted one should be discarded"
+    )
     token_type: str = Field(default="bearer", description="Token type")
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "token_type": "bearer",
             }
         }
@@ -58,7 +62,7 @@ class AuthTokenRefreshResponse(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     """Schema for forgot password requests."""
 
-    email: str = Field(..., description="User's email address")
+    email: EmailStr = Field(..., description="User's email address")
     captcha_token: str = Field(..., description="Cloudflare Turnstile token")
 
     model_config = ConfigDict(

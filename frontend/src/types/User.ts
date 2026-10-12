@@ -13,13 +13,15 @@ export interface UserCreate {
   username: string
   email: string
   password: string
+  captcha_token: string
 }
 
 // User update interface
 export interface UserUpdate {
   username?: string
   email?: string
-  password?: string
+  // Required by the backend when changing email
+  current_password?: string
 }
 
 // Authentication token response interface
@@ -44,6 +46,7 @@ export interface TokenRefreshRequest {
 // Token refresh response interface
 export interface TokenRefreshResponse {
   access_token: string
+  refresh_token: string
   token_type: string
 }
 

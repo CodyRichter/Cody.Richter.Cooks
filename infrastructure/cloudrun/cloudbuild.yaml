@@ -1,36 +1,47 @@
+# Backend release pipeline: build -> migrate -> deploy.
+# Invoked by .github/workflows/deploy-backend.yml (on master) and by
+# scripts/prod/deploy.sh (manual fallback). _IMAGE_TAG must be a git SHA.
 steps:
-  # Build the Docker image
-  - name: 'gcr.io/cloud-builders/docker'
+  - id: build
+    name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
       - 'gcr.io/$PROJECT_ID/cooking-backend:${_IMAGE_TAG}'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/cooking-backend:latest'
       - '-f'
       - 'backend/Dockerfile'
       - './backend'
 
-  # Push the image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/cooking-backend:${_IMAGE_TAG}'
+  - id: push
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/cooking-backend:${_IMAGE_TAG}']
 
-  - name: 'gcr.io/cloud-builders/docker'
+  # Run migrations with the exact image being released, before it takes traffic
+  - id: migrate
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
     args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/cooking-backend:latest'
+      - '-ceu'
+      - |
+        gcloud run jobs deploy cooking-backend-migrate \
+          --image 'gcr.io/$PROJECT_ID/cooking-backend:${_IMAGE_TAG}' \
+          --region '${_REGION}' \
+          --command sh --args migrate.sh \
+          --max-retries 0 \
+          --task-timeout 600s \
+          --set-env-vars 'DEBUG=false' \
+          --set-secrets 'DATABASE_URL=DATABASE_URL:latest,SECRET_KEY=SECRET_KEY:latest,TURNSTILE_SECRET_KEY=TURNSTILE_SECRET_KEY:latest'
+        gcloud run jobs execute cooking-backend-migrate --region '${_REGION}' --wait
 
-  # Deploy to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - id: deploy
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
       - 'cooking-backend'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/cooking-backend:latest'
+      - 'gcr.io/$PROJECT_ID/cooking-backend:${_IMAGE_TAG}'
       - '--region'
       - '${_REGION}'
       - '--platform'
@@ -50,17 +61,15 @@ steps:
       - 'DEBUG=false,APP_NAME=Cody Richter Cooks API,FRONTEND_URL=https://cooking.cody.richter.codes,EMAIL_FROM_ADDRESS=support@cooking.cody.richter.codes'
       - '--update-secrets'
       - 'SECRET_KEY=SECRET_KEY:latest,DATABASE_URL=DATABASE_URL:latest,RESEND_API_KEY=RESEND_API_KEY:latest,TURNSTILE_SECRET_KEY=TURNSTILE_SECRET_KEY:latest'
+      - '--labels'
+      - 'git-sha=${_IMAGE_TAG}'
 
-
-# Store images in Container Registry
 images:
-  - 'gcr.io/$PROJECT_ID/cooking-backend:latest'
+  - 'gcr.io/$PROJECT_ID/cooking-backend:${_IMAGE_TAG}'
 
-# Substitutions (can be overridden)
 substitutions:
   _REGION: 'us-central1'
-  _IMAGE_TAG: 'manual'
+  _IMAGE_TAG: ''
 
-# Build options
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -8,7 +8,7 @@ PASSWORD="TestPassword123!"
 echo "Logging in as $USERNAME..."
 
 # Login and get access token
-LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/users/login" \
+LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/users/login/" \
      -H "Content-Type: application/json" \
      -d "{\"username\": \"$USERNAME\", \"password\": \"$PASSWORD\"}")
 

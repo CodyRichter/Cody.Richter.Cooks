@@ -13,6 +13,7 @@ import { IconClock } from "@tabler/icons-react";
 import { InstructionStep } from "@/types/InstructionStep";
 import React from "react";
 import parse from "html-react-parser";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import { useMediaQuery } from "@mantine/hooks";
 
 interface RecipeInstructionsCardProps {
@@ -125,7 +126,7 @@ export default function RecipeInstructionsCard({
                         }}
                       >
                         {typeof instructionStep.description === "string"
-                          ? parse(instructionStep.description)
+                          ? parse(sanitizeHtml(instructionStep.description))
                           : instructionStep.description}
                       </Box>
                     )}

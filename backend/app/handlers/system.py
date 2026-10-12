@@ -37,7 +37,7 @@ class HealthcheckResponse(BaseModel):
     summary="Check API and Database Health",
     description="Check the operational health status of the API service and its database connectivity. Use this tool to verify system availability before executing recipe or authentication operations.",
 )
-async def health_check() -> HealthcheckResponse:
+def health_check() -> HealthcheckResponse:
     """
     Health check endpoint that verifies service status and database connectivity.
 

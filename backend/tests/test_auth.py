@@ -13,7 +13,9 @@ from app.utils.auth import (
     create_refresh_token,
     verify_token,
     verify_refresh_token,
-    refresh_access_token,
+    rotate_refresh_token,
+    revoke_user_tokens,
+    token_claims,
     get_current_user,
 )
 from app.utils.password_security import PasswordSecurity
@@ -192,20 +194,20 @@ class TestJWTTokenManagement:
 class TestTokenRefreshFlow:
     """Test token refresh functionality."""
 
-    def test_refresh_access_token_success(self, db_session, test_user: User):
-        """Test successful token refresh."""
-        refresh_token = create_refresh_token(data={"sub": test_user.username})
+    def test_rotate_refresh_token_success(self, db_session, test_user: User):
+        """A valid refresh token yields a new access and refresh token."""
+        refresh_token = create_refresh_token(data=token_claims(test_user))
 
-        new_access_token = refresh_access_token(refresh_token, db_session)
+        result = rotate_refresh_token(refresh_token, db_session)
 
-        assert new_access_token is not None
-        assert isinstance(new_access_token, str)
+        assert result is not None
+        user, new_access, new_refresh = result
+        assert user.id == test_user.id
 
-        # Verify new token is valid
-        payload = verify_token(new_access_token)
-        assert payload is not None
-        assert payload["sub"] == test_user.username
-        assert payload["type"] == "access"
+        access_payload = verify_token(new_access)
+        assert access_payload["sub"] == test_user.id
+        assert access_payload["type"] == "access"
+        assert verify_refresh_token(new_refresh)["sub"] == test_user.id
 
     @pytest.mark.parametrize(
         "invalid_scenario",
@@ -214,26 +216,32 @@ class TestTokenRefreshFlow:
             "nonexistent_user",
             "expired_token",
             "access_token_as_refresh",
+            "legacy_username_subject",
+            "revoked_token",
         ],
     )
-    def test_refresh_access_token_failures(
+    def test_rotate_refresh_token_failures(
         self, db_session, test_user: User, invalid_scenario: str
     ):
         """Test token refresh failure scenarios."""
         if invalid_scenario == "invalid_token":
             token = "invalid.token.here"
         elif invalid_scenario == "nonexistent_user":
-            token = create_refresh_token(data={"sub": "nonexistent_user"})
+            token = create_refresh_token(data={"sub": "U-NOPE0-NOPE0", "tv": 0})
         elif invalid_scenario == "expired_token":
-            expires_delta = timedelta(seconds=-1)
             token = create_refresh_token(
-                data={"sub": test_user.username}, expires_delta=expires_delta
+                data=token_claims(test_user), expires_delta=timedelta(seconds=-1)
             )
         elif invalid_scenario == "access_token_as_refresh":
-            token = create_access_token(data={"sub": test_user.username})
+            token = create_access_token(data=token_claims(test_user))
+        elif invalid_scenario == "legacy_username_subject":
+            token = create_refresh_token(data={"sub": test_user.username})
+        elif invalid_scenario == "revoked_token":
+            token = create_refresh_token(data=token_claims(test_user))
+            revoke_user_tokens(test_user)
+            db_session.commit()
 
-        result = refresh_access_token(token, db_session)
-        assert result is None
+        assert rotate_refresh_token(token, db_session) is None
 
 
 @pytest.mark.auth
@@ -243,7 +251,7 @@ class TestUserAuthentication:
 
     def test_get_current_user_success(self, db_session, test_user: User):
         """Test successful user authentication."""
-        token = create_access_token(data={"sub": test_user.username})
+        token = create_access_token(data=token_claims(test_user))
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
         current_user = get_current_user(credentials, db_session)
@@ -259,6 +267,7 @@ class TestUserAuthentication:
             "nonexistent_user",
             "missing_sub_claim",
             "refresh_token_as_access",
+            "revoked_token",
         ],
     )
     def test_get_current_user_failures(
@@ -280,7 +289,14 @@ class TestUserAuthentication:
                 scheme="Bearer", credentials=token
             )
         elif failure_scenario == "refresh_token_as_access":
-            token = create_refresh_token(data={"sub": test_user.username})
+            token = create_refresh_token(data=token_claims(test_user))
+            credentials = HTTPAuthorizationCredentials(
+                scheme="Bearer", credentials=token
+            )
+        elif failure_scenario == "revoked_token":
+            token = create_access_token(data=token_claims(test_user))
+            revoke_user_tokens(test_user)
+            db_session.commit()
             credentials = HTTPAuthorizationCredentials(
                 scheme="Bearer", credentials=token
             )

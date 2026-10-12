@@ -36,8 +36,8 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    """Get database URL from settings."""
-    return settings.database_url
+    """Database URL: an explicit override (used by the test suite) or settings."""
+    return config.attributes.get("database_url") or settings.database_url
 
 
 def run_migrations_offline() -> None:

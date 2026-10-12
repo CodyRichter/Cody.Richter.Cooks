@@ -2,7 +2,7 @@
 User Pydantic schemas for API serialization and validation.
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -46,10 +46,11 @@ class UserCreateSchema(BaseModel):
     username: str = Field(
         ..., min_length=3, max_length=50, description="Username for login"
     )
-    email: str = Field(..., description="User email address")
+    email: EmailStr = Field(..., description="User email address")
     password: str = Field(
         ..., min_length=8, max_length=128, description="User password"
     )
+    captcha_token: str = Field(..., description="Cloudflare Turnstile token")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -57,20 +58,29 @@ class UserCreateSchema(BaseModel):
                 "username": "chef_cody",
                 "email": "cody@example.com",
                 "password": "SuperSecretPassword123!",
+                "captcha_token": "0.XXXXX-turnstile-token-XXXXX",
             }
         }
     )
 
 
-class UserUpdateSchema(UserCreateSchema):
-    """Schema for updating user information."""
+class UserProfileUpdate(BaseModel):
+    """Schema for updating the current user's profile."""
+
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=50, description="New username"
+    )
+    email: Optional[EmailStr] = Field(None, description="New email address")
+    current_password: Optional[str] = Field(
+        None, description="Current password; required when changing email"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "username": "chef_cody_updated",
                 "email": "cody_new@example.com",
-                "password": "NewSecretPassword456!",
+                "current_password": "SuperSecretPassword123!",
             }
         }
     )

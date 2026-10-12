@@ -10,6 +10,7 @@ psycopg2-binary==2.9.12
 # Authentication and security
 PyJWT==2.13.0
 bcrypt==5.0.0
+slowapi==0.1.10
 
 # Validation and serialization
 pydantic[email]==2.13.4
@@ -18,7 +19,7 @@ email-validator==2.3.0
 
 # Utilities
 python-dotenv==1.2.2
-bleach==6.4.0
+nh3==0.3.7
 resend==2.36.0
 
 # Testing dependencies

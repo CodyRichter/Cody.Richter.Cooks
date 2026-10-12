@@ -1,4 +1,4 @@
-// JWT-based authentication utilities
+// JWT token storage: the single source of truth for tokens in localStorage
 import { tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
 
 export const authConfig = {
@@ -27,6 +27,18 @@ export const clearTokens = (): void => {
   if (typeof window === 'undefined') return
   localStorage.removeItem(authConfig.tokenStorageKey)
   localStorage.removeItem(authConfig.refreshTokenStorageKey)
+}
+
+// Fired when the session can no longer be refreshed (revoked or expired),
+// so AuthContext can drop its user state even though the failure happened
+// inside the API client.
+export const SESSION_EXPIRED_EVENT = 'auth:session-expired'
+
+export const endSession = (): void => {
+  clearTokens()
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+  }
 }
 
 export const isTokenExpired = (token: string): boolean => {

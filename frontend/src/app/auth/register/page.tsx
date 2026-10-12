@@ -11,9 +11,10 @@ import {
   Title,
   Anchor,
 } from "@mantine/core";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
@@ -34,6 +35,8 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
   const [formErrors, setFormErrors] = useState({
     username: "",
     email: "",
@@ -88,7 +91,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm() || !captchaToken) return;
 
     clearError();
 
@@ -97,10 +100,13 @@ export default function RegisterPage() {
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        captcha_token: captchaToken,
       });
       router.push('/auth/login?registered=true');
     } catch {
-      // Error is handled by the register hook
+      // Error is shown by the register hook; captcha tokens are single-use
+      setCaptchaToken(null);
+      turnstileRef.current?.reset();
     }
   };
 
@@ -160,11 +166,23 @@ export default function RegisterPage() {
             error={formErrors.confirmPassword}
           />
 
+          <Group justify="center" mb="md">
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+              onSuccess={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+              options={{
+                appearance: 'execute',
+              }}
+            />
+          </Group>
+
           <Button
             type="submit"
             fullWidth
             loading={isLoading}
-            disabled={!formData.username || !formData.email || !formData.password || !formData.confirmPassword}
+            disabled={!formData.username || !formData.email || !formData.password || !formData.confirmPassword || !captchaToken}
             mb="md"
           >
             Create Account

@@ -7,6 +7,7 @@ import { ColorSchemeScript } from "@mantine/core";
 import { Providers } from "@/app/providers";
 import { AppLayout } from "@/app/AppLayout";
 import type { Metadata } from "next";
+import { siteUrl } from "@/config/environment";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -17,8 +18,9 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Cody Richter Cooks",
-  description: "A culinary platform",
+  description: "Recipes and cooking guides from Cody Richter and friends.",
   icons: {
     icon: "/chef-hat.svg",
   },

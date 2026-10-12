@@ -11,7 +11,7 @@ This repository hosts the "Cody Richter Cooks" application, a full-stack web pla
 - **`backend/`**: FastAPI (Python) web server. See [backend/AGENTS.md](backend/AGENTS.md).
 - **`scripts/`**: Automation scripts for devops/maintenance. See [scripts/AGENTS.md](scripts/AGENTS.md).
 - **`infrastructure/`**: Cloud Run and database configuration. See [infrastructure/AGENTS.md](infrastructure/AGENTS.md).
-- **`.github/`**: CI/CD and Issue templates.
+- **`.github/`**: GitHub Actions. `ci.yml` (backend lint + tests on Postgres, frontend lint + build) runs on every push; `deploy-backend.yml` deploys the backend after CI passes on `master`.
 
 ## 2. Global Workflow Rules
 1.  **Script Priority**: ALWAYS use the scripts in `scripts/` (e.g., `scripts/local/start.sh`, `scripts/local/test.sh`) instead of raw commands like `docker-compose up` or `pytest`. These scripts handle environment setup and cleanup correctly.

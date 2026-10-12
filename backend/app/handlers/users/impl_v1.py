@@ -1,5 +1,4 @@
 from fastapi import HTTPException, Request, status
-from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
@@ -17,23 +16,21 @@ from app.schemas.user import (
     UserCreateSchema,
     UserLogin,
     UserResponseSchema,
-    UserUpdateSchema,
+    UserProfileUpdate,
     UserChangePassword,
 )
 from app.utils.audit_logger import get_audit_logger
 from app.utils.auth import (
     authenticate_user,
-    create_access_token,
-    create_refresh_token,
-    refresh_access_token,
+    create_token_pair,
+    revoke_user_tokens,
+    rotate_refresh_token,
     create_password_reset_token,
     verify_password_reset_token,
 )
 from app.utils.captcha import verify_turnstile_token
 from app.utils.email import EmailService
 from app.utils.password_security import PasswordSecurity
-import jwt
-from jwt import PyJWTError as JWTError
 from app.core.config import settings
 
 
@@ -41,6 +38,11 @@ def register_user_internal(
     user_data: UserCreateSchema, request: Request, db: Session
 ) -> UserResponseSchema:
     audit_logger = get_audit_logger(db)
+
+    if not verify_turnstile_token(user_data.captcha_token):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid captcha token"
+        )
 
     try:
         # Check if username already exists (case-insensitive)
@@ -172,8 +174,7 @@ def login_user_internal(
         )
 
     # Create access and refresh tokens
-    access_token = create_access_token(data={"sub": user.username})
-    refresh_token = create_refresh_token(data={"sub": user.username})
+    access_token, refresh_token = create_token_pair(user)
 
     # Log successful login
     audit_logger.log_authentication_event(
@@ -199,7 +200,7 @@ def get_user_profile_internal(current_user: User) -> UserResponseSchema:
 
 
 def update_user_profile_internal(
-    profile_data: UserUpdateSchema, request: Request, current_user: User, db: Session
+    profile_data: UserProfileUpdate, request: Request, current_user: User, db: Session
 ) -> UserResponseSchema:
     audit_logger = get_audit_logger(db)
     changes = {}
@@ -226,6 +227,14 @@ def update_user_profile_internal(
 
     # Check if email is being updated and if it already exists (case-insensitive)
     if profile_data.email and profile_data.email != current_user.email:
+        # The email controls password resets, so changing it requires re-authentication
+        if not PasswordSecurity.verify_password(
+            profile_data.current_password or "", current_user.password_hash
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is required to change email",
+            )
         existing_email = (
             db.query(User)
             .filter(
@@ -270,7 +279,7 @@ def change_password_internal(
     request: Request,
     current_user: User,
     db: Session,
-) -> UserResponseSchema:
+) -> AuthTokenResponse:
     audit_logger = get_audit_logger(db)
 
     # Validate current password
@@ -289,6 +298,7 @@ def change_password_internal(
     current_user.password_hash = PasswordSecurity.hash_password(
         change_password_data.new_password
     )
+    revoke_user_tokens(current_user)
 
     try:
         db.commit()
@@ -303,7 +313,14 @@ def change_password_internal(
             details={"changed_via": "profile_update"},
         )
 
-        return UserResponseSchema.model_validate(current_user)
+        # Other sessions were revoked; keep this one signed in with fresh tokens
+        access_token, refresh_token = create_token_pair(current_user)
+        return AuthTokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            user=UserResponseSchema.model_validate(current_user),
+        )
 
     except IntegrityError:
         db.rollback()
@@ -318,42 +335,13 @@ def refresh_token_internal(
 ) -> AuthTokenRefreshResponse:
     audit_logger = get_audit_logger(db)
 
-    # Try to refresh the token and get user info
-    try:
-        # Decode the refresh token to get user info for logging
-        payload = jwt.decode(
-            refresh_data.refresh_token,
-            settings.secret_key,
-            algorithms=[settings.algorithm],
-        )
-        username = payload.get("sub")
-        token_type = payload.get("type")
-
-        if token_type != "refresh":
-            # Log failed refresh attempt
-            audit_logger.log_authentication_event(
-                event_type=SecurityEventType.TOKEN_REFRESH_FAILED,
-                request=request,
-                username=username,
-                success=False,
-                failure_reason="Invalid token type",
-            )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired refresh token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        # Get user for logging
-        user = db.query(User).filter(User.username == username).first()
-
-    except JWTError:
-        # Log failed refresh attempt with unknown user
+    rotated = rotate_refresh_token(refresh_data.refresh_token, db)
+    if rotated is None:
         audit_logger.log_authentication_event(
             event_type=SecurityEventType.TOKEN_REFRESH_FAILED,
             request=request,
             success=False,
-            failure_reason="Invalid token format",
+            failure_reason="Invalid, expired, or revoked refresh token",
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -361,24 +349,7 @@ def refresh_token_internal(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    new_access_token = refresh_access_token(refresh_data.refresh_token, db)
-
-    if not new_access_token:
-        # Log failed refresh attempt
-        audit_logger.log_authentication_event(
-            event_type=SecurityEventType.TOKEN_REFRESH_FAILED,
-            request=request,
-            user=user,
-            success=False,
-            failure_reason="Token refresh failed",
-        )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Log successful token refresh
+    user, access_token, refresh_token = rotated
     audit_logger.log_authentication_event(
         event_type=SecurityEventType.TOKEN_REFRESH,
         request=request,
@@ -386,16 +357,33 @@ def refresh_token_internal(
         success=True,
     )
 
-    return AuthTokenRefreshResponse(access_token=new_access_token, token_type="bearer")
+    return AuthTokenRefreshResponse(
+        access_token=access_token, refresh_token=refresh_token, token_type="bearer"
+    )
 
 
-async def forgot_password_internal(
+def logout_all_sessions_internal(
+    request: Request, current_user: User, db: Session
+) -> None:
+    revoke_user_tokens(current_user)
+    db.commit()
+
+    get_audit_logger(db).log_event(
+        event_type=SecurityEventType.LOGOUT,
+        request=request,
+        user=current_user,
+        success=True,
+        details={"scope": "all_sessions"},
+    )
+
+
+def forgot_password_internal(
     request_data: ForgotPasswordRequest, request: Request, db: Session
 ) -> dict:
     audit_logger = get_audit_logger(db)
 
     # 1. Verify captcha
-    is_valid_captcha = await verify_turnstile_token(request_data.captcha_token)
+    is_valid_captcha = verify_turnstile_token(request_data.captcha_token)
     if not is_valid_captcha:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid captcha token"
@@ -413,10 +401,8 @@ async def forgot_password_internal(
         token = create_password_reset_token(user.id, user.password_hash)
         reset_link = f"{settings.frontend_url}/auth/reset-password?token={token}"
 
-        # 4. Send email (synchronous call wrapped in threadpool to avoid blocking)
-        await run_in_threadpool(
-            EmailService.send_password_reset_email, user.email, reset_link
-        )
+        # 4. Send email
+        EmailService.send_password_reset_email(user.email, reset_link)
 
         audit_logger.log_event(
             event_type=SecurityEventType.PASSWORD_CHANGED,  # Maybe better to have a generic event
@@ -468,8 +454,9 @@ def reset_password_internal(
     # 3. Validate new password strength
     PasswordSecurity.validate_password_strength_strict(request_data.new_password)
 
-    # 4. Hash and update
+    # 4. Hash and update, signing out every existing session
     user.password_hash = PasswordSecurity.hash_password(request_data.new_password)
+    revoke_user_tokens(user)
 
     try:
         db.commit()

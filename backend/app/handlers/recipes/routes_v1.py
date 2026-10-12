@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models.recipe_permission import PermissionRole
 from app.models.user import User
 from app.schemas.recipe import (
     RecipeCreate,
@@ -57,7 +58,7 @@ router = APIRouter(prefix="/api/v1/recipes", tags=["recipes"])
     summary="Create a new recipe",
     description="Create a complete recipe with initial metadata, optional ingredients, and optional instructions. The authenticated caller is automatically assigned as the recipe owner. Use this tool when authoring a new recipe from scratch.",
 )
-async def create_recipe(
+def create_recipe(
     recipe_data: RecipeCreate,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
@@ -82,7 +83,7 @@ async def create_recipe(
     summary="List recipes owned by the authenticated user",
     description="Retrieve a paginated list of all recipes where the authenticated user is the owner or editor. Requires authentication. Use this tool to list the user's personal recipe collection.",
 )
-async def get_my_recipes(
+def get_my_recipes(
     page: int = Query(1, ge=1, description="Page number for pagination"),
     limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
     current_user: User = Depends(get_current_active_user),
@@ -104,6 +105,7 @@ async def get_my_recipes(
     return list_recipes_internal(
         db=db,
         user_id_filter=current_user.id,
+        user_roles=[PermissionRole.OWNER, PermissionRole.EDITOR],
         page=page,
         limit=limit,
     )
@@ -115,7 +117,7 @@ async def get_my_recipes(
     summary="Get recipe details by ID",
     description="Retrieve full details for a single recipe by its ID, including complete ingredient lists, ordered instruction steps, metadata, and timestamps. Public endpoint. Use this tool when you have a recipe ID and need its full recipe instructions or ingredient breakdown.",
 )
-async def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
+def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
     """
     Get a recipe by ID with all ingredients and instructions. Public endpoint - anyone can view recipes.
 
@@ -138,7 +140,7 @@ async def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
     summary="Update entire recipe",
     description="Update all details of an existing recipe by ID. Caller must be the recipe owner or an editor. Use this tool to replace or update recipe metadata, tags, ingredients, or instructions.",
 )
-async def update_recipe(
+def update_recipe(
     recipe_id: str,
     recipe_data: RecipeDetail,
     current_user: User = Depends(get_current_active_user),
@@ -168,7 +170,7 @@ async def update_recipe(
     summary="Partially update recipe metadata",
     description="Update specific metadata fields of a recipe (such as title, description, tags, cooking time, or serving size) without affecting its ingredients or instructions. Caller must be the recipe owner or an editor. Use this tool for targeted metadata changes or real-time auto-saving.",
 )
-async def patch_recipe(
+def patch_recipe(
     recipe_id: str,
     patch_data: RecipePatch,
     current_user: User = Depends(get_current_active_user),
@@ -195,7 +197,7 @@ async def patch_recipe(
     summary="Delete recipe by ID",
     description="Permanently delete a recipe and all associated ingredients, instructions, and permissions. Only the recipe owner can perform this operation. Use this tool when a user explicitly requests deleting a recipe.",
 )
-async def delete_recipe(
+def delete_recipe(
     recipe_id: str,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
@@ -224,7 +226,7 @@ async def delete_recipe(
     summary="Add an instruction step to a recipe",
     description="Add a single instruction step to an existing recipe. If step_number is omitted, it will automatically append to the end of the instructions list. Caller must be the recipe owner or an editor. Use this tool to insert a new step without re-sending the whole recipe.",
 )
-async def add_instruction(
+def add_instruction(
     recipe_id: str,
     instruction_data: InstructionCreate,
     current_user: User = Depends(get_current_active_user),
@@ -242,7 +244,7 @@ async def add_instruction(
     summary="Update an instruction step",
     description="Update fields of a specific instruction step identified by either instruction ID (e.g. 'INS-12345') or step number (e.g. '1', '2'). Caller must be the recipe owner or an editor. Use this tool to update instruction title, description, or timing.",
 )
-async def patch_instruction(
+def patch_instruction(
     recipe_id: str,
     step_or_id: str,
     instruction_data: InstructionPatch,
@@ -263,7 +265,7 @@ async def patch_instruction(
     summary="Delete an instruction step",
     description="Remove a specific instruction step from a recipe by instruction ID or step number. Remaining steps are automatically re-sequenced. Caller must be the recipe owner or an editor. Use this tool to remove a step.",
 )
-async def delete_instruction(
+def delete_instruction(
     recipe_id: str,
     step_or_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -285,7 +287,7 @@ async def delete_instruction(
     summary="Add an ingredient to a recipe",
     description="Add a single ingredient to an existing recipe. If order_index is omitted, it will automatically append to the end of the ingredient list. Caller must be the recipe owner or an editor. Use this tool to add an ingredient without replacing the entire recipe.",
 )
-async def add_ingredient(
+def add_ingredient(
     recipe_id: str,
     ingredient_data: IngredientCreate,
     current_user: User = Depends(get_current_active_user),
@@ -303,7 +305,7 @@ async def add_ingredient(
     summary="Update an ingredient",
     description="Update fields of a specific ingredient identified by ingredient ID (e.g. 'I-12345') or order index. Caller must be the recipe owner or an editor. Use this tool to update ingredient quantity, unit, name, or notes.",
 )
-async def patch_ingredient(
+def patch_ingredient(
     recipe_id: str,
     ingredient_id: str,
     ingredient_data: IngredientPatch,
@@ -324,7 +326,7 @@ async def patch_ingredient(
     summary="Delete an ingredient",
     description="Remove a specific ingredient from a recipe by ingredient ID or order index. Remaining ingredients are automatically re-indexed. Caller must be the recipe owner or an editor. Use this tool to remove an ingredient.",
 )
-async def delete_ingredient(
+def delete_ingredient(
     recipe_id: str,
     ingredient_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -345,7 +347,7 @@ async def delete_ingredient(
     summary="Search and list public recipes",
     description="Search and browse public recipes with pagination. Supports fuzzy search on recipe titles using the 'q' parameter. Use this tool for recipe discovery, browsing, or title searching.",
 )
-async def list_recipes(
+def list_recipes(
     q: Optional[str] = Query(None, description="Search query for recipe title"),
     page: int = Query(1, ge=1, description="Page number for pagination"),
     limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
@@ -378,7 +380,7 @@ async def list_recipes(
     summary="List recipes by author user ID",
     description="Retrieve a paginated list of public recipes created by a specific user ID. Use this tool to explore all recipes authored by a specific user.",
 )
-async def list_recipes_for_user(
+def list_recipes_for_user(
     user_id: str,
     page: int = Query(1, ge=1, description="Page number for pagination"),
     limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
@@ -409,9 +411,9 @@ async def list_recipes_for_user(
     response_model=RecipePermissionDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Grant recipe permission to user",
-    description="Grant 'editor' or 'owner' permission for a recipe to another user by their username. Only the recipe owner can grant permissions. Use this tool when sharing collaborative recipe editing access.",
+    description="Grant 'editor' or 'owner' permission for a recipe to another user by their username, or change their existing role. Only the recipe owner can grant permissions. Use this tool when sharing collaborative recipe editing access.",
 )
-async def grant_recipe_permission(
+def grant_recipe_permission(
     recipe_id: str,
     permission_data: GrantPermissionRequest,
     current_user: User = Depends(get_current_active_user),
@@ -447,7 +449,7 @@ async def grant_recipe_permission(
     summary="List users with permission for recipe",
     description="Retrieve the list of users with access permissions to this recipe. Recipe owners and editors see all collaborators including emails; public users see only the owner.",
 )
-async def list_recipe_permissions(
+def list_recipe_permissions(
     recipe_id: str,
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
@@ -477,7 +479,7 @@ async def list_recipe_permissions(
     summary="Revoke recipe permission from user",
     description="Revoke an editor or co-owner's permission from a recipe. Only the recipe owner can revoke permissions, and owners cannot revoke their own primary ownership. Use this tool when managing recipe collaborators.",
 )
-async def revoke_recipe_permission(
+def revoke_recipe_permission(
     recipe_id: str,
     target_user_id: str,
     current_user: User = Depends(get_current_active_user),

@@ -2,15 +2,22 @@
 Pytest configuration and fixtures for backend tests.
 """
 
+import os
 import pytest
 import asyncio
+from pathlib import Path
 from typing import Generator, AsyncGenerator
-from sqlalchemy import create_engine
+
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from unittest.mock import Mock
 
+from app.core.config import settings
 from app.main import app
 from app.core.database import Base, get_db
 from app.models.user import User
@@ -18,20 +25,62 @@ from app.models.recipe import Recipe
 from app.models.recipe_permission import RecipePermission, PermissionRole
 from app.models.ingredient import Ingredient
 from app.models.instruction import Instruction
-from app.utils.auth import create_access_token
+from app.utils.auth import create_access_token, token_claims
+from app.utils.rate_limit import limiter
 from app.utils.password_security import PasswordSecurity
 
 
-# Test database URL - use in-memory SQLite for tests
-TEST_DATABASE_URL = "sqlite:///./test.db"
+BACKEND_DIR = Path(__file__).resolve().parent.parent
 
-# Create test engine
-test_engine = create_engine(
-    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
-)
 
-# Create test session
+def _default_test_database_url() -> str:
+    """Same server as the app database, separate `<name>_test` database."""
+    url = make_url(settings.database_url)
+    return url.set(database=f"{url.database}_test").render_as_string(
+        hide_password=False
+    )
+
+
+# Tests run against Postgres with the schema built by Alembic, exactly as in
+# production, so migrations and Postgres-specific behavior are exercised.
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL") or _default_test_database_url()
+
+test_engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+
+def alembic_config() -> Config:
+    config = Config()
+    config.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
+    config.attributes["database_url"] = TEST_DATABASE_URL
+    return config
+
+
+def _recreate_test_database() -> None:
+    url = make_url(TEST_DATABASE_URL)
+    admin_engine = create_engine(
+        url.set(database="postgres"), isolation_level="AUTOCOMMIT"
+    )
+    with admin_engine.connect() as connection:
+        connection.execute(
+            text(f'DROP DATABASE IF EXISTS "{url.database}" WITH (FORCE)')
+        )
+        connection.execute(text(f'CREATE DATABASE "{url.database}"'))
+    admin_engine.dispose()
+
+
+@pytest.fixture(scope="session")
+def alembic_cfg() -> Config:
+    return alembic_config()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def migrated_database():
+    """Build the test database from migrations once per test session."""
+    _recreate_test_database()
+    command.upgrade(alembic_config(), "head")
+    yield
+    test_engine.dispose()
 
 
 @pytest.fixture(scope="session")
@@ -42,21 +91,26 @@ def event_loop():
     loop.close()
 
 
+@pytest.fixture(autouse=True)
+def disable_rate_limits():
+    """Rate limits are exercised explicitly in their own tests."""
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
+
+
 @pytest.fixture(scope="function")
 def db_session() -> Generator[Session, None, None]:
-    """Create a fresh database session for each test."""
-    # Create all tables
-    Base.metadata.create_all(bind=test_engine)
-
-    # Create session
+    """Database session for one test; all tables are emptied afterwards."""
     session = TestingSessionLocal()
 
     try:
         yield session
     finally:
         session.close()
-        # Drop all tables after test
-        Base.metadata.drop_all(bind=test_engine)
+        tables = ", ".join(f'"{t.name}"' for t in Base.metadata.sorted_tables)
+        with test_engine.begin() as connection:
+            connection.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
 
 
 @pytest.fixture(scope="function")
@@ -248,21 +302,21 @@ def sample_recipe_data() -> dict:
 @pytest.fixture
 def auth_headers(test_user: User) -> dict:
     """Create authentication headers for test user."""
-    access_token = create_access_token(data={"sub": test_user.username})
+    access_token = create_access_token(data=token_claims(test_user))
     return {"Authorization": f"Bearer {access_token}"}
 
 
 @pytest.fixture
 def auth_headers_user2(test_user2: User) -> dict:
     """Create authentication headers for second test user."""
-    access_token = create_access_token(data={"sub": test_user2.username})
+    access_token = create_access_token(data=token_claims(test_user2))
     return {"Authorization": f"Bearer {access_token}"}
 
 
 @pytest.fixture
 def admin_auth_headers(admin_user: User) -> dict:
     """Create authentication headers for admin user."""
-    access_token = create_access_token(data={"sub": admin_user.username})
+    access_token = create_access_token(data=token_claims(admin_user))
     return {"Authorization": f"Bearer {access_token}"}
 
 

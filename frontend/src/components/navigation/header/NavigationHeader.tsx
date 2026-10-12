@@ -20,6 +20,7 @@ import {
   IconSun,
   IconUserCircle,
 } from "@tabler/icons-react";
+import { useMounted } from "@mantine/hooks";
 import React from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,7 +46,9 @@ export default function NavigationHeader({
   const computedColorScheme = useComputedColorScheme("light", {
     getInitialValueInEffect: true,
   });
-  const isDark = computedColorScheme === "dark";
+  // The server can't know the stored scheme, so match its light render until mounted
+  const mounted = useMounted();
+  const isDark = mounted && computedColorScheme === "dark";
 
   return (
     <Group h="100%" px={{ base: "xs", sm: "md" }} justify="space-between" align="center" wrap="nowrap">
