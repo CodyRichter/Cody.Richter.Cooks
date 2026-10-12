@@ -71,3 +71,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .next/
+
+# graphify
+graphify-out/
+.agents/rules/graphify.md
+.agents/workflows/graphify.md
