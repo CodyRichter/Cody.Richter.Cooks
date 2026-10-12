@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RecipeCreate, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
+import { RecipeCreate, RecipeDetail, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
 import { InstructionCreate, InstructionPatch } from '@/types/InstructionStep'
 import { IngredientCreate, IngredientPatch } from '@/types/Ingredient'
 import { recipeApi } from '@/services/apiServices'
@@ -28,11 +28,18 @@ export const useRecipes = (params?: RecipeSearchParams) => {
 }
 
 // Hook to fetch a single recipe
-export const useRecipe = (id: string, options: { enabled?: boolean } = {}) => {
+export const useRecipe = (
+  id: string,
+  options: { enabled?: boolean; initialData?: RecipeDetail } = {}
+) => {
   return useQuery({
     queryKey: ['recipe', id],
     queryFn: () => recipeApi.getRecipe(id),
     enabled: !!id && (options.enabled ?? true),
+    // Server-rendered data may come from a cached page; render it immediately
+    // but treat it as stale so the latest version is fetched on mount.
+    initialData: options.initialData,
+    initialDataUpdatedAt: 0,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000
   })

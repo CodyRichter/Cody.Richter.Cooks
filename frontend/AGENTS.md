@@ -67,7 +67,8 @@ npm run lint     # Run ESLint (MANDATORY before commit)
 - **Adding a Page**: Create `src/app/path/to/page.tsx`. Ensure it exports a default function.
 
 ## 5. Security & SEO
-- **SEO**: Export `metadata` object from `page.tsx` or `layout.tsx`.
+- **SEO**: Export `metadata` (or `generateMetadata`) from server `page.tsx`/`layout.tsx` files. Recipe pages (`app/recipes/view/[recipe_id]/page.tsx`) are server components with ISR: they fetch via `utils/recipeServer.ts`, emit OpenGraph metadata and schema.org `Recipe` JSON-LD (`utils/recipeStructuredData.ts`), and hand the data to the client `RecipeView` as `initialData`. `app/sitemap.ts` and `app/robots.ts` cover crawlers.
+- **Server rendering**: Do not wrap the app shell in client-only gates; that disables SSR for every page. Use hydration-safe hooks (e.g. Mantine `useMediaQuery` with `getInitialValueInEffect`) for browser-only values.
 - **Secrets**: NEVER hardcode API keys. Use `process.env.NEXT_PUBLIC_...` for public keys (like `NEXT_PUBLIC_TURNSTILE_SITE_KEY`), and keep private keys server-side.
 - **Bot Protection**: Use `@marsidev/react-turnstile` for CAPTCHA protection on sensitive forms (registration, forgot password). Turnstile tokens are single-use; reset the widget after a failed submit.
 - **Rendering HTML**: Pass user-authored HTML through `sanitizeHtml` (`src/utils/sanitizeHtml.ts`) before `dangerouslySetInnerHTML` or `html-react-parser`.
