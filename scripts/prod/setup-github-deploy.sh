@@ -68,6 +68,12 @@ for role in roles/run.admin roles/iam.serviceAccountUser roles/artifactregistry.
         --member="serviceAccount:${BUILD_SA}" --role="$role" >/dev/null
 done
 
+# Every deploy pushes a SHA-tagged image; keep only the 4 newest for rollback.
+echo "▶ Applying Artifact Registry cleanup policy..."
+gcloud artifacts repositories set-cleanup-policies gcr.io --project="$PROJECT" --location=us \
+    --policy="$(dirname "$0")/../../infrastructure/cloudrun/artifact-cleanup-policy.json" \
+    --no-dry-run >/dev/null
+
 echo "▶ Creating workload identity pool and provider..."
 gcloud iam workload-identity-pools describe "$POOL" --location=global --project="$PROJECT" >/dev/null 2>&1 ||
     gcloud iam workload-identity-pools create "$POOL" --location=global --project="$PROJECT" \
