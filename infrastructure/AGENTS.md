@@ -5,20 +5,19 @@
 
 ## 1. Tech Stack Overview
 - **Deployment Platform**: [Google Cloud Run](https://cloud.google.com/run) (Serverless container execution)
-- **CI/CD**: [Google Cloud Build](https://cloud.google.com/build)
+- **CI/CD**: GitHub Actions (`.github/workflows/`) for checks; [Google Cloud Build](https://cloud.google.com/build) for the release pipeline
 - **Database**: [Supabase](https://supabase.com/) (Managed PostgreSQL)
 - **Containerization**: Docker & Docker Compose
 
 ## 2. Directory Structure
-- `cloudrun/`: Configuration for Cloud Run services and build triggers.
-  - `service.yaml`: Cloud Run service definition (Specifies CPU, Memory, Concurrency).
-  - `cloudbuild.yaml`: Build pipeline definition.
+- `cloudrun/`: Cloud Run release configuration.
+  - `cloudbuild.yaml`: The release pipeline and the source of truth for the service's runtime config (CPU, memory, scaling, env vars, secrets). Steps: build the image tagged with the git SHA, run `alembic upgrade head` as the `cooking-backend-migrate` Cloud Run Job (same image), then deploy the service.
 - `postgres/`: Database initialization scripts and local development setup.
   - `init.sql`: Schema initialization for local development.
 
 ## 3. Cost-Optimization Rules
 For a project with 200-300 requests/day, we MUST maintain a minimal footprint:
-1. **Scale to Zero**: Always ensure `autoscaling.knative.dev/minScale: "0"` is set in `service.yaml` unless otherwise specified.
+1. **Scale to Zero**: Keep `--min-instances 0` in `cloudbuild.yaml` unless otherwise specified.
 2. **Resource Allocation**: Start with minimal CPU and memory (e.g., 512MiB memory, 1 CPU). Only increase if performance bottlenecks are identified.
 3. **Concurrency**: Tune `containerConcurrency` to handle multiple requests per instance (default 80 is usually fine for FastAPI).
 
@@ -44,5 +43,7 @@ For a project with 200-300 requests/day, we MUST maintain a minimal footprint:
 
 ## 5. Development Workflow
 - **Local Dev**: Use `docker-compose.yml` in the root directory for a consistent environment.
-- **Deploying**: Prefer `scripts/prod/deploy.sh` for production deployments.
+- **Deploying**: Merging to `master` deploys automatically: `.github/workflows/ci.yml` (lint, tests on Postgres, frontend build) must pass, then `.github/workflows/deploy-backend.yml` submits `cloudbuild.yaml` with the commit SHA. `scripts/prod/deploy.sh` runs the same pipeline manually from a clean checkout.
+- **Rollback**: Every image is tagged with its commit SHA (and the revision is labelled `git-sha`). Roll back with `gcloud run services update-traffic cooking-backend --to-revisions=REVISION=100 --region us-central1`, or re-run the deploy workflow on an older commit. Migrations are not reversed automatically.
+- **One-time CI/CD setup**: `./scripts/prod/setup-github-deploy.sh --project codyrichtercooks` (Workload Identity Federation, deployer service account, GitHub repository variables).
 - **Verification**: Always check logs in Google Cloud Console after deploying changes to infrastructure.

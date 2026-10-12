@@ -1,0 +1,50 @@
+name: Deploy backend
+
+# Runs after CI passes on master. Builds the image tagged with the commit SHA,
+# runs migrations as a Cloud Run Job, then deploys (infrastructure/cloudrun/cloudbuild.yaml).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build, migrate, deploy
+        run: |
+          gcloud builds submit \
+            --project='${{ vars.GCP_PROJECT_ID }}' \
+            --config=infrastructure/cloudrun/cloudbuild.yaml \
+            --substitutions=_REGION=us-central1,_IMAGE_TAG="$SHA"
+      - name: Smoke test
+        run: |
+          URL=$(gcloud run services describe cooking-backend --region us-central1 \
+            --project='${{ vars.GCP_PROJECT_ID }}' --format='value(status.url)')
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            "$URL/api/v1/system/health/"

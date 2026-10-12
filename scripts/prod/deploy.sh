@@ -1,8 +1,8 @@
 #!/bin/bash
 # =============================================================================
-# deploy-cloudrun.sh - Deploy backend to Google Cloud Run
+# deploy.sh - Build, migrate, and deploy the backend to Google Cloud Run
 # =============================================================================
-# Usage: ./scripts/deploy-cloudrun.sh [OPTIONS]
+# Usage: ./scripts/prod/deploy.sh [OPTIONS]
 #
 # Options:
 #   --project PROJECT   GCP project ID (required if not set via gcloud config)
@@ -130,9 +130,20 @@ check_prerequisites() {
 
 # Build and deploy
 deploy() {
+    cd "$PROJECT_ROOT"
+
+    # Releases are built from a commit, never from uncommitted local changes,
+    # so the running image is always traceable (and revertable) to git.
+    if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+        print_error "Working tree has uncommitted changes. Commit or stash them first."
+        exit 1
+    fi
+    IMAGE_TAG=$(git rev-parse HEAD)
+
     print_step "Starting deployment to Cloud Run..."
     echo "  Project: $PROJECT"
     echo "  Region: $REGION"
+    echo "  Commit: $IMAGE_TAG"
     echo ""
 
     if [[ "$DRY_RUN" == "true" ]]; then
@@ -140,20 +151,18 @@ deploy() {
         echo ""
         echo "Would execute:"
         echo "  gcloud builds submit --config=infrastructure/cloudrun/cloudbuild.yaml \\"
-        echo "    --substitutions=_REGION=$REGION \\"
+        echo "    --substitutions=_REGION=$REGION,_IMAGE_TAG=$IMAGE_TAG \\"
         echo "    --project=$PROJECT"
 
         cleanup_untagged_images
         return
     fi
 
-    cd "$PROJECT_ROOT"
-
-    # Submit build
+    # Build, migrate, and deploy (see cloudbuild.yaml)
     print_step "Submitting build to Cloud Build..."
     gcloud builds submit \
         --config=infrastructure/cloudrun/cloudbuild.yaml \
-        --substitutions=_REGION="$REGION" \
+        --substitutions=_REGION="$REGION",_IMAGE_TAG="$IMAGE_TAG" \
         --project="$PROJECT"
 
     print_success "Deployment complete!"

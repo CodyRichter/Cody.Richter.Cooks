@@ -20,8 +20,9 @@
 ## 2. Production & Deployment (`scripts/prod/`)
 | Script | Description |
 | :--- | :--- |
-| **`./scripts/prod/deploy.sh`** | **Deploy to Cloud Run**. Builds and pushes image, then deploys. |
-| **`./scripts/prod/migrate.sh`** | **Apply Production Migrations**. Runs migrations against remote DB. **USE WITH CAUTION**. |
+| **`./scripts/prod/deploy.sh`** | **Deploy to Cloud Run (manual fallback)**. Requires a clean working tree; runs `cloudbuild.yaml` (build tagged with the commit SHA, migrate, deploy). Normal deploys happen via GitHub Actions on merge to `master`. |
+| **`./scripts/prod/setup-github-deploy.sh`** | **CI/CD Setup (one-time)**. Workload Identity Federation + deployer service account + GitHub variables for the deploy workflow. |
+| **`./scripts/prod/migrate.sh`** | **Apply Production Migrations from a laptop**. Normally unnecessary: every deploy runs migrations via the `cooking-backend-migrate` Cloud Run Job. **USE WITH CAUTION**. |
 | **`./scripts/prod/setup-gcp.sh`** | **GCP Initialization**. Sets up project, APIs, and basic infra. |
 | **`./scripts/prod/setup-secret-permissions.sh`** | **IAM Secrets**. Configures Secret Manager access for the service account. |
 | **`./scripts/prod/logs.sh`** | **Production Logs**. View or tail live logs from GCP Cloud Run. |
