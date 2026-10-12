@@ -405,6 +405,32 @@ class TestRecipeAPI(APITestBase):
         data = self.assert_success_response(response, 201)
         assert data["title"] == "Complete Recipe"
 
+    def test_recipe_creation_sanitizes_html(
+        self, client: TestClient, auth_headers: dict
+    ):
+        """Malicious HTML is stripped before storage, not just rejected by tag."""
+        recipe_data = {
+            "title": "XSS Recipe",
+            "description": '<p>Hi</p><img src="x" onerror="alert(1)">'
+            '<a href="javascript:alert(1)">x</a>',
+            "instructions": [
+                {
+                    "title": "Mix",
+                    "description": '<p onmouseover="alert(1)">Mix</p>',
+                    "step_number": 1,
+                }
+            ],
+        }
+
+        response = client.post(
+            "/api/v1/recipes", json=recipe_data, headers=auth_headers
+        )
+        data = self.assert_success_response(response, 201)
+        stored = client.get(f"/api/v1/recipes/{data['id']}").json()
+        assert "onerror" not in stored["description"]
+        assert "javascript:" not in stored["description"]
+        assert stored["instructions"][0]["description"] == "<p>Mix</p>"
+
     def test_recipe_creation_unauthorized(
         self, client: TestClient, sample_recipe_data: dict
     ):

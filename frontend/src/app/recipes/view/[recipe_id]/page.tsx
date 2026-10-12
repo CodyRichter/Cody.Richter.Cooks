@@ -33,6 +33,7 @@ import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard
 import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
 import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
 import ShareRecipeModal from "@/components/recipes/share/ShareRecipeModal";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import { titleize } from "@/utils/recipeUtils";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -347,7 +348,7 @@ export default function ViewRecipe() {
                 <Divider />
                 <Box
                   className="recipe-description-content"
-                  dangerouslySetInnerHTML={{ __html: recipe.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(recipe.description) }}
                   onClick={handleDescriptionClick}
                   style={{
                     cursor: "auto",

@@ -186,11 +186,11 @@ class TestConsolidatedRecipeSchema:
         recipe = RecipeDetail(**recipe_data)
         assert recipe.description == "<p>Valid <strong>HTML</strong> content.</p>"
 
-        # Invalid HTML tag
-        with pytest.raises(ValidationError):
-            RecipeDetail(
-                title="Test Recipe", description="<script>alert('xss')</script>"
-            )
+        recipe = RecipeDetail(
+            title="Test Recipe",
+            description="<script>alert('xss')</script><p>Safe</p>",
+        )
+        assert recipe.description == "<p>Safe</p>"
 
 
 @pytest.mark.unit

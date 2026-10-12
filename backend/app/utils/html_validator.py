@@ -1,92 +1,96 @@
 """
-Centralized HTML content validation utility.
+Centralized HTML sanitization for user-authored rich text.
+
+Content is rendered as raw HTML on the frontend, so everything outside the
+allowlists below (tags, attributes, URL schemes, inline styles) is stripped.
 """
 
-import re
-from typing import Optional, Set
+from typing import Optional
+
+import nh3
+
+ALLOWED_TAGS = {
+    "p",
+    "br",
+    "hr",
+    "strong",
+    "b",
+    "em",
+    "i",
+    "u",
+    "s",
+    "mark",
+    "sub",
+    "sup",
+    "code",
+    "pre",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "ul",
+    "ol",
+    "li",
+    "img",
+    "a",
+    "span",
+    "div",
+    "blockquote",
+}
+
+_ALIGNABLE_TAGS = {"p", "h1", "h2", "h3", "h4", "h5", "h6"}
+
+ALLOWED_ATTRIBUTES = {
+    "a": {"href", "title", "target"},
+    "img": {"src", "alt", "title", "width", "height"},
+    "ol": {"start"},
+    **{tag: {"style"} for tag in _ALIGNABLE_TAGS},
+}
+
+ALLOWED_URL_SCHEMES = {"http", "https", "mailto", "data"}
+ALLOWED_STYLE_PROPERTIES = {"text-align"}
+_DATA_IMAGE_PREFIXES = (
+    "data:image/png",
+    "data:image/jpeg",
+    "data:image/gif",
+    "data:image/webp",
+)
 
 
-class HTMLValidator:
-    """Centralized HTML content validator with configurable allowed tags."""
-
-    DEFAULT_ALLOWED_TAGS = {
-        "p",
-        "br",
-        "strong",
-        "b",
-        "em",
-        "i",
-        "u",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "h6",
-        "ul",
-        "ol",
-        "li",
-        "img",
-        "a",
-        "span",
-        "div",
-        "blockquote",
-    }
-
-    @classmethod
-    def validate_html_content(
-        cls,
-        content: Optional[str],
-        allowed_tags: Optional[Set[str]] = None,
-        allow_empty: bool = True,
-    ) -> Optional[str]:
-        """
-        Validate HTML content against allowed tags.
-
-        Args:
-            content: HTML content to validate
-            allowed_tags: Set of allowed HTML tags (uses default if None)
-            allow_empty: Whether to allow empty/None content
-
-        Returns:
-            The validated content
-
-        Raises:
-            ValueError: If content contains disallowed tags or is empty when not allowed
-        """
-        if content is None:
-            if allow_empty:
-                return None
-            raise ValueError("Content cannot be empty")
-
-        content = content.strip()
-        if not content:
-            if allow_empty:
-                return content
-            raise ValueError("Content cannot be empty")
-
-        # Use default allowed tags if none provided
-        if allowed_tags is None:
-            allowed_tags = cls.DEFAULT_ALLOWED_TAGS
-
-        # Simple regex to find HTML tags
-        tag_pattern = r"<(/?)(\w+)[^>]*>"
-        tags = re.findall(tag_pattern, content.lower())
-
-        for _, tag in tags:
-            if tag not in allowed_tags:
-                raise ValueError(f"HTML tag '{tag}' is not allowed")
-
-        return content
+def _filter_attribute(tag: str, attribute: str, value: str) -> Optional[str]:
+    """Restrict `data:` URLs to raster images inside <img src>."""
+    if value.strip().lower().startswith("data:"):
+        if tag == "img" and attribute == "src":
+            return value if value.lower().startswith(_DATA_IMAGE_PREFIXES) else None
+        return None
+    return value
 
 
-# Convenience functions for common validation scenarios
+def sanitize_html(content: str) -> str:
+    return nh3.clean(
+        content,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES,
+        url_schemes=ALLOWED_URL_SCHEMES,
+        filter_style_properties=ALLOWED_STYLE_PROPERTIES,
+        attribute_filter=_filter_attribute,
+        link_rel="noopener noreferrer",
+        strip_comments=True,
+    ).strip()
+
+
 def validate_recipe_description(content: Optional[str]) -> Optional[str]:
-    """Validate HTML content for recipe descriptions (allows empty)."""
-    return HTMLValidator.validate_html_content(content, allow_empty=True)
+    """Sanitize HTML for recipe descriptions (allows empty)."""
+    if content is None:
+        return None
+    return sanitize_html(content)
 
 
-def validate_instruction_description(content: str) -> str:
-    """Validate HTML content for instruction descriptions (requires content)."""
-    result = HTMLValidator.validate_html_content(content, allow_empty=False)
-    return result if result is not None else ""
+def validate_instruction_description(content: Optional[str]) -> str:
+    """Sanitize HTML for instruction descriptions (requires content)."""
+    sanitized = sanitize_html(content or "")
+    if not sanitized:
+        raise ValueError("Content cannot be empty")
+    return sanitized

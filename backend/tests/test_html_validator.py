@@ -1,146 +1,87 @@
 """
-Tests for HTML validator utility.
+Tests for HTML sanitization utility.
 """
 
 import pytest
 from app.utils.html_validator import (
-    HTMLValidator,
+    sanitize_html,
     validate_recipe_description,
     validate_instruction_description,
 )
 
 
 @pytest.mark.unit
-class TestHTMLValidator:
-    """Test cases for HTMLValidator class."""
+class TestSanitizeHTML:
+    """Allowed rich text survives; anything executable is stripped."""
 
-    def test_validate_html_content_with_allowed_tags(self):
-        """Test validation with allowed HTML tags."""
-        content = "<p>This is a <strong>test</strong> with <em>formatting</em>.</p>"
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
+    @pytest.mark.parametrize(
+        "content",
+        [
+            "<p>This is a <strong>test</strong> with <em>formatting</em>.</p>",
+            "<div><p>Nested <strong><em>formatting</em></strong> test.</p></div>",
+            '<ul><li>One</li></ul><ol start="3"><li>Three</li></ol>',
+            "<p><mark>hi</mark> H<sub>2</sub>O x<sup>2</sup> <s>old</s> <u>u</u></p>",
+            "<pre><code>code</code></pre><hr><blockquote>q</blockquote>",
+            '<p style="text-align:center">Centered</p>',
+            '<img src="https://example.com/a.webp" alt="Dish">',
+            '<img src="data:image/webp;base64,AAAA">',
+            "This is plain text with no HTML tags.",
+        ],
+    )
+    def test_preserves_allowed_content(self, content):
+        assert sanitize_html(content) == content
 
-    def test_validate_html_content_with_disallowed_tags(self):
-        """Test validation fails with disallowed HTML tags."""
-        content = "<script>alert('xss')</script><p>Test</p>"
-        with pytest.raises(ValueError, match="HTML tag 'script' is not allowed"):
-            HTMLValidator.validate_html_content(content)
+    def test_links_get_safe_rel(self):
+        result = sanitize_html('<a href="https://example.com">link</a>')
+        assert result == (
+            '<a href="https://example.com" rel="noopener noreferrer">link</a>'
+        )
 
-    def test_validate_html_content_empty_allowed(self):
-        """Test validation allows empty content when configured."""
-        assert HTMLValidator.validate_html_content(None, allow_empty=True) is None
-        assert HTMLValidator.validate_html_content("", allow_empty=True) == ""
-        assert HTMLValidator.validate_html_content("   ", allow_empty=True) == ""
+    def test_normalizes_tag_case(self):
+        assert (
+            sanitize_html("<P>Up <STRONG>case</STRONG></P>")
+            == "<p>Up <strong>case</strong></p>"
+        )
 
-    def test_validate_html_content_empty_not_allowed(self):
-        """Test validation fails with empty content when not allowed."""
-        with pytest.raises(ValueError, match="Content cannot be empty"):
-            HTMLValidator.validate_html_content(None, allow_empty=False)
-
-        with pytest.raises(ValueError, match="Content cannot be empty"):
-            HTMLValidator.validate_html_content("", allow_empty=False)
-
-        with pytest.raises(ValueError, match="Content cannot be empty"):
-            HTMLValidator.validate_html_content("   ", allow_empty=False)
-
-    def test_validate_html_content_custom_allowed_tags(self):
-        """Test validation with custom allowed tags."""
-        content = "<custom>Test</custom>"
-        custom_tags = {"custom"}
-
-        result = HTMLValidator.validate_html_content(content, allowed_tags=custom_tags)
-        assert result == content
-
-        # Should fail with default tags
-        with pytest.raises(ValueError, match="HTML tag 'custom' is not allowed"):
-            HTMLValidator.validate_html_content(content)
-
-    def test_validate_html_content_case_insensitive(self):
-        """Test validation is case insensitive for tags."""
-        content = "<P>Test with <STRONG>uppercase</STRONG> tags.</P>"
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
-
-    def test_validate_html_content_with_attributes(self):
-        """Test validation works with tag attributes."""
-        content = '<p class="test">Test with <a href="http://example.com">link</a>.</p>'
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
-
-    def test_validate_html_content_nested_tags(self):
-        """Test validation with nested HTML tags."""
-        content = "<div><p>Nested <strong><em>formatting</em></strong> test.</p></div>"
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
+    @pytest.mark.parametrize(
+        "payload, forbidden",
+        [
+            ("<img src=x onerror=alert(1)>", "onerror"),
+            ('<a href="javascript:alert(1)">x</a>', "javascript:"),
+            ('<a href="JaVaScRiPt:alert(1)">x</a>', "alert"),
+            ('<a href="data:text/html,<script>1</script>">x</a>', "data:"),
+            ('<img src="data:image/svg+xml,<svg onload=alert(1)>">', "svg"),
+            ("<svg onload=alert(1)><circle/></svg>", "onload"),
+            ("<script>alert('xss')</script><p>Test</p>", "script"),
+            ('<iframe src="https://evil.example"></iframe>', "iframe"),
+            ('<p onclick="alert(1)">t</p>', "onclick"),
+            ('<p style="background:url(javascript:alert(1))">t</p>', "background"),
+            ("<style>body{display:none}</style><p>t</p>", "display"),
+            ('<div><form action="https://evil.example"><input></form></div>', "form"),
+        ],
+    )
+    def test_strips_xss_vectors(self, payload, forbidden):
+        assert forbidden not in sanitize_html(payload).lower()
 
 
 @pytest.mark.unit
 class TestConvenienceFunctions:
-    """Test cases for convenience validation functions."""
-
-    def test_validate_recipe_description_allows_empty(self):
-        """Test recipe description validation allows empty content."""
+    def test_recipe_description_allows_empty(self):
         assert validate_recipe_description(None) is None
         assert validate_recipe_description("") == ""
         assert validate_recipe_description("   ") == ""
 
-    def test_validate_recipe_description_with_content(self):
-        """Test recipe description validation with valid content."""
-        content = "<p>A delicious <strong>recipe</strong> description.</p>"
-        result = validate_recipe_description(content)
-        assert result == content
+    def test_recipe_description_strips_script(self):
+        assert (
+            validate_recipe_description("<script>alert('xss')</script><p>Recipe</p>")
+            == "<p>Recipe</p>"
+        )
 
-    def test_validate_recipe_description_with_invalid_tags(self):
-        """Test recipe description validation fails with invalid tags."""
-        content = "<script>alert('xss')</script><p>Recipe</p>"
-        with pytest.raises(ValueError, match="HTML tag 'script' is not allowed"):
-            validate_recipe_description(content)
+    def test_instruction_description_requires_content(self):
+        for content in ["", "   ", None, "<script>alert(1)</script>"]:
+            with pytest.raises(ValueError, match="Content cannot be empty"):
+                validate_instruction_description(content)
 
-    def test_validate_instruction_description_requires_content(self):
-        """Test instruction description validation requires content."""
-        with pytest.raises(ValueError, match="Content cannot be empty"):
-            validate_instruction_description("")
-
-        with pytest.raises(ValueError, match="Content cannot be empty"):
-            validate_instruction_description("   ")
-
-    def test_validate_instruction_description_with_content(self):
-        """Test instruction description validation with valid content."""
+    def test_instruction_description_with_content(self):
         content = "<p>Mix the <strong>ingredients</strong> thoroughly.</p>"
-        result = validate_instruction_description(content)
-        assert result == content
-
-    def test_validate_instruction_description_with_invalid_tags(self):
-        """Test instruction description validation fails with invalid tags."""
-        content = "<script>alert('xss')</script><p>Instruction</p>"
-        with pytest.raises(ValueError, match="HTML tag 'script' is not allowed"):
-            validate_instruction_description(content)
-
-
-@pytest.mark.unit
-class TestEdgeCases:
-    """Test edge cases and error conditions."""
-
-    def test_validate_html_content_no_tags(self):
-        """Test validation with plain text (no HTML tags)."""
-        content = "This is plain text with no HTML tags."
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
-
-    def test_validate_html_content_malformed_tags(self):
-        """Test validation with malformed HTML tags."""
-        # Unclosed tags should still be detected
-        content = "<p>Unclosed paragraph"
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
-
-        # Self-closing tags
-        content = "<br/><img src='test.jpg'/>"
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
-
-    def test_validate_html_content_mixed_case_tags(self):
-        """Test validation with mixed case HTML tags."""
-        content = "<P>Mixed <Strong>case</Strong> tags.</P>"
-        result = HTMLValidator.validate_html_content(content)
-        assert result == content
+        assert validate_instruction_description(content) == content
