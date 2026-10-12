@@ -18,7 +18,8 @@ from app.models.recipe import Recipe
 from app.models.recipe_permission import RecipePermission, PermissionRole
 from app.models.ingredient import Ingredient
 from app.models.instruction import Instruction
-from app.utils.auth import create_access_token
+from app.utils.auth import create_access_token, token_claims
+from app.utils.rate_limit import limiter
 from app.utils.password_security import PasswordSecurity
 
 
@@ -40,6 +41,14 @@ def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limits():
+    """Rate limits are exercised explicitly in their own tests."""
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
 
 
 @pytest.fixture(scope="function")
@@ -248,21 +257,21 @@ def sample_recipe_data() -> dict:
 @pytest.fixture
 def auth_headers(test_user: User) -> dict:
     """Create authentication headers for test user."""
-    access_token = create_access_token(data={"sub": test_user.username})
+    access_token = create_access_token(data=token_claims(test_user))
     return {"Authorization": f"Bearer {access_token}"}
 
 
 @pytest.fixture
 def auth_headers_user2(test_user2: User) -> dict:
     """Create authentication headers for second test user."""
-    access_token = create_access_token(data={"sub": test_user2.username})
+    access_token = create_access_token(data=token_claims(test_user2))
     return {"Authorization": f"Bearer {access_token}"}
 
 
 @pytest.fixture
 def admin_auth_headers(admin_user: User) -> dict:
     """Create authentication headers for admin user."""
-    access_token = create_access_token(data={"sub": admin_user.username})
+    access_token = create_access_token(data=token_claims(admin_user))
     return {"Authorization": f"Bearer {access_token}"}
 
 

@@ -119,6 +119,45 @@ def verify_refresh_token(token: str) -> Optional[dict]:
         return None
 
 
+def token_claims(user: "User") -> dict:
+    """Identity claims embedded in access and refresh tokens."""
+    return {"sub": user.id, "tv": user.token_version}
+
+
+def create_token_pair(user: "User") -> tuple[str, str]:
+    """Issue a fresh (access_token, refresh_token) pair for a user."""
+    claims = token_claims(user)
+    return create_access_token(claims), create_refresh_token(claims)
+
+
+def revoke_user_tokens(user: "User") -> None:
+    """Invalidate every token issued to the user so far. Caller commits."""
+    user.token_version = (user.token_version or 0) + 1
+
+
+def get_user_from_token(db: Session, token: str, token_type: str) -> Optional["User"]:
+    """
+    Resolve the user a token belongs to.
+
+    Returns None unless the token is valid, of the expected type, and was issued
+    for the user's current token_version (i.e. not revoked).
+    """
+    from app.models.user import User
+
+    payload = verify_token(token)
+    if payload is None or payload.get("type") != token_type:
+        return None
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        return None
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None or payload.get("tv") != user.token_version:
+        return None
+    return user
+
+
 def authenticate_user(db: Session, username: str, password: str) -> Optional["User"]:
     """
     Authenticate a user by username and password.
@@ -150,79 +189,33 @@ def get_current_user(
     """
     Dependency to get the current authenticated user from JWT token.
 
-    Args:
-        credentials: HTTP authorization credentials containing the JWT token
-        db: Database session
-
-    Returns:
-        Current authenticated user
-
     Raises:
-        HTTPException: If token is invalid or user not found
+        HTTPException: If token is invalid, revoked, or user not found
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = verify_token(credentials.credentials)
-        if payload is None:
-            raise credentials_exception
-
-        # Ensure this is an access token (not a refresh token)
-        if payload.get("type") != "access":
-            raise credentials_exception
-
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-
-    except JWTError:
-        raise credentials_exception
-
-    from app.models.user import User
-
-    user = (
-        db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
-    )
+    user = get_user_from_token(db, credentials.credentials, "access")
     if user is None:
-        raise credentials_exception
-
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return user
 
 
-def refresh_access_token(refresh_token: str, db: Session) -> Optional[str]:
+def rotate_refresh_token(
+    refresh_token: str, db: Session
+) -> Optional[tuple["User", str, str]]:
     """
-    Create a new access token from a valid refresh token.
-
-    Args:
-        refresh_token: JWT refresh token string
-        db: Database session
+    Exchange a valid refresh token for a new (access, refresh) pair.
 
     Returns:
-        New access token if refresh token is valid, None otherwise
+        (user, access_token, refresh_token) if the refresh token is valid, None otherwise
     """
-    payload = verify_refresh_token(refresh_token)
-    if payload is None:
-        return None
-
-    username: str = payload.get("sub")
-    if username is None:
-        return None
-
-    from app.models.user import User
-
-    user = (
-        db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
-    )
+    user = get_user_from_token(db, refresh_token, "refresh")
     if user is None:
         return None
-
-    # Create new access token
-    access_token = create_access_token(data={"sub": user.username})
-    return access_token
+    access_token, new_refresh_token = create_token_pair(user)
+    return user, access_token, new_refresh_token
 
 
 def get_current_active_user(current_user: "User" = Depends(get_current_user)) -> "User":
@@ -250,39 +243,10 @@ def get_current_user_optional(
     """
     Dependency to get the current authenticated user from JWT token if available.
     Does not raise exception if token is missing or invalid.
-
-    Args:
-        credentials: HTTP authorization credentials containing the JWT token
-        db: Database session
-
-    Returns:
-        Current authenticated user if token is valid, None otherwise
     """
     if credentials is None:
         return None
-
-    try:
-        payload = verify_token(credentials.credentials)
-        if payload is None:
-            return None
-
-        # Ensure this is an access token (not a refresh token)
-        if payload.get("type") != "access":
-            return None
-
-        username: str = payload.get("sub")
-        if username is None:
-            return None
-
-    except JWTError:
-        return None
-
-    from app.models.user import User
-
-    user = (
-        db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
-    )
-    return user
+    return get_user_from_token(db, credentials.credentials, "access")
 
 
 def create_password_reset_token(user_id: str, password_hash: str) -> str:

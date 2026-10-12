@@ -39,13 +39,17 @@ pip install -r requirements.txt
 ## 4. Coding Standards (Python)
 - **Style**: Follow PEP 8.
 - **Type Hints**: **MANDATORY** for all function arguments and returns. `def foo(x: int) -> str:`
-- **Async**: Use `async def` for all route handlers and DB access.
+- **Sync handlers**: Use plain `def` for route handlers. SQLAlchemy sessions and bcrypt are blocking; FastAPI runs `def` handlers in its threadpool, whereas blocking calls inside `async def` stall every request on the instance. Only use `async def` for handlers that exclusively `await` non-blocking I/O.
 - **Dangling Commas**: Prefer trailing commas in multi-line lists/dicts for cleaner diffs.
 
 ## 5. Security & Best Practices
 - **Dependencies**: Pin versions in `requirements.txt`.
 - **SQL Injection**: ALWAYS use SQLAlchemy ORM methods or parameterized queries.
 - **Validation**: Rely on Pydantic schemas to validate incoming JSON.
+- **Rich text / HTML**: Any user-authored HTML must pass through `app/utils/html_validator.sanitize_html` (via the schema validators). The frontend renders it as raw HTML, so the allowlist there is the XSS boundary; extend it deliberately.
+- **Auth tokens**: JWTs carry `sub` = user ID and `tv` = `users.token_version`. Issue tokens with `create_token_pair(user)`; resolve them with `get_user_from_token`. Call `revoke_user_tokens(user)` whenever credentials change (password change/reset, `POST /users/logout-all/`). Refresh tokens rotate on every `/users/refresh/` call.
+- **Abuse protection**: Login, register, refresh, forgot/reset password and change-password are rate limited per IP via `app/utils/rate_limit.limiter` (slowapi, in-memory per instance). Registration and forgot-password require a Cloudflare Turnstile token. Client IPs come from `app/utils/client_ip.get_client_ip`, which trusts only the right-most `X-Forwarded-For` hop(s) (`FORWARDED_FOR_TRUSTED_HOPS`).
+- **Production secrets**: With `DEBUG=false` the app refuses to start unless `SECRET_KEY` (32+ chars, non-default) and a real `TURNSTILE_SECRET_KEY` are set.
 - **Secrets**: Read from `os.environ` or `fastapi.config`. Never commit secrets.
 
 ## 6. Testing Guidelines

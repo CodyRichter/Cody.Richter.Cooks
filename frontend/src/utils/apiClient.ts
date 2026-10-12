@@ -1,4 +1,6 @@
-import { apiBaseUrl, tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
+import { apiBaseUrl } from '@/config/environment'
+import { endSession, getAccessToken, getRefreshToken, setTokens } from '@/utils/auth'
+import type { TokenRefreshResponse } from '@/types/User'
 
 export class ApiError extends Error {
   status: number
@@ -29,68 +31,56 @@ export class ApiError extends Error {
   }
 }
 
-// Simple token manager
-class TokenManager {
-  getAccessToken(): string | null {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem(tokenStorageKey)
-  }
+let refreshInFlight: Promise<string> | null = null
 
-  getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem(refreshTokenStorageKey)
-  }
-
-  setTokens(accessToken: string, refreshToken?: string): void {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(tokenStorageKey, accessToken)
-    if (refreshToken) {
-      localStorage.setItem(refreshTokenStorageKey, refreshToken)
-    }
-  }
-
-  clearTokens(): void {
-    if (typeof window === 'undefined') return
-    localStorage.removeItem(tokenStorageKey)
-    localStorage.removeItem(refreshTokenStorageKey)
-  }
-
-  async refreshAccessToken(): Promise<string> {
-    const refreshToken = this.getRefreshToken()
-    if (!refreshToken) {
-      throw new Error('No refresh token available')
-    }
-
-    const response = await fetch(`${apiBaseUrl}/api/v1/users/refresh/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken })
+/**
+ * Exchanges the stored refresh token for a new token pair. Concurrent callers
+ * share one request: the backend rotates refresh tokens, so a second parallel
+ * refresh would present an already-consumed token.
+ */
+export function refreshSession(): Promise<string> {
+  if (!refreshInFlight) {
+    refreshInFlight = performRefresh().finally(() => {
+      refreshInFlight = null
     })
-
-    if (!response.ok) {
-      this.clearTokens()
-      let message = 'Failed to refresh token'
-      let details = null
-      try {
-        const errorData = await response.json()
-        message = errorData.message || errorData.detail || message
-        details = errorData
-      } catch {
-        // Use status text if JSON parsing fails
-        message = response.statusText || message
-      }
-      throw new ApiError(message, response.status, response.status.toString(), details)
-    }
-
-    const data = await response.json()
-    this.setTokens(data.access_token, data.refresh_token)
-    return data.access_token
   }
+  return refreshInFlight
+}
+
+async function performRefresh(): Promise<string> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) {
+    endSession()
+    throw new ApiError('No refresh token available', 401, '401')
+  }
+
+  const response = await fetch(`${apiBaseUrl}/api/v1/users/refresh/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken })
+  })
+
+  if (!response.ok) {
+    endSession()
+    let message = 'Failed to refresh token'
+    let details = null
+    try {
+      const errorData = await response.json()
+      message = errorData.message || errorData.detail || message
+      details = errorData
+    } catch {
+      message = response.statusText || message
+    }
+    throw new ApiError(message, response.status, response.status.toString(), details)
+  }
+
+  const data: TokenRefreshResponse = await response.json()
+  setTokens(data.access_token, data.refresh_token)
+  return data.access_token
 }
 
 // Simple API client for React Query
 export class ApiClient {
-  private tokenManager = new TokenManager()
   private baseUrl = apiBaseUrl
 
   private async createApiError(response: Response): Promise<ApiError> {
@@ -128,7 +118,7 @@ export class ApiClient {
     }
 
     if (!skipAuth) {
-      const token = this.tokenManager.getAccessToken()
+      const token = getAccessToken()
       if (token) {
         headers.Authorization = `Bearer ${token}`
       }
@@ -162,20 +152,19 @@ export class ApiClient {
     })
 
     // Handle 401 with token refresh
-    if (response.status === 401 && !skipAuth) {
+    if (response.status === 401 && !skipAuth && getRefreshToken()) {
       try {
-        await this.tokenManager.refreshAccessToken()
-        response = await fetch(url, {
-          ...fetchOptions,
-          headers: {
-            ...this.getHeaders(false),
-            ...fetchOptions.headers
-          }
-        })
+        await refreshSession()
       } catch {
-        this.tokenManager.clearTokens()
         throw new Error('Authentication failed. Please log in again.')
       }
+      response = await fetch(url, {
+        ...fetchOptions,
+        headers: {
+          ...this.getHeaders(false),
+          ...fetchOptions.headers
+        }
+      })
     }
 
     if (!response.ok) {

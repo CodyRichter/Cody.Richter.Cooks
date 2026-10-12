@@ -43,6 +43,7 @@ class TestUserAPI(APITestBase):
                     "username": "validuser",
                     "email": "valid@example.com",
                     "password": "StrongPassword123!",
+                    "captcha_token": "test",
                 },
                 201,
             ),
@@ -51,13 +52,27 @@ class TestUserAPI(APITestBase):
                     "username": "user",
                     "email": "invalid-email",
                     "password": "StrongPassword123!",
+                    "captcha_token": "test",
                 },
-                201,
-            ),  # API may not validate email format strictly
-            (
-                {"username": "user", "email": "valid@example.com", "password": "weak"},
                 422,
-            ),  # Weak password validation may return 422
+            ),
+            (
+                {
+                    "username": "user",
+                    "email": "valid@example.com",
+                    "password": "weak",
+                    "captcha_token": "test",
+                },
+                422,
+            ),
+            (
+                {
+                    "username": "user",
+                    "email": "valid@example.com",
+                    "password": "StrongPassword123!",
+                },
+                422,
+            ),  # Missing captcha token
         ],
     )
     def test_user_registration(
@@ -97,6 +112,7 @@ class TestUserAPI(APITestBase):
                 "username": test_user.username,
                 "email": "different@example.com",
                 "password": "StrongPassword123!",
+                "captcha_token": "test",
             },
         )
         self.assert_error_response(response, 400, "Username already registered")
@@ -108,6 +124,7 @@ class TestUserAPI(APITestBase):
                 "username": "differentuser",
                 "email": test_user.email,
                 "password": "StrongPassword123!",
+                "captcha_token": "test",
             },
         )
         self.assert_error_response(response, 400, "Email already registered")
@@ -169,7 +186,14 @@ class TestUserAPI(APITestBase):
 
         new_tokens = self.assert_success_response(refresh_response)
         assert "access_token" in new_tokens
+        assert new_tokens["refresh_token"]
         assert new_tokens["token_type"] == "bearer"
+
+        # The rotated refresh token keeps the session alive
+        response = client.post(
+            "/api/v1/users/refresh", json={"refresh_token": new_tokens["refresh_token"]}
+        )
+        self.assert_success_response(response)
 
     @pytest.mark.parametrize(
         "invalid_token_scenario",
@@ -206,21 +230,130 @@ class TestUserAPI(APITestBase):
         assert data["email"] == test_user.email
         assert "password_hash" not in data
 
-        # Test update profile
-        update_data = {"email": "updated@example.com"}
+        # Changing email requires re-authentication
+        for password in [None, "WrongPassword123!"]:
+            response = client.put(
+                "/api/v1/users/profile",
+                json={"email": "updated@example.com", "current_password": password},
+                headers=auth_headers,
+            )
+            self.assert_error_response(response, 400, "Current password is required")
+
+        update_data = {
+            "email": "updated@example.com",
+            "current_password": "TestPassword123!",
+        }
         response = client.put(
             "/api/v1/users/profile", json=update_data, headers=auth_headers
         )
         data = self.assert_success_response(response)
         assert data["email"] == "updated@example.com"
 
+        # Username changes don't need the password
+        response = client.put(
+            "/api/v1/users/profile", json={"username": "renamed"}, headers=auth_headers
+        )
+        assert self.assert_success_response(response)["username"] == "renamed"
+
         # Test update with duplicate email (should fail)
         response = client.put(
             "/api/v1/users/profile",
-            json={"email": test_user2.email},
+            json={"email": test_user2.email, "current_password": "TestPassword123!"},
             headers=auth_headers,
         )
         self.assert_error_response(response, 400, "Email already taken")
+
+        response = client.put(
+            "/api/v1/users/profile",
+            json={"email": "not-an-email"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 422
+
+    def test_tokens_survive_rename_and_stale_tokens_cannot_hijack(
+        self, client: TestClient, db_session: Session, test_user: User, auth_headers
+    ):
+        """Tokens identify users by ID, not by (reusable) username."""
+        old_username = test_user.username
+        response = client.put(
+            "/api/v1/users/profile", json={"username": "renamed"}, headers=auth_headers
+        )
+        self.assert_success_response(response)
+
+        # Someone else registers the freed-up username
+        response = client.post(
+            "/api/v1/users/register",
+            json={
+                "username": old_username,
+                "email": "squatter@example.com",
+                "password": "StrongPassword123!",
+                "captcha_token": "test",
+            },
+        )
+        self.assert_success_response(response, 201)
+
+        profile = client.get("/api/v1/users/profile", headers=auth_headers).json()
+        assert profile["id"] == test_user.id
+        assert profile["username"] == "renamed"
+
+    def test_password_change_revokes_other_sessions(
+        self, client: TestClient, test_user: User
+    ):
+        """Changing the password signs out every other session."""
+        login = {"username": test_user.username, "password": "TestPassword123!"}
+        other_session = client.post("/api/v1/users/login", json=login).json()
+        this_session = client.post("/api/v1/users/login", json=login).json()
+
+        response = client.post(
+            "/api/v1/users/change-password",
+            json={
+                "current_password": "TestPassword123!",
+                "new_password": "NewPassword456!",
+            },
+            headers={"Authorization": f"Bearer {this_session['access_token']}"},
+        )
+        fresh = self.assert_success_response(response)
+
+        stale = {"Authorization": f"Bearer {other_session['access_token']}"}
+        assert client.get("/api/v1/users/profile", headers=stale).status_code == 401
+        response = client.post(
+            "/api/v1/users/refresh",
+            json={"refresh_token": other_session["refresh_token"]},
+        )
+        assert response.status_code == 401
+
+        # The caller continues with the tokens returned by change-password
+        headers = {"Authorization": f"Bearer {fresh['access_token']}"}
+        assert client.get("/api/v1/users/profile", headers=headers).status_code == 200
+
+    def test_logout_all_revokes_every_session(
+        self, client: TestClient, test_user: User
+    ):
+        login = {"username": test_user.username, "password": "TestPassword123!"}
+        tokens = client.post("/api/v1/users/login", json=login).json()
+        headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+
+        response = client.post("/api/v1/users/logout-all", headers=headers)
+        assert response.status_code == 204
+
+        assert client.get("/api/v1/users/profile", headers=headers).status_code == 401
+        response = client.post(
+            "/api/v1/users/refresh", json={"refresh_token": tokens["refresh_token"]}
+        )
+        assert response.status_code == 401
+
+    def test_login_is_rate_limited(self, client: TestClient, test_user: User):
+        from app.utils.rate_limit import limiter
+
+        limiter.reset()
+        limiter.enabled = True
+        login = {"username": test_user.username, "password": "wrong"}
+        statuses = [
+            client.post("/api/v1/users/login", json=login).status_code
+            for _ in range(11)
+        ]
+        assert statuses[:10] == [401] * 10
+        assert statuses[10] == 429
 
     def test_user_profile_unauthorized(self, client: TestClient):
         """Test profile operations without authentication."""
@@ -301,6 +434,10 @@ class TestUserAPI(APITestBase):
         assert verify_resp.json()["username"] == test_user.username
 
         # 4. Submit new password
+        existing_session = client.post(
+            "/api/v1/users/login/",
+            json={"username": test_user.username, "password": "TestPassword123!"},
+        ).json()
         new_password = "NewStrongPassword123!"
         reset_resp = client.post(
             "/api/v1/users/reset-password/",
@@ -308,6 +445,10 @@ class TestUserAPI(APITestBase):
         )
         assert reset_resp.status_code == 200
         assert "Password has been reset successfully" in reset_resp.json()["message"]
+
+        # Sessions from before the reset are revoked
+        stale = {"Authorization": f"Bearer {existing_session['access_token']}"}
+        assert client.get("/api/v1/users/profile", headers=stale).status_code == 401
 
         # 5. Login with new password succeeds
         login_resp = client.post(

@@ -252,17 +252,6 @@ export const validateUserUpdate = (user: UserUpdate): ValidationResult => {
     }
   }
 
-  // Password validation (optional, 8-128 chars if provided)
-  if (user.password !== undefined) {
-    if (user.password.length === 0) {
-      errors.push({ field: 'password', message: 'Password cannot be empty' })
-    } else if (user.password.length < 8) {
-      errors.push({ field: 'password', message: 'Password must be at least 8 characters' })
-    } else if (user.password.length > 128) {
-      errors.push({ field: 'password', message: 'Password must be 128 characters or less' })
-    }
-  }
-
   return {
     isValid: errors.length === 0,
     errors

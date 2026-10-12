@@ -1,6 +1,6 @@
 import { apiClient } from '@/utils/apiClient'
 import { createApiService } from '@/utils/createApiService'
-import { User, UserRegistration, TokenResponse, LoginRequest, UserUpdate, TokenRefreshResponse } from '@/types/User'
+import { User, UserRegistration, TokenResponse, LoginRequest, UserUpdate } from '@/types/User'
 import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
 import { InstructionStep, InstructionCreate, InstructionPatch } from '@/types/InstructionStep'
 import { Ingredient, IngredientCreate, IngredientPatch } from '@/types/Ingredient'
@@ -10,11 +10,8 @@ export const authApi = {
   login: (credentials: LoginRequest): Promise<TokenResponse> =>
     apiClient.post('/api/v1/users/login', credentials, true),
 
-  register: (userData: UserRegistration): Promise<TokenResponse> =>
+  register: (userData: UserRegistration): Promise<User> =>
     apiClient.post('/api/v1/users/register', userData, true),
-
-  refreshToken: (refreshToken: string): Promise<TokenRefreshResponse> =>
-    apiClient.post('/api/v1/users/refresh', { refresh_token: refreshToken }, true),
 
   getProfile: (): Promise<User> =>
     apiClient.get('/api/v1/users/profile'),
@@ -22,14 +19,15 @@ export const authApi = {
   updateProfile: (userData: UserUpdate): Promise<User> =>
     apiClient.put('/api/v1/users/profile', userData),
 
-  changePassword: (currentPassword: string, newPassword: string): Promise<void> =>
+  // Signs out every other session; the response carries this session's new tokens
+  changePassword: (currentPassword: string, newPassword: string): Promise<TokenResponse> =>
     apiClient.post('/api/v1/users/change-password', {
       current_password: currentPassword,
       new_password: newPassword
     }),
 
-  logout: (): Promise<void> =>
-    Promise.resolve() // Backend doesn't have logout endpoint
+  logoutAll: (): Promise<void> =>
+    apiClient.post('/api/v1/users/logout-all')
 }
 
 // Recipe API - uses generic service with custom methods

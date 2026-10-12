@@ -2,7 +2,7 @@
 User model for authentication and user management.
 """
 
-from sqlalchemy import Column, String, DateTime, Index, Boolean
+from sqlalchemy import Column, String, DateTime, Index, Boolean, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.models import Base
@@ -19,6 +19,7 @@ class User(Base):
         email: Unique email address
         password_hash: Hashed password for authentication
         is_admin: Whether the user is an administrator
+        token_version: Embedded in JWTs; incrementing it revokes all issued tokens
         created_at: Timestamp when user was created
         updated_at: Timestamp when user was last updated
     """
@@ -30,6 +31,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False, server_default="false")
+    token_version = Column(Integer, default=0, nullable=False, server_default="0")
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

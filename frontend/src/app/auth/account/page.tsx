@@ -16,13 +16,17 @@ import {
   IconAlertTriangle,
   IconBrandTelegram,
   IconCircleDashedCheck,
+  IconLogout,
   IconShieldCheck,
 } from "@tabler/icons-react";
 
 import ChangePasswordModal from "@/components/account/ChangePasswordModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatNotificationError } from "@/utils/notificationUtils";
+import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
 
 export default function AccountDetailsPage() {
   const auth = useAuth();
@@ -32,6 +36,22 @@ export default function AccountDetailsPage() {
     isChangePasswordDialogOpen,
     { toggle: toggleChangePasswordDialog, close: closeChangePasswordDialog },
   ] = useDisclosure(false);
+
+  const [isSigningOutEverywhere, setIsSigningOutEverywhere] = useState(false);
+  const signOutEverywhere = async () => {
+    setIsSigningOutEverywhere(true);
+    try {
+      await auth.logoutAllSessions();
+    } catch (error) {
+      notifications.show({
+        title: "Could not sign out everywhere",
+        message: formatNotificationError(error),
+        color: "red",
+      });
+    } finally {
+      setIsSigningOutEverywhere(false);
+    }
+  };
 
   const username = auth.user?.username || "<Username Not Found>";
   const email = auth.user?.email || "<Email Not Found>";
@@ -113,6 +133,28 @@ export default function AccountDetailsPage() {
             onClick={toggleChangePasswordDialog}
           >
             Change Password
+          </Button>
+        </Flex>
+
+        <Flex
+          gap="xs"
+          justify="flex-start"
+          align="flex-end"
+          direction="row"
+          wrap="wrap"
+        >
+          <Text mt="md" size="md">
+            <strong>Sessions:</strong>
+          </Text>
+          <Button
+            size="compact-sm"
+            variant="subtle"
+            color="red"
+            loading={isSigningOutEverywhere}
+            onClick={signOutEverywhere}
+            leftSection={<IconLogout size={16} />}
+          >
+            Sign Out of All Devices
           </Button>
         </Flex>
       </Card>

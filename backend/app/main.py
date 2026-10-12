@@ -5,6 +5,8 @@ FastAPI application entry point with CORS configuration and route setup.
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 import logging
 
 from app.core.config import settings
@@ -12,6 +14,7 @@ from app.handlers.system import router as system_router
 from app.handlers.users import router as users_router
 from app.handlers.recipes import router as recipes_router
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.utils.rate_limit import limiter
 
 # Configure logging
 logging.basicConfig(
@@ -52,6 +55,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.debug else None,
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS middleware
 app.add_middleware(

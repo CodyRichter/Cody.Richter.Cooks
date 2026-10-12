@@ -14,6 +14,7 @@ from app.models.security_audit_log import (
     SecurityRiskLevel,
 )
 from app.models.user import User
+from app.utils.client_ip import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -388,21 +389,7 @@ class SecurityAuditLogger:
         Returns:
             Client IP address
         """
-        # Check for forwarded headers (common in proxy setups)
-        forwarded_for = request.headers.get("x-forwarded-for")
-        if forwarded_for:
-            # Take the first IP in the chain
-            return forwarded_for.split(",")[0].strip()
-
-        real_ip = request.headers.get("x-real-ip")
-        if real_ip:
-            return real_ip
-
-        # Fall back to direct client IP
-        if hasattr(request, "client") and request.client:
-            return request.client.host
-
-        return "Unknown"
+        return get_client_ip(request)
 
     def _log_to_application_logger(self, audit_log: SecurityAuditLog) -> None:
         """

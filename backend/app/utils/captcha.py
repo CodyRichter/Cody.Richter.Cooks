@@ -3,7 +3,7 @@ Utility for validating Cloudflare Turnstile captchas.
 """
 
 import httpx
-from app.core.config import settings
+from app.core.config import TURNSTILE_TEST_SECRET_KEY, settings
 
 
 def verify_turnstile_token(token: str) -> bool:
@@ -12,7 +12,7 @@ def verify_turnstile_token(token: str) -> bool:
     Returns True if valid, False otherwise.
     """
     # If the default secret key is set, assume we are in a testing environment
-    if settings.turnstile_secret_key == "1x0000000000000000000000000000000AA":
+    if settings.turnstile_secret_key == TURNSTILE_TEST_SECRET_KEY:
         print("[Captcha] Using test Turnstile secret key, bypassing validation.")
         return True
 

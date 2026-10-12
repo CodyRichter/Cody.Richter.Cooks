@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useReducer, ReactNode, useCallback, useEffect, useRef } from 'react'
-import { User, UserRegistration, TokenResponse } from '@/types/User'
+import React, { createContext, useContext, useReducer, ReactNode, useCallback, useEffect } from 'react'
+import { User, UserRegistration } from '@/types/User'
 import { authApi } from '@/services/apiServices'
-import { tokenStorageKey, refreshTokenStorageKey } from '@/config/environment'
+import { refreshSession } from '@/utils/apiClient'
+import { SESSION_EXPIRED_EVENT, clearTokens, getRefreshToken, setTokens } from '@/utils/auth'
 import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { formatNotificationError } from '@/utils/notificationUtils'
@@ -17,7 +18,7 @@ interface AuthState {
 // Authentication action types
 type AuthAction =
   | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; tokens: TokenResponse } }
+  | { type: 'AUTH_SUCCESS'; payload: { user: User } }
   | { type: 'AUTH_ERROR'; payload: { error: string } }
   | { type: 'AUTH_LOGOUT' }
   | { type: 'AUTH_FINISH_LOADING' }
@@ -29,6 +30,7 @@ interface AuthContextValue extends AuthState {
   login: (username: string, password: string) => Promise<void>
   register: (userData: UserRegistration) => Promise<void>
   logout: () => Promise<void>
+  logoutAllSessions: () => Promise<void>
   clearError: () => void
   refreshToken: () => Promise<void>
 }
@@ -52,11 +54,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       }
 
     case 'AUTH_SUCCESS':
-      // Store tokens securely
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(tokenStorageKey, action.payload.tokens.access_token)
-        localStorage.setItem(refreshTokenStorageKey, action.payload.tokens.refresh_token)
-      }
       return {
         ...state,
         user: action.payload.user,
@@ -84,11 +81,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       }
 
     case 'AUTH_LOGOUT':
-      // Clear tokens from storage
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(tokenStorageKey)
-        localStorage.removeItem(refreshTokenStorageKey)
-      }
       return {
         ...state,
         user: null,
@@ -123,47 +115,24 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialAuthState)
-  const refreshPromiseRef = useRef<Promise<void> | null>(null)
 
-  // Restore authentication state on app load
+  // Restore authentication state on app load. An expired access token is
+  // refreshed transparently by the API client.
   useEffect(() => {
-    const restoreAuthState = async () => {
-      if (typeof window === 'undefined') return
+    if (!getRefreshToken()) return
 
-      const accessToken = localStorage.getItem(tokenStorageKey)
-      const storedRefreshToken = localStorage.getItem(refreshTokenStorageKey)
+    // Rejected sessions are ended by the API client (SESSION_EXPIRED_EVENT);
+    // other failures (e.g. backend cold start) keep the tokens for a retry.
+    authApi.getProfile()
+      .then((user) => dispatch({ type: 'AUTH_RESTORE', payload: { user } }))
+      .catch(() => dispatch({ type: 'AUTH_FINISH_LOADING' }))
+  }, [])
 
-      if (!accessToken || !storedRefreshToken) return
-
-      try {
-        // Try to get user profile to validate token
-        const user = await authApi.getProfile()
-        dispatch({ type: 'AUTH_RESTORE', payload: { user } })
-      } catch {
-        // If token is invalid, try to refresh
-        try {
-          const tokenResponse = await authApi.refreshToken(storedRefreshToken)
-          const user = await authApi.getProfile()
-          dispatch({
-            type: 'AUTH_SUCCESS',
-            payload: {
-              user,
-              tokens: {
-                ...tokenResponse,
-                refresh_token: storedRefreshToken,
-                user
-              } as TokenResponse
-            }
-          })
-        } catch {
-          // If refresh fails, clear tokens and stay logged out
-          localStorage.removeItem(tokenStorageKey)
-          localStorage.removeItem(refreshTokenStorageKey)
-        }
-      }
-    }
-
-    restoreAuthState()
+  // The API client ends the session when a refresh is rejected (expired or revoked)
+  useEffect(() => {
+    const handleSessionExpired = () => dispatch({ type: 'AUTH_LOGOUT' })
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
   }, [])
 
   // Login function with JWT authentication
@@ -172,13 +141,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const tokenResponse = await authApi.login({ username, password })
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: {
-          user: tokenResponse.user,
-          tokens: tokenResponse
-        }
-      })
+      setTokens(tokenResponse.access_token, tokenResponse.refresh_token)
+      dispatch({ type: 'AUTH_SUCCESS', payload: { user: tokenResponse.user } })
       notifications.show({
         title: 'Welcome back!',
         message: `It's great to see you again, ${tokenResponse.user.username}.`,
@@ -225,63 +189,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [])
 
-  // Logout function with token cleanup
+  // Logout clears this browser's tokens; they expire on their own server-side
   const logout = useCallback(async () => {
-    try {
-      // Call logout endpoint to invalidate tokens on server
-      await authApi.logout()
-    } catch (error) {
-      // Continue with logout even if server call fails
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.warn(`Server logout failed: ${errorMessage}`, error)
-    } finally {
-      dispatch({ type: 'AUTH_LOGOUT' })
-      notifications.show({
-        title: 'See you next time!',
-        message: 'You have been successfully logged out.',
-        color: 'blue',
-        icon: <IconCheck size={18} />,
-      })
-    }
+    clearTokens()
+    dispatch({ type: 'AUTH_LOGOUT' })
+    notifications.show({
+      title: 'See you next time!',
+      message: 'You have been successfully logged out.',
+      color: 'blue',
+      icon: <IconCheck size={18} />,
+    })
   }, [])
 
-  // Refresh token function
+  // Revoke every token issued to this account, on all devices
+  const logoutAllSessions = useCallback(async () => {
+    await authApi.logoutAll()
+    clearTokens()
+    dispatch({ type: 'AUTH_LOGOUT' })
+    notifications.show({
+      title: 'Signed out everywhere',
+      message: 'All sessions on every device have been signed out.',
+      color: 'blue',
+      icon: <IconCheck size={18} />,
+    })
+  }, [])
+
+  // Proactive refresh; failures end the session via SESSION_EXPIRED_EVENT
   const refreshToken = useCallback(async () => {
     if (typeof window === 'undefined') return
-    if (refreshPromiseRef.current) return refreshPromiseRef.current
-
-    refreshPromiseRef.current = (async () => {
-      const refreshTokenValue = localStorage.getItem(refreshTokenStorageKey)
-      if (!refreshTokenValue) {
-        dispatch({ type: 'AUTH_LOGOUT' })
-        return
-      }
-
-      try {
-        const tokenResponse = await authApi.refreshToken(refreshTokenValue)
-        const user = await authApi.getProfile()
-        dispatch({
-          type: 'AUTH_SUCCESS',
-          payload: {
-            user,
-            tokens: {
-              ...tokenResponse,
-              refresh_token: refreshTokenValue,
-              user
-            } as TokenResponse
-          }
-        })
-      } catch (error) {
-        dispatch({ type: 'AUTH_LOGOUT' })
-        throw error
-      }
-    })()
-
-    try {
-      await refreshPromiseRef.current
-    } finally {
-      refreshPromiseRef.current = null
-    }
+    await refreshSession()
   }, [])
 
   // Clear error function
@@ -294,6 +230,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    logoutAllSessions,
     clearError,
     refreshToken
   }

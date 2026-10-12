@@ -236,8 +236,11 @@ class TestSecurityAuditLogger:
     @pytest.mark.parametrize(
         "header_scenario",
         [
-            ({"x-forwarded-for": "192.168.1.100, 10.0.0.1"}, "192.168.1.100"),
-            ({"x-real-ip": "203.0.113.1"}, "203.0.113.1"),
+            # Rightmost entry is the one appended by the trusted proxy
+            ({"x-forwarded-for": "6.6.6.6, 203.0.113.7"}, "203.0.113.7"),
+            ({"x-forwarded-for": "203.0.113.7"}, "203.0.113.7"),
+            # Client-controlled header is ignored
+            ({"x-real-ip": "6.6.6.6"}, "192.168.1.100"),
             ({}, "192.168.1.100"),  # Falls back to client.host
         ],
     )
@@ -465,3 +468,43 @@ class TestSecurityAuditLogger:
 
         logger.log_event(SecurityEventType.LOGIN_SUCCESS, ip_address="192.168.1.100")
         mock_logger.info.assert_called()
+
+
+@pytest.mark.security
+@pytest.mark.unit
+class TestProductionSettings:
+    """Outside debug mode the app refuses to start with development secrets."""
+
+    STRONG_KEY = "x" * 48
+
+    @pytest.fixture(autouse=True)
+    def isolated_env(self, monkeypatch):
+        for name in ["SECRET_KEY", "TURNSTILE_SECRET_KEY", "DEBUG"]:
+            monkeypatch.delenv(name, raising=False)
+
+    @pytest.mark.parametrize(
+        "overrides",
+        [
+            {},
+            {"turnstile_secret_key": "real-turnstile-key"},
+            {"secret_key": "too-short", "turnstile_secret_key": "real-key"},
+            {"secret_key": STRONG_KEY},
+        ],
+    )
+    def test_rejects_development_secrets(self, overrides):
+        from pydantic import ValidationError
+        from app.core.config import Settings
+
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None, debug=False, **overrides)
+
+    def test_accepts_real_secrets(self):
+        from app.core.config import Settings
+
+        settings = Settings(
+            _env_file=None,
+            debug=False,
+            secret_key=self.STRONG_KEY,
+            turnstile_secret_key="real-turnstile-key",
+        )
+        assert settings.debug is False

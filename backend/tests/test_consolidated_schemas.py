@@ -35,7 +35,7 @@ from app.schemas.recipe_permission import (
 from app.schemas.user import (
     UserSchema,
     UserCreateSchema,
-    UserUpdateSchema,
+    UserProfileUpdate,
     UserResponseSchema,
     UserLogin,
     UserChangePassword,
@@ -421,7 +421,7 @@ class TestSchemaExamplesAndDiscoverability:
             InstructionListResponse,
             UserSchema,
             UserCreateSchema,
-            UserUpdateSchema,
+            UserProfileUpdate,
             UserResponseSchema,
             UserLogin,
             UserChangePassword,

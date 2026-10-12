@@ -10,6 +10,7 @@ psycopg2-binary==2.9.12
 # Authentication and security
 PyJWT==2.13.0
 bcrypt==5.0.0
+slowapi==0.1.10
 
 # Validation and serialization
 pydantic[email]==2.13.4
