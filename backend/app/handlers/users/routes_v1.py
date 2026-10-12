@@ -44,7 +44,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
     summary="Register new user account",
     description="Create a new user account with a unique username, email address, and strong password. Use this tool when registering a new user before authenticating.",
 )
-async def register_user(
+def register_user(
     user_data: UserCreateSchema, request: Request, db: Session = Depends(get_db)
 ):
     """
@@ -70,9 +70,7 @@ async def register_user(
     summary="User login and JWT token generation",
     description="Authenticate with username/email and password to receive JWT access and refresh tokens along with user information. Use this tool to establish an authenticated session.",
 )
-async def login_user(
-    login_data: UserLogin, request: Request, db: Session = Depends(get_db)
-):
+def login_user(login_data: UserLogin, request: Request, db: Session = Depends(get_db)):
     """
     Authenticate user and return JWT token.
 
@@ -96,7 +94,7 @@ async def login_user(
     summary="Get current user profile",
     description="Retrieve the profile details (ID, username, email, admin status, creation timestamp) of the currently authenticated user. Use this tool to verify authentication or retrieve user details.",
 )
-async def get_user_profile(current_user: User = Depends(get_current_active_user)):
+def get_user_profile(current_user: User = Depends(get_current_active_user)):
     """
     Get current user's profile information.
 
@@ -115,7 +113,7 @@ async def get_user_profile(current_user: User = Depends(get_current_active_user)
     summary="Update current user profile",
     description="Update profile information such as username and email for the currently authenticated user. Use this tool when modifying account details.",
 )
-async def update_user_profile(
+def update_user_profile(
     profile_data: UserSchema,
     request: Request,
     current_user: User = Depends(get_current_active_user),
@@ -145,7 +143,7 @@ async def update_user_profile(
     summary="Change user password",
     description="Change the password of the currently authenticated user by validating current password and supplying a new strong password. Use this tool when the authenticated user requests a password change.",
 )
-async def change_password(
+def change_password(
     change_password_data: UserChangePassword,
     request: Request,
     current_user: User = Depends(get_current_active_user),
@@ -175,7 +173,7 @@ async def change_password(
     summary="Refresh JWT access token",
     description="Exchange a valid JWT refresh token for a fresh JWT access token. Use this tool to maintain an active session when the access token has expired without re-authenticating with credentials.",
 )
-async def refresh_token(
+def refresh_token(
     refresh_data: AuthTokenRefreshRequest,
     request: Request,
     db: Session = Depends(get_db),
@@ -203,14 +201,14 @@ async def refresh_token(
     description="Initiate a password reset request for a given email address with captcha verification. Sends a password reset link to the email if the account exists.",
 )
 @router.post("/forgot-password", include_in_schema=False)
-async def forgot_password(
+def forgot_password(
     request_data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)
 ):
     """
     Handle forgot password requests.
     Sends a password reset email if the user exists.
     Always returns a success message to prevent user enumeration.\n"""
-    return await forgot_password_internal(request_data, request, db)
+    return forgot_password_internal(request_data, request, db)
 
 
 @router.post(
@@ -219,7 +217,7 @@ async def forgot_password(
     description="Reset a user's password by submitting a valid password reset JWT token received via email and specifying a new strong password.",
 )
 @router.post("/reset-password", include_in_schema=False)
-async def reset_password(
+def reset_password(
     request_data: ResetPasswordRequest, request: Request, db: Session = Depends(get_db)
 ):
     """
@@ -235,7 +233,7 @@ async def reset_password(
     description="Verify the authenticity and validity of a password reset token and return the associated username. Use this tool before prompting the user for the new password.",
 )
 @router.get("/reset-password/verify", include_in_schema=False)
-async def verify_reset_password_token(token: str, db: Session = Depends(get_db)):
+def verify_reset_password_token(token: str, db: Session = Depends(get_db)):
     """
     Verify a password reset token and return user details (username).
     Used to pre-fill the reset form and satisfy password managers.

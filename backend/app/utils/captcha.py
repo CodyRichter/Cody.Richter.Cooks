@@ -6,7 +6,7 @@ import httpx
 from app.core.config import settings
 
 
-async def verify_turnstile_token(token: str) -> bool:
+def verify_turnstile_token(token: str) -> bool:
     """
     Verifies a Cloudflare Turnstile token.
     Returns True if valid, False otherwise.
@@ -19,9 +19,9 @@ async def verify_turnstile_token(token: str) -> bool:
     url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
     data = {"secret": settings.turnstile_secret_key, "response": token}
 
-    async with httpx.AsyncClient() as client:
+    with httpx.Client(timeout=10) as client:
         try:
-            response = await client.post(url, data=data)
+            response = client.post(url, data=data)
             result = response.json()
             return result.get("success", False)
         except Exception as e:

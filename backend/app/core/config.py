@@ -24,6 +24,10 @@ class Settings(BaseSettings):
             return v.replace("postgres://", "postgresql://", 1)
         return v
 
+    # Per-instance connection pool; keep (instances x total) within the DB pooler's limit
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
+
     # CORS settings
     cors_origins: str = (
         "https://cooking.cody.richter.codes,http://localhost:3000,http://127.0.0.1:3000"

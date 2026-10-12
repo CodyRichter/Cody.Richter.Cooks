@@ -269,15 +269,12 @@ class TestUserAPI(APITestBase):
 
     def test_password_reset_flow_complete(self, client: TestClient, test_user: User):
         """Test the full forgot password -> verify -> reset flow."""
-        from unittest.mock import patch, AsyncMock
+        from unittest.mock import patch
         from app.utils.auth import create_password_reset_token
 
         # 1. Forgot password request (mocking turnstile captcha and email)
         with (
-            patch(
-                "app.handlers.users.impl_v1.verify_turnstile_token",
-                new_callable=AsyncMock,
-            ) as mock_captcha,
+            patch("app.handlers.users.impl_v1.verify_turnstile_token") as mock_captcha,
             patch(
                 "app.handlers.users.impl_v1.EmailService.send_password_reset_email"
             ) as mock_email,

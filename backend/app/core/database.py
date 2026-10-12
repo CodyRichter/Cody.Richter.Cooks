@@ -12,8 +12,17 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Create SQLAlchemy engine
+_pool_kwargs = (
+    {"pool_size": settings.db_pool_size, "max_overflow": settings.db_max_overflow}
+    if settings.database_url.startswith("postgresql")
+    else {}
+)
 engine = create_engine(
-    settings.database_url, pool_pre_ping=True, pool_recycle=300, echo=settings.debug
+    settings.database_url,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    echo=settings.debug,
+    **_pool_kwargs,
 )
 
 # Create SessionLocal class
