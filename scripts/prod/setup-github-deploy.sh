@@ -68,6 +68,10 @@ for role in roles/run.admin roles/iam.serviceAccountUser roles/artifactregistry.
         --member="serviceAccount:${BUILD_SA}" --role="$role" >/dev/null
 done
 
+# Submitting a build that runs as BUILD_SA requires acting as it.
+gcloud iam service-accounts add-iam-policy-binding "$BUILD_SA" --project="$PROJECT" --quiet \
+    --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountUser" >/dev/null
+
 # Every deploy pushes a SHA-tagged image; keep only the 4 newest for rollback.
 echo "▶ Applying Artifact Registry cleanup policy..."
 gcloud artifacts repositories set-cleanup-policies gcr.io --project="$PROJECT" --location=us \
