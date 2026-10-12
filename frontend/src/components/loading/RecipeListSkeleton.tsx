@@ -1,23 +1,14 @@
-import React from 'react'
 import { SimpleGrid } from '@mantine/core'
-import { RecipeCardSkeleton } from '@/components/loading/RecipeCardSkeleton'
+import RecipePreviewCardLoadingSkeleton from '@/components/recipes/preview/RecipePreviewCardLoadingSkeleton'
+import { HOME_RECIPES_PER_PAGE } from '@/config/pagination'
 
-interface RecipeListSkeletonProps {
-  count?: number
-  columns?: { base: number; sm?: number; md?: number; lg?: number }
-}
-
-export const RecipeListSkeleton: React.FC<RecipeListSkeletonProps> = ({
-  count = 6,
-  columns = { base: 1, sm: 2, md: 3 }
-}) => {
+// Mirrors the home recipe grid so real cards replace it without shifting
+export function RecipeListSkeleton() {
   return (
-    <SimpleGrid cols={columns}>
-      {Array.from({ length: count }).map((_, i) => (
-        <RecipeCardSkeleton key={i} />
+    <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg" verticalSpacing="lg">
+      {Array.from({ length: HOME_RECIPES_PER_PAGE }).map((_, i) => (
+        <RecipePreviewCardLoadingSkeleton key={i} />
       ))}
     </SimpleGrid>
   )
 }
-
-export default RecipeListSkeleton

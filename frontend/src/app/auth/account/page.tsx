@@ -23,10 +23,8 @@ import {
 import ChangePasswordModal from "@/components/account/ChangePasswordModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatNotificationError } from "@/utils/notificationUtils";
-import { notifications } from "@mantine/notifications";
+import { useLogoutAllSessions } from "@/hooks/useAuthMutations";
 import { useDisclosure } from "@mantine/hooks";
-import { useState } from "react";
 
 export default function AccountDetailsPage() {
   const auth = useAuth();
@@ -37,21 +35,7 @@ export default function AccountDetailsPage() {
     { toggle: toggleChangePasswordDialog, close: closeChangePasswordDialog },
   ] = useDisclosure(false);
 
-  const [isSigningOutEverywhere, setIsSigningOutEverywhere] = useState(false);
-  const signOutEverywhere = async () => {
-    setIsSigningOutEverywhere(true);
-    try {
-      await auth.logoutAllSessions();
-    } catch (error) {
-      notifications.show({
-        title: "Could not sign out everywhere",
-        message: formatNotificationError(error),
-        color: "red",
-      });
-    } finally {
-      setIsSigningOutEverywhere(false);
-    }
-  };
+  const { mutate: signOutEverywhere, isPending: isSigningOutEverywhere } = useLogoutAllSessions();
 
   const username = auth.user?.username || "<Username Not Found>";
   const email = auth.user?.email || "<Email Not Found>";
@@ -151,7 +135,7 @@ export default function AccountDetailsPage() {
             variant="subtle"
             color="red"
             loading={isSigningOutEverywhere}
-            onClick={signOutEverywhere}
+            onClick={() => signOutEverywhere()}
             leftSection={<IconLogout size={16} />}
           >
             Sign Out of All Devices

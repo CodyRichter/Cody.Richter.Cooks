@@ -168,3 +168,10 @@ export function getRecipeValidationStatus(recipe: RecipeDetail): RecipeValidatio
 export function isRecipeValid(recipe: RecipeDetail): boolean {
   return getRecipeValidationStatus(recipe).isValid;
 }
+
+const recipeDateFormat = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' });
+
+// Fixed locale and time zone so server and client render the same string
+export function formatRecipeDate(isoDate: string): string {
+  return recipeDateFormat.format(new Date(isoDate));
+}

@@ -21,7 +21,6 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useMediaQuery } from "@mantine/hooks";
 
 import { Ingredient } from "@/types/Ingredient";
 import { convertToFractionalRepresentation } from "@/utils/recipeUtils";
@@ -48,10 +47,6 @@ export default function RecipeIngredientCard({
   onScaleChange,
   servingSize,
 }: RecipeIngredientCardProps) {
-  const isMobile = useMediaQuery("(max-width: 768px)", false, {
-    getInitialValueInEffect: true,
-  });
-
   const [checkedIngredientIds, setCheckedIngredientIds] = useState<Set<string>>(
     new Set()
   );
@@ -164,11 +159,8 @@ export default function RecipeIngredientCard({
   if (!ingredients || ingredients.length === 0) {
     return (
       <Paper
-        withBorder={!isMobile}
-        shadow={isMobile ? "none" : "xs"}
-        radius={isMobile ? 0 : "lg"}
-        p={isMobile ? 0 : "lg"}
-        bg={isMobile ? "transparent" : undefined}
+        className="recipe-section"
+        p={{ base: 0, sm: "lg" }}
         h="100%"
         style={{ display: "flex", flexDirection: "column" }}
       >
@@ -186,11 +178,8 @@ export default function RecipeIngredientCard({
 
   return (
     <Paper
-      withBorder={!isMobile}
-      shadow={isMobile ? "none" : "xs"}
-      radius={isMobile ? 0 : "lg"}
-      p={isMobile ? 0 : "lg"}
-      bg={isMobile ? "transparent" : undefined}
+      className="recipe-section"
+      p={{ base: 0, sm: "lg" }}
       h="100%"
       style={{ display: "flex", flexDirection: "column" }}
     >
@@ -237,16 +226,7 @@ export default function RecipeIngredientCard({
         {/* Scaling Controls Bar - Stepper is anchored right, Reset appears on left so + never shifts */}
         {onScaleChange && (
           <Box
-            p={isMobile ? "4px 0" : "6px 10px"}
-            style={{
-              backgroundColor: isMobile
-                ? "transparent"
-                : "var(--mantine-color-default-hover)",
-              borderRadius: "var(--mantine-radius-md)",
-              border: isMobile
-                ? "none"
-                : "1px solid var(--mantine-color-default-border)",
-            }}
+            className="recipe-scale-bar"
           >
             <Group justify="space-between" align="center" gap="xs" wrap="nowrap">
               {/* Left: Label + Reset button */}

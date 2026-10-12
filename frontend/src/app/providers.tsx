@@ -7,7 +7,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import GlobalErrorBoundary from "@/components/error-handling/GlobalErrorBoundary";
 import TokenRefreshManager from "@/components/TokenRefreshManager";
 import { theme } from "@/styles/theme";
+import { ApiError } from "@/utils/apiClient";
 import { useState } from "react";
+
+// Client errors (bad request, auth, not found) won't succeed on retry
+const isClientError = (error: unknown) =>
+  error instanceof ApiError && error.status >= 400 && error.status < 500;
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -15,10 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       queries: {
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
-        retry: (failureCount, error: unknown) => {
-          if (error && typeof error === 'object' && 'status' in error && error.status === 404) return false;
-          return failureCount < 3;
-        },
+        retry: (failureCount, error) => !isClientError(error) && failureCount < 3,
         retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000)
       }
     }

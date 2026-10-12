@@ -14,7 +14,6 @@ import { InstructionStep } from "@/types/InstructionStep";
 import React from "react";
 import parse from "html-react-parser";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
-import { useMediaQuery } from "@mantine/hooks";
 
 interface RecipeInstructionsCardProps {
   instructions: InstructionStep[];
@@ -23,18 +22,11 @@ interface RecipeInstructionsCardProps {
 export default function RecipeInstructionsCard({
   instructions,
 }: RecipeInstructionsCardProps) {
-  const isMobile = useMediaQuery("(max-width: 768px)", false, {
-    getInitialValueInEffect: true,
-  });
-
   if (!instructions || instructions.length === 0) {
     return (
       <Paper
-        withBorder={!isMobile}
-        shadow={isMobile ? "none" : "xs"}
-        radius={isMobile ? 0 : "lg"}
-        p={isMobile ? 0 : "lg"}
-        bg={isMobile ? "transparent" : undefined}
+        className="recipe-section"
+        p={{ base: 0, sm: "lg" }}
         h="100%"
         style={{ display: "flex", flexDirection: "column" }}
       >
@@ -52,11 +44,8 @@ export default function RecipeInstructionsCard({
 
   return (
     <Paper
-      withBorder={!isMobile}
-      shadow={isMobile ? "none" : "xs"}
-      radius={isMobile ? 0 : "lg"}
-      p={isMobile ? 0 : "lg"}
-      bg={isMobile ? "transparent" : undefined}
+      className="recipe-section"
+      p={{ base: 0, sm: "lg" }}
       h="100%"
       style={{ display: "flex", flexDirection: "column" }}
     >

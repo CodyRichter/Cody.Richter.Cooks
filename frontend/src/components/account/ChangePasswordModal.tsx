@@ -18,7 +18,8 @@ interface ChangePasswordModalProps {
 }
 
 export default function ChangePasswordModal({ opened, close }: ChangePasswordModalProps) {
-  const isMobile = useMediaQuery("(max-width: 50em)");
+  // Only rendered client-side behind ProtectedRoute, so the real value is safe on first render
+  const isMobile = useMediaQuery("(max-width: 50em)", false, { getInitialValueInEffect: false });
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

@@ -1,47 +1,27 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { refreshSession } from '@/utils/apiClient'
 import { getAccessToken, isTokenExpiringSoon } from '@/utils/auth'
 
+// Proactive refresh; a rejected refresh ends the session inside the API client
 export const useTokenRefresh = () => {
-  const { refreshToken, isAuthenticated } = useAuth()
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const isRefreshingRef = useRef(false)
+  const { status } = useAuth()
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-      return
-    }
+    if (status !== 'authenticated') return
 
-    const checkToken = async () => {
-      if (isRefreshingRef.current) return
-
+    const checkToken = () => {
       const accessToken = getAccessToken()
-      if (!accessToken) return
+      if (!accessToken || !isTokenExpiringSoon(accessToken, 5)) return
 
-      if (isTokenExpiringSoon(accessToken, 5)) {
-        isRefreshingRef.current = true
-        try {
-          await refreshToken()
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-          console.error(`Token refresh failed: ${errorMessage}`, error)
-        } finally {
-          isRefreshingRef.current = false
-        }
-      }
+      refreshSession().catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        console.error(`Token refresh failed: ${errorMessage}`, error)
+      })
     }
 
     checkToken()
-    intervalRef.current = setInterval(checkToken, 60000) // Check every minute
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [isAuthenticated, refreshToken])
+    const interval = setInterval(checkToken, 60000)
+    return () => clearInterval(interval)
+  }, [status])
 }

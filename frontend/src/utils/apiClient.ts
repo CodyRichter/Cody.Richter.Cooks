@@ -33,6 +33,10 @@ export class ApiError extends Error {
 
 let refreshInFlight: Promise<string> | null = null
 
+// The refresh token was refused, so the session is over. Server errors and rate
+// limits (e.g. a cold start) are not rejections; the session is kept for a retry.
+const isSessionRejection = (status: number) => status >= 400 && status < 500 && status !== 429
+
 /**
  * Exchanges the stored refresh token for a new token pair. Concurrent callers
  * share one request: the backend rotates refresh tokens, so a second parallel
@@ -61,7 +65,7 @@ async function performRefresh(): Promise<string> {
   })
 
   if (!response.ok) {
-    endSession()
+    if (isSessionRejection(response.status)) endSession()
     let message = 'Failed to refresh token'
     let details = null
     try {
@@ -155,8 +159,11 @@ export class ApiClient {
     if (response.status === 401 && !skipAuth && getRefreshToken()) {
       try {
         await refreshSession()
-      } catch {
-        throw new Error('Authentication failed. Please log in again.')
+      } catch (error) {
+        if (error instanceof ApiError && isSessionRejection(error.status)) {
+          throw new ApiError('Your session has expired. Please log in again.', 401, '401', error.details)
+        }
+        throw error
       }
       response = await fetch(url, {
         ...fetchOptions,

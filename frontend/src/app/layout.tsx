@@ -3,11 +3,13 @@ import "@mantine/notifications/styles.css";
 import "@mantine/tiptap/styles.css";
 import "@/styles/styles.css";
 
-import { ColorSchemeScript } from "@mantine/core";
+import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
 import { Providers } from "@/app/providers";
 import { AppLayout } from "@/app/AppLayout";
 import type { Metadata } from "next";
 import { siteUrl } from "@/config/environment";
+import { SIDEBAR_RECIPES_PER_PAGE } from "@/config/pagination";
+import { fetchRecipeListForServer } from "@/utils/recipeServer";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -33,19 +35,21 @@ export const viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const sidebarRecipes = await fetchRecipeListForServer(1, SIDEBAR_RECIPES_PER_PAGE);
+
   return (
-    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable}`} {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript />
+        <ColorSchemeScript defaultColorScheme="auto" />
       </head>
       <body>
         <Providers>
-          <AppLayout>
+          <AppLayout initialSidebarRecipes={sidebarRecipes ?? undefined}>
             {children}
           </AppLayout>
         </Providers>

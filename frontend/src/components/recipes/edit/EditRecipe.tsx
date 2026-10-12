@@ -35,8 +35,9 @@ interface EditRecipeProps {
 }
 
 export default function EditRecipe({ form }: EditRecipeProps) {
+  // Only rendered client-side behind ProtectedRoute, so the real value is safe on first render
   const isDesktop = useMediaQuery('(min-width: 992px)', false, {
-    getInitialValueInEffect: true,
+    getInitialValueInEffect: false,
   });
 
   // Watch lists to update section counts reactively

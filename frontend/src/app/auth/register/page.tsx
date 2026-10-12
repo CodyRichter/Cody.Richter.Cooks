@@ -13,21 +13,14 @@ import {
 } from "@mantine/core";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
-import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect, useRef } from "react";
+import { GuestRoute } from "@/components/auth/ProtectedRoute";
+import { useRegister } from "@/hooks/useAuthMutations";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const { register, isLoading, clearError, isAuthenticated } = useAuth();
+  const { mutateAsync: register, isPending } = useRegister();
   const router = useRouter();
-
-  // Redirect authenticated users away from register page
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/');
-    }
-  }, [isAuthenticated, router]);
-
 
   const [formData, setFormData] = useState({
     username: "",
@@ -93,8 +86,6 @@ export default function RegisterPage() {
 
     if (!validateForm() || !captchaToken) return;
 
-    clearError();
-
     try {
       await register({
         username: formData.username,
@@ -102,7 +93,7 @@ export default function RegisterPage() {
         password: formData.password,
         captcha_token: captchaToken,
       });
-      router.push('/auth/login?registered=true');
+      router.push('/auth/login');
     } catch {
       // Error is shown by the register hook; captcha tokens are single-use
       setCaptchaToken(null);
@@ -110,98 +101,95 @@ export default function RegisterPage() {
     }
   };
 
-  // Don't render if user is authenticated (will redirect)
-  if (isAuthenticated) {
-    return null;
-  }
-
   return (
-    <Container size="xs" mt="xl">
-      <Card shadow="md" padding="xl" radius="md" withBorder>
-        <Title order={2} ta="center" mb="md">
-          Create Account
-        </Title>
-        <Text c="dimmed" size="sm" ta="center" mb="xl">
-          Join us to start creating and sharing recipes
-        </Text>
-
-        <form onSubmit={handleSubmit}>
-          <TextInput
-            label="Username"
-            placeholder="Choose a username"
-            required
-            mb="md"
-            value={formData.username}
-            onChange={(e) => setFormData((prev) => ({ ...prev, username: e.target.value }))}
-            error={formErrors.username}
-          />
-
-          <TextInput
-            label="Email"
-            placeholder="Enter your email address"
-            type="email"
-            required
-            mb="md"
-            value={formData.email}
-            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-            error={formErrors.email}
-          />
-
-          <PasswordStrength
-            label="Password"
-            placeholder="Create a strong password"
-            mb="md"
-            value={formData.password}
-            onChange={(val) => setFormData((prev) => ({ ...prev, password: val }))}
-            error={formErrors.password}
-          />
-
-          <PasswordInput
-            label="Confirm Password"
-            placeholder="Confirm your password"
-            required
-            mb="md"
-            value={formData.confirmPassword}
-            onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-            error={formErrors.confirmPassword}
-          />
-
-          <Group justify="center" mb="md">
-            <Turnstile
-              ref={turnstileRef}
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-              onSuccess={(token) => setCaptchaToken(token)}
-              onExpire={() => setCaptchaToken(null)}
-              options={{
-                appearance: 'execute',
-              }}
-            />
-          </Group>
-
-          <Button
-            type="submit"
-            fullWidth
-            loading={isLoading}
-            disabled={!formData.username || !formData.email || !formData.password || !formData.confirmPassword || !captchaToken}
-            mb="md"
-          >
+    <GuestRoute>
+      <Container size="xs" mt="xl">
+        <Card shadow="md" padding="xl" radius="md" withBorder>
+          <Title order={2} ta="center" mb="md">
             Create Account
-          </Button>
+          </Title>
+          <Text c="dimmed" size="sm" ta="center" mb="xl">
+            Join us to start creating and sharing recipes
+          </Text>
 
-          <Group justify="center">
-            <Text size="sm" c="dimmed">
-              Already have an account?{" "}
-              <Anchor
-                size="sm"
-                onClick={() => router.push('/auth/login')}
-                style={{ cursor: "pointer" }}
-              >
-                Sign in here
-              </Anchor>
-            </Text>
-          </Group>
-        </form>
-      </Card>
-    </Container>
+          <form onSubmit={handleSubmit}>
+            <TextInput
+              label="Username"
+              placeholder="Choose a username"
+              required
+              mb="md"
+              value={formData.username}
+              onChange={(e) => setFormData((prev) => ({ ...prev, username: e.target.value }))}
+              error={formErrors.username}
+            />
+
+            <TextInput
+              label="Email"
+              placeholder="Enter your email address"
+              type="email"
+              required
+              mb="md"
+              value={formData.email}
+              onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+              error={formErrors.email}
+            />
+
+            <PasswordStrength
+              label="Password"
+              placeholder="Create a strong password"
+              mb="md"
+              value={formData.password}
+              onChange={(val) => setFormData((prev) => ({ ...prev, password: val }))}
+              error={formErrors.password}
+            />
+
+            <PasswordInput
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              required
+              mb="md"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+              error={formErrors.confirmPassword}
+            />
+
+            <Group justify="center" mb="md">
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                options={{
+                  appearance: 'execute',
+                }}
+              />
+            </Group>
+
+            <Button
+              type="submit"
+              fullWidth
+              loading={isPending}
+              disabled={!formData.username || !formData.email || !formData.password || !formData.confirmPassword || !captchaToken}
+              mb="md"
+            >
+              Create Account
+            </Button>
+
+            <Group justify="center">
+              <Text size="sm" c="dimmed">
+                Already have an account?{" "}
+                <Anchor
+                  size="sm"
+                  onClick={() => router.push('/auth/login')}
+                  style={{ cursor: "pointer" }}
+                >
+                  Sign in here
+                </Anchor>
+              </Text>
+            </Group>
+          </form>
+        </Card>
+      </Container>
+    </GuestRoute>
   );
 }

@@ -15,91 +15,66 @@ import {
   Alert,
 } from "@mantine/core";
 
-import { IconSearch, IconAlertCircle } from "@tabler/icons-react";
+import {
+  IconSearch,
+  IconAlertCircle,
+  IconChevronLeft,
+  IconChevronRight,
+} from "@tabler/icons-react";
 import React, { useState } from "react";
 import RecipePreviewCard from "@/components/recipes/preview/RecipePreviewCard";
-import { useMediaQuery } from "@mantine/hooks";
 import { useRecipeSearch, useRecipes } from "@/hooks/useRecipes";
 import { RecipeListSkeleton } from "@/components/loading";
-import { useCallback, useMemo } from "react";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { HOME_RECIPES_PER_PAGE } from "@/config/pagination";
+import { RecipeListItem } from "@/types/Recipe";
+import { PaginatedResponse } from "@/types/api";
 
-export default function Home() {
-  const isMobile = useMediaQuery("(max-width: 50em)");
+const MINIMUM_SEARCH_LENGTH = 3;
+
+interface RecipeHomeProps {
+  // First page rendered on the server; absent when the backend was unavailable
+  initialRecipes?: PaginatedResponse<RecipeListItem>;
+}
+
+export default function RecipeHome({ initialRecipes }: RecipeHomeProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchMode, setIsSearchMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const minimumSearchLength = 3;
+  const isSearchMode = searchQuery.length >= MINIMUM_SEARCH_LENGTH;
 
-  // Search functionality with debouncing
   const {
-    data: searchResultsResponse,
-    isLoading: isSearchLoading,
+    data: searchResults,
     error: searchError,
+    isFetching: isSearchFetching,
     canSearch,
-    isSearching
+    isSearching,
   } = useRecipeSearch(searchQuery);
 
-  // Load all recipes when not searching
   const {
-    data: allRecipesResponse,
-    isLoading: isRecipesLoading,
-    error: recipesError
-  } = useRecipes({ page: currentPage, limit: 12 });
+    data: recipePage,
+    error: recipesError,
+    isPlaceholderData: isPagePlaceholder,
+  } = useRecipes(
+    { page: currentPage, limit: HOME_RECIPES_PER_PAGE },
+    { initialData: currentPage === 1 ? initialRecipes : undefined }
+  );
 
-  // Derive search mode from query length
-  const shouldBeInSearchMode = searchQuery.length >= minimumSearchLength;
+  // Until the first search results arrive, keep the current list on screen
+  const activeData = isSearchMode ? searchResults ?? recipePage : recipePage;
+  const isUpdating = isSearchMode
+    ? isSearching || isSearchFetching || (!searchResults && !searchError)
+    : isPagePlaceholder;
+  const recipes = activeData?.items ?? [];
+  const error = isSearchMode ? searchError : recipesError;
 
-  const handleSearchSubmit = useCallback(() => {
-    if (searchQuery.length >= minimumSearchLength) {
-      setIsSearchMode(true);
-      setCurrentPage(1);
-    }
-  }, [searchQuery, minimumSearchLength]);
-
-  const handleSearchClear = useCallback(() => {
-    setSearchQuery("");
-    setIsSearchMode(false);
+  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.currentTarget.value);
     setCurrentPage(1);
-  }, []);
+  };
 
-  // Memoize search input handler to prevent unnecessary re-renders
-  const handleSearchInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const newQuery = event.currentTarget.value;
-    setSearchQuery(newQuery);
-
-    // Auto-toggle search mode and reset page
-    const newShouldBeInSearchMode = newQuery.length >= minimumSearchLength;
-    if (isSearchMode !== newShouldBeInSearchMode) {
-      setIsSearchMode(newShouldBeInSearchMode);
-      setCurrentPage(1);
-    }
-  }, [isSearchMode, minimumSearchLength]);
-
-  // Memoize key down handler
-  const handleSearchKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleSearchSubmit();
-    }
-  }, [handleSearchSubmit]);
-
-  // Memoize which recipes to display to prevent unnecessary re-computations
-  const displayRecipes = useMemo(() => {
-    if (shouldBeInSearchMode) {
-      return searchResultsResponse?.items || [];
-    }
-    return allRecipesResponse?.items || [];
-  }, [shouldBeInSearchMode, searchResultsResponse, allRecipesResponse]);
-
-  const isLoading = useMemo(() =>
-    shouldBeInSearchMode ? (isSearchLoading || isSearching) : isRecipesLoading,
-    [shouldBeInSearchMode, isSearchLoading, isSearching, isRecipesLoading]
-  );
-
-  const error = useMemo(() =>
-    shouldBeInSearchMode ? searchError : recipesError,
-    [shouldBeInSearchMode, searchError, recipesError]
-  );
+  const handleSearchClear = () => {
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
 
   return (
     <Container size="xl" px="md">
@@ -114,7 +89,7 @@ export default function Home() {
 
         <Divider />
 
-        {/* Search Section */}
+        {/* Search runs as you type; the button is a visual affordance */}
         <Flex
           gap="sm"
           justify="flex-start"
@@ -129,55 +104,52 @@ export default function Home() {
             style={{ width: "90%" }}
             value={searchQuery}
             onChange={handleSearchInputChange}
-            onKeyDown={handleSearchKeyDown}
             rightSection={
               searchQuery && (
                 <ActionIcon
                   variant="subtle"
                   onClick={handleSearchClear}
                   size="sm"
+                  aria-label="Clear search"
                 >
                   ×
                 </ActionIcon>
               )
             }
           />
-          {isMobile ? (
-            <ActionIcon
-              radius="md"
-              size="lg"
-              onClick={handleSearchSubmit}
-              disabled={!canSearch}
-              loading={isSearching}
-            >
-              <IconSearch />
-            </ActionIcon>
-          ) : (
-            <Button
-              size="sm"
-              miw={90}
-              onClick={handleSearchSubmit}
-              disabled={!canSearch}
-              loading={isSearching}
-            >
-              Search
-            </Button>
-          )}
+          <ActionIcon
+            hiddenFrom="sm"
+            radius="md"
+            size="lg"
+            disabled={!canSearch}
+            loading={isSearchMode && isUpdating}
+            aria-label="Search"
+          >
+            <IconSearch />
+          </ActionIcon>
+          <Button
+            visibleFrom="sm"
+            size="sm"
+            miw={90}
+            disabled={!canSearch}
+            loading={isSearchMode && isUpdating}
+          >
+            Search
+          </Button>
         </Flex>
 
-        {/* Search Status */}
-        {shouldBeInSearchMode && (
+        {isSearchMode && (
           <Text size="sm" c="dimmed" ta="center">
-            {isLoading
+            {isUpdating
               ? `Searching for "${searchQuery}"...`
-              : `Found ${displayRecipes.length} recipe${displayRecipes.length !== 1 ? 's' : ''} for "${searchQuery}"`
+              : `Found ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} for "${searchQuery}"`
             }
           </Text>
         )}
 
         <Divider />
 
-        {!shouldBeInSearchMode && (
+        {!isSearchMode && (
           <Text ta="center" size="lg" mb="xl">
             Cody Richter Cooks is the home of all of my recipes, cooking tips, and
             more! I&apos;m a self-taught home cook who loves to share my passion for
@@ -186,24 +158,23 @@ export default function Home() {
           </Text>
         )}
 
-        {/* Error Display */}
         {error && (
           <Alert icon={<IconAlertCircle size="1rem" />} color="red" variant="light">
             {error.message || 'Failed to load recipes. Please try again.'}
           </Alert>
         )}
 
-        {/* Recipe Grid */}
-        {isLoading && displayRecipes.length === 0 ? (
-          <RecipeListSkeleton count={6} />
+        {!activeData ? (
+          !error && <RecipeListSkeleton />
         ) : (
           <>
             <SimpleGrid
               cols={{ base: 1, sm: 2, md: 3, lg: 4 }}
               spacing="lg"
               verticalSpacing="lg"
+              style={{ opacity: isUpdating ? 0.6 : 1, transition: "opacity 150ms ease" }}
             >
-              {displayRecipes.map((recipe) => (
+              {recipes.map((recipe) => (
                 <RecipePreviewCard
                   key={recipe.id}
                   recipe={recipe}
@@ -211,14 +182,13 @@ export default function Home() {
               ))}
             </SimpleGrid>
 
-            {/* Pagination Controls */}
-            {!shouldBeInSearchMode && allRecipesResponse && (allRecipesResponse.has_next || allRecipesResponse.has_prev) && (
+            {!isSearchMode && recipePage && (recipePage.has_next || recipePage.has_prev) && (
               <Center mt="xl">
                 <Flex gap="sm" align="center">
                   <Button
                     variant="light"
                     leftSection={<IconChevronLeft size={16} />}
-                    disabled={!allRecipesResponse.has_prev}
+                    disabled={!recipePage.has_prev || isUpdating}
                     onClick={() => setCurrentPage(prev => prev - 1)}
                   >
                     Previous
@@ -229,7 +199,7 @@ export default function Home() {
                   <Button
                     variant="light"
                     rightSection={<IconChevronRight size={16} />}
-                    disabled={!allRecipesResponse.has_next}
+                    disabled={!recipePage.has_next || isUpdating}
                     onClick={() => setCurrentPage(prev => prev + 1)}
                   >
                     Next
@@ -238,17 +208,16 @@ export default function Home() {
               </Center>
             )}
 
-            {/* No Results Message */}
-            {!isLoading && displayRecipes.length === 0 && (
+            {!isUpdating && recipes.length === 0 && (
               <Center py="xl">
                 <Stack align="center" gap="sm">
                   <Text size="lg" c="dimmed">
-                    {shouldBeInSearchMode
+                    {isSearchMode
                       ? `No recipes found for "${searchQuery}"`
                       : 'No recipes available'
                     }
                   </Text>
-                  {shouldBeInSearchMode && (
+                  {isSearchMode && (
                     <Button variant="light" onClick={handleSearchClear}>
                       Clear Search
                     </Button>

@@ -56,8 +56,9 @@ export default function RecipeEditHeader({
   isAdminOverride,
   authorName,
 }: RecipeEditHeaderProps) {
+  // Only rendered client-side behind ProtectedRoute, so the real value is safe on first render
   const isMobile = useMediaQuery('(max-width: 768px)', false, {
-    getInitialValueInEffect: true,
+    getInitialValueInEffect: false,
   });
   const [popoverOpened, setPopoverOpened] = useState(false);
   const { isValid, completionCount, totalCount, issues } = validationStatus;

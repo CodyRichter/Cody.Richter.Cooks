@@ -8,7 +8,8 @@ export default function EditRecipeDescriptionTextEditor({
 }: {
   editor: Editor;
 }) {
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  // Only rendered client-side behind ProtectedRoute, so the real value is safe on first render
+  const isMobile = useMediaQuery("(max-width: 768px)", false, { getInitialValueInEffect: false });
 
   return (
     <RichTextEditor

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RecipeCreate, RecipeDetail, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { RecipeCreate, RecipeDetail, RecipeListItem, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
+import { PaginatedResponse } from '@/types/api'
 import { InstructionCreate, InstructionPatch } from '@/types/InstructionStep'
 import { IngredientCreate, IngredientPatch } from '@/types/Ingredient'
 import { recipeApi } from '@/services/apiServices'
@@ -17,13 +18,21 @@ const useDebounce = <T>(value: T, delay: number): T => {
   return debouncedValue
 }
 
-// Hook to fetch all recipes
-export const useRecipes = (params?: RecipeSearchParams) => {
+// Hook to fetch a page of recipes. Keeps showing the previous page while the
+// next one loads so the list doesn't collapse.
+export const useRecipes = (
+  params?: RecipeSearchParams,
+  options: { initialData?: PaginatedResponse<RecipeListItem> } = {}
+) => {
   return useQuery({
     queryKey: ['recipes', params],
     queryFn: () => recipeApi.getRecipes(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000 // 10 minutes
+    // Server-rendered first page; stale so it is refreshed on mount (see useRecipe)
+    initialData: options.initialData,
+    initialDataUpdatedAt: 0,
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000
   })
 }
 
@@ -45,16 +54,6 @@ export const useRecipe = (
   })
 }
 
-// Hook to fetch user's recipes
-export const useMyRecipes = () => {
-  return useQuery({
-    queryKey: ['my-recipes'],
-    queryFn: () => recipeApi.getMyRecipes(),
-    staleTime: 1 * 60 * 1000,
-    gcTime: 5 * 60 * 1000
-  })
-}
-
 // Hook to create a recipe
 export const useCreateRecipe = () => {
   const queryClient = useQueryClient()
@@ -63,7 +62,6 @@ export const useCreateRecipe = () => {
     mutationFn: (recipe: RecipeCreate) => recipeApi.createRecipe(recipe),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
-      queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
     }
   })
 }
@@ -76,9 +74,9 @@ export const useUpdateRecipe = () => {
     mutationFn: ({ id, ...recipe }: RecipeUpdate & { id: string }) =>
       recipeApi.updateRecipe(id, recipe),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['recipe', variables.id] })
+      queryClient.setQueryData(['recipe', variables.id], data)
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
-      queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
+      queryClient.invalidateQueries({ queryKey: ['search'] })
     }
   })
 }
@@ -93,7 +91,6 @@ export const usePatchRecipe = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['recipe', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
-      queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
     }
   })
 }
@@ -194,7 +191,6 @@ export const useDeleteRecipe = () => {
     mutationFn: (id: string) => recipeApi.deleteRecipe(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
-      queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
       queryClient.invalidateQueries({ queryKey: ['search'] })
       queryClient.removeQueries({ queryKey: ['recipe', id] })
     }
@@ -215,6 +211,7 @@ export const useRecipeSearch = (query: string) => {
     queryKey: ['search', searchParams],
     queryFn: () => recipeApi.getRecipes(searchParams),
     enabled: shouldSearch,
+    placeholderData: keepPreviousData,
     staleTime: 30 * 1000,
     gcTime: 2 * 60 * 1000
   })

@@ -9,6 +9,7 @@ import {
   Grid,
   Group,
   Paper,
+  Skeleton,
   Stack,
   Text,
   Title,
@@ -23,7 +24,7 @@ import {
   IconUserPlus,
   IconUsers,
 } from "@tabler/icons-react";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -31,10 +32,10 @@ import { ApiErrorAlert } from "@/components/error-handling";
 import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
 import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
-import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
+import { RecipeDetailSkeleton } from "@/components/loading";
 import ShareRecipeModal from "@/components/recipes/share/ShareRecipeModal";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
-import { titleize } from "@/utils/recipeUtils";
+import { formatRecipeDate, titleize } from "@/utils/recipeUtils";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecipeDetail } from "@/types/Recipe";
@@ -45,9 +46,10 @@ interface RecipeViewProps {
   recipeId: string;
   // Server-fetched recipe, so the first paint (and crawlers) get full content
   initialRecipe?: RecipeDetail;
+  initialAuthorName?: string | null;
 }
 
-export default function RecipeView({ recipeId: recipe_id, initialRecipe }: RecipeViewProps) {
+export default function RecipeView({ recipeId: recipe_id, initialRecipe, initialAuthorName }: RecipeViewProps) {
   const auth = useAuth();
   const router = useRouter();
 
@@ -55,18 +57,23 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
   const [deleteModalOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const [shareModalOpened, { open: openShare, close: closeShare }] = useDisclosure(false);
   const [scaleFactor, setScaleFactor] = useState(1);
-  const isMobile = useMediaQuery('(max-width: 768px)', false, { getInitialValueInEffect: true });
 
   const { data: recipe, isLoading, error, refetch } = useRecipe(recipe_id, { initialData: initialRecipe });
 
-  const { canEdit, canDelete, isOwner, isAdminOverride } = useUserRecipePermissions(recipe_id);
+  const {
+    canEdit,
+    canDelete,
+    isOwner,
+    isAdminOverride,
+    isLoading: isPermissionsLoading,
+  } = useUserRecipePermissions(recipe_id);
   const { data: permissions } = useRecipePermissions(recipe_id);
 
   const authorName = useMemo(() => {
-    if (!permissions || !Array.isArray(permissions)) return null;
+    if (!permissions || !Array.isArray(permissions)) return initialAuthorName ?? null;
     const owner = permissions.find((p) => p.role === 'owner');
     return owner ? owner.user_username : null;
-  }, [permissions]);
+  }, [permissions, initialAuthorName]);
 
   const handleEditClick = () => {
     navigateToRecipeEdit(recipe_id, recipe);
@@ -86,7 +93,7 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
   };
 
   if (isLoading) {
-    return <RecipeLoadingSkeleton />;
+    return <RecipeDetailSkeleton />;
   }
 
   if (error || !recipe) {
@@ -102,17 +109,16 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
   }
 
   const hasActions = auth.isAuthenticated && (canEdit || canDelete);
+  // Holds the action buttons' space while a logged-in user's permissions load
+  const showActionsSkeleton = auth.isAuthenticated && isPermissionsLoading && !hasActions;
 
   return (
     <Container size="xl" px={{ base: "xs", sm: "md" }} py={{ base: "xs", sm: "md" }}>
-      <Stack gap={isMobile ? "lg" : "md"}>
+      <Stack gap="md">
         {/* Section 1: Overview & Details */}
         <Paper
-          shadow={isMobile ? "none" : "xs"}
-          p={isMobile ? 0 : "xl"}
-          radius={isMobile ? 0 : "lg"}
-          withBorder={!isMobile}
-          bg={isMobile ? "transparent" : undefined}
+          className="recipe-section"
+          p={{ base: 0, sm: "xl" }}
         >
           <Stack gap="md">
             {/* Top Bar: Title & Desktop Actions */}
@@ -120,7 +126,8 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
               <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
                 <Title
                   order={1}
-                  size={isMobile ? "h2" : "h1"}
+                  fz={{ base: "h2", sm: "h1" }}
+                  lh={{ base: "h2", sm: "h1" }}
                   fw={800}
                   style={{ wordBreak: 'break-word', letterSpacing: '-0.5px' }}
                 >
@@ -166,7 +173,7 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
                   )}
 
                   <Text size="xs" fw={600}>
-                    {new Date(recipe.created_at).toLocaleDateString()}
+                    {formatRecipeDate(recipe.created_at)}
                   </Text>
                 </Group>
 
@@ -191,6 +198,14 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
                   </Group>
                 )}
               </Stack>
+
+              {showActionsSkeleton && (
+                <Group gap="xs" visibleFrom="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+                  <Skeleton h={36} w={75} radius="md" />
+                  <Skeleton h={36} w={85} radius="md" />
+                  <Skeleton h={36} w={90} radius="md" />
+                </Group>
+              )}
 
               {/* Desktop Action Buttons (encapsulated with subtle red dotted border if admin override) */}
               {hasActions && (
@@ -269,6 +284,14 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
                 </Box>
               )}
             </Group>
+
+            {showActionsSkeleton && (
+              <Group gap="xs" grow hiddenFrom="sm" mt="xs">
+                <Skeleton h={36} radius="md" />
+                <Skeleton h={36} radius="md" />
+                <Skeleton h={36} radius="md" />
+              </Group>
+            )}
 
             {/* Mobile Action Bar (encapsulated with subtle red dotted border if admin override) */}
             {hasActions && (
@@ -364,7 +387,7 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
           </Stack>
         </Paper>
 
-        {isMobile && <Divider />}
+        <Divider hiddenFrom="sm" />
 
         {/* 2-Column Desktop Grid / Stacked Seamless Mobile Flow */}
         <Grid gap="md" style={{ alignItems: "stretch" }}>
@@ -384,11 +407,9 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe }: Recip
             />
           </Grid.Col>
 
-          {isMobile && (
-            <Grid.Col span={12}>
-              <Divider />
-            </Grid.Col>
-          )}
+          <Grid.Col span={12} hiddenFrom="sm">
+            <Divider />
+          </Grid.Col>
 
           {/* Section 3: Instructions */}
           <Grid.Col

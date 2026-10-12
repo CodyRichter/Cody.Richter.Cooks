@@ -78,7 +78,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
-      <RecipeView recipeId={recipe_id} initialRecipe={result.recipe} />
+      <RecipeView recipeId={recipe_id} initialRecipe={result.recipe} initialAuthorName={author} />
     </>
   );
 }

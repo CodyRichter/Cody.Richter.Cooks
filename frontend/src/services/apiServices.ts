@@ -4,6 +4,7 @@ import { User, UserRegistration, TokenResponse, LoginRequest, UserUpdate } from 
 import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipePatch, RecipeSearchParams } from '@/types/Recipe'
 import { InstructionStep, InstructionCreate, InstructionPatch } from '@/types/InstructionStep'
 import { Ingredient, IngredientCreate, IngredientPatch } from '@/types/Ingredient'
+import { PaginatedResponse } from '@/types/api'
 
 // Auth API - specialized due to different patterns
 export const authApi = {
@@ -38,7 +39,7 @@ const baseRecipeService = createApiService<RecipeListItem, RecipeCreate, RecipeU
 
 export const recipeApi = {
   // Public recipe methods
-  getRecipes: (params?: RecipeSearchParams): Promise<{items: RecipeListItem[], has_next: boolean, has_prev: boolean, total: number, page: number, limit: number}> => {
+  getRecipes: (params?: RecipeSearchParams): Promise<PaginatedResponse<RecipeListItem>> => {
     const cleanParams: Record<string, string | number> = {}
     if (params?.q) cleanParams.q = params.q
     if (params?.page) cleanParams.page = params.page
@@ -59,8 +60,6 @@ export const recipeApi = {
     baseRecipeService.getById(id, true) as Promise<RecipeDetail>,
 
   // Authenticated recipe methods
-  getMyRecipes: (): Promise<RecipeListItem[]> =>
-    apiClient.get('/api/v1/recipes/my-recipes'),
 
   createRecipe: (recipeData: RecipeCreate): Promise<RecipeDetail> =>
     baseRecipeService.create(recipeData) as Promise<RecipeDetail>,

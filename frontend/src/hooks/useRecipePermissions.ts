@@ -7,14 +7,14 @@ import {
   UserRecipePermissions,
 } from '@/types/Permission'
 
-// Hook to fetch recipe permissions
+// Keyed by user so one account never sees another's cached permissions
 export const useRecipePermissions = (recipeId: string) => {
-  const auth = useAuth()
+  const { user } = useAuth()
 
   return useQuery<RecipePermissionWithUser[]>({
-    queryKey: ['recipe-permissions', recipeId],
+    queryKey: ['recipe-permissions', recipeId, user?.id],
     queryFn: () => recipePermissionApi.getRecipePermissions(recipeId),
-    enabled: !!recipeId && auth.isAuthenticated,
+    enabled: !!recipeId && !!user,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000
   })
@@ -22,23 +22,22 @@ export const useRecipePermissions = (recipeId: string) => {
 
 // Hook to check current user's permissions for a recipe
 export const useUserRecipePermissions = (recipeId: string): UserRecipePermissions => {
-  const auth = useAuth()
+  const { status, user } = useAuth()
   const { data: permissions, isLoading, error } = useRecipePermissions(recipeId)
 
   return useMemo(() => {
-    // If user is not authenticated, they have no permissions
-    if (!auth.isAuthenticated || !auth.user) {
+    if (!user) {
       return {
         canEdit: false,
         canDelete: false,
         userRole: null,
         isOwner: false,
         isAdminOverride: false,
-        isLoading: false,
+        isLoading: status === 'loading',
       }
     }
 
-    const isAdmin = Boolean(auth.user.is_admin)
+    const isAdmin = Boolean(user.is_admin)
 
     // While loading, do not assume admin override as the user might be the owner/editor
     if (isLoading) {
@@ -66,7 +65,7 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
 
     // Find current user's permission in the permissions list
     const userPermission = Array.isArray(permissions) ? permissions.find(
-      (perm) => perm.user_username === auth.user?.username
+      (perm) => perm.user_username === user.username
     ) : undefined
 
     if (!userPermission) {
@@ -91,5 +90,5 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
       isAdminOverride: isAdmin && !isOwner,
       isLoading: false,
     }
-  }, [auth.isAuthenticated, auth.user, permissions, isLoading, error])
+  }, [status, user, permissions, isLoading, error])
 }

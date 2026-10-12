@@ -10,6 +10,7 @@ import {
   Badge,
   Tooltip,
   Box,
+  Skeleton,
   useMantineColorScheme,
   useComputedColorScheme,
 } from "@mantine/core";
@@ -24,6 +25,7 @@ import { useMounted } from "@mantine/hooks";
 import React from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLogout } from "@/hooks/useAuthMutations";
 import { useRouter } from "next/navigation";
 
 interface NavigationHeaderProps {
@@ -40,7 +42,8 @@ export default function NavigationHeader({
   toggleDesktop,
 }: NavigationHeaderProps) {
   const router = useRouter();
-  const auth = useAuth();
+  const { status } = useAuth();
+  const logout = useLogout();
 
   const { toggleColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme("light", {
@@ -158,7 +161,13 @@ export default function NavigationHeader({
           </Tooltip>
         </Box>
 
-        {auth.isAuthenticated ? (
+        {status === "loading" ? (
+          // Same footprint as the logged-out buttons while the session is restored
+          <>
+            <Skeleton hiddenFrom="sm" h={30} w={64} radius="sm" />
+            <Skeleton visibleFrom="sm" h={38} w={84} radius="xl" />
+          </>
+        ) : status === "authenticated" ? (
           <>
             {/* Mobile Create Recipe Button */}
             <ActionIcon
@@ -213,7 +222,7 @@ export default function NavigationHeader({
                 <Menu.Item
                   leftSection={<IconLogout size={16} />}
                   color="red"
-                  onClick={() => auth.logout()}
+                  onClick={logout}
                 >
                   Logout
                 </Menu.Item>

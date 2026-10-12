@@ -1,59 +1,58 @@
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+'use client'
+
+import { ReactNode, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Center, Loader } from '@mantine/core'
 
+const defaultFallback = (
+  <Center py="xl">
+    <Loader size="lg" />
+  </Center>
+)
+
 interface ProtectedRouteProps {
-  children: React.ReactNode
-  redirectTo?: string
-  requireAuth?: boolean
+  children: ReactNode
+  // Shown while the session is being restored; match the page's shape to avoid layout shift
+  fallback?: ReactNode
 }
 
-export default function ProtectedRoute({
-  children,
-  redirectTo = '/auth/login',
-  requireAuth = true
-}: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+// Renders children only for logged-in users; others go to login and come back afterwards
+export default function ProtectedRoute({ children, fallback = defaultFallback }: ProtectedRouteProps) {
+  const { status } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`)
+    }
+  }, [status, router, pathname])
+
+  return status === 'authenticated' ? <>{children}</> : <>{fallback}</>
+}
+
+// Where to go after logging in: the `next` param when it is a local path, else home
+function getLoginRedirectTarget(): string {
+  const next = new URLSearchParams(window.location.search).get('next')
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
+}
+
+// Renders children only for logged-out users (login, register); others are sent on
+export function GuestRoute({ children }: { children: ReactNode }) {
+  const { status } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading) {
-      if (requireAuth && !isAuthenticated) {
-        router.push(redirectTo)
-      } else if (!requireAuth && isAuthenticated) {
-        // For guest routes (login/register), redirect authenticated users
-        router.push('/')
-      }
+    if (status === 'authenticated') {
+      router.replace(getLoginRedirectTarget())
     }
-  }, [isAuthenticated, isLoading, requireAuth, redirectTo, router])
+  }, [status, router])
 
-  // Show loading while checking auth status
-  if (isLoading) {
-    return (
-      <Center h="100vh">
-        <Loader size="lg" />
-      </Center>
-    )
-  }
-
-  // Don't render children if auth requirements aren't met
-  if (requireAuth && !isAuthenticated) {
-    return null
-  }
-
-  if (!requireAuth && isAuthenticated) {
-    return null
-  }
-
-  return <>{children}</>
-}
-
-// Convenience component for guest-only routes
-export function GuestRoute({ children }: { children: React.ReactNode }) {
+  // Laid out but invisible until the session is known, so the form neither jumps in nor flashes
   return (
-    <ProtectedRoute requireAuth={false}>
+    <div style={{ visibility: status === 'unauthenticated' ? 'visible' : 'hidden' }}>
       {children}
-    </ProtectedRoute>
+    </div>
   )
 }

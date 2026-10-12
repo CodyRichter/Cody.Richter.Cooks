@@ -13,3 +13,4 @@ export const apiBaseUrl = getApiBaseUrl()
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cooking.cody.richter.codes'
 export const tokenStorageKey = 'cooking_app_access_token'
 export const refreshTokenStorageKey = 'cooking_app_refresh_token'
+export const userStorageKey = 'cooking_app_user'

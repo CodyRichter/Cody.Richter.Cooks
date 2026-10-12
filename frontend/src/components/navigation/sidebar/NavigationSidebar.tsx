@@ -1,6 +1,4 @@
 import {
-  Button,
-  Collapse,
   Divider,
   Group,
   Kbd,
@@ -22,61 +20,63 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useRouter, usePathname } from "next/navigation";
 import { RecipeListItem } from "@/types/Recipe";
+import { PaginatedResponse } from "@/types/api";
 import { useRecipes, useRecipe } from "@/hooks/useRecipes";
-import { useFocusWithin, useDebouncedValue, useOs } from "@mantine/hooks";
-
-
+import { useDebouncedValue, useOs } from "@mantine/hooks";
+import { SIDEBAR_RECIPES_PER_PAGE } from "@/config/pagination";
 
 interface NavigationSidebarProps {
   mobileOpened: boolean;
   desktopOpened: boolean;
   toggleMobile(): void;
   toggleDesktop(): void;
+  initialRecipes?: PaginatedResponse<RecipeListItem>;
 }
 
+// The OS is only known after mount; the hint keeps its space until then so the input doesn't shift
 function SearchShortcutText({ os }: { os: string }) {
-  if (os === "macos") {
-    return (
-      <div dir="ltr">
-        <Kbd>⌘</Kbd>+<Kbd>K</Kbd>
-      </div>
-    );
-  } else if (os === "windows" || os === "linux") {
-    return (
-      <div dir="ltr">
-        <Kbd>Ctrl</Kbd>+<Kbd>K</Kbd>
-      </div>
-    );
-  } else {
-    return null;
-  }
+  const isMac = os === "macos" || os === "undetermined";
+  const isKnown = os === "macos" || os === "windows" || os === "linux";
+  return (
+    <div dir="ltr" style={{ visibility: isKnown ? "visible" : "hidden" }}>
+      <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>+<Kbd>K</Kbd>
+    </div>
+  );
 }
 
 export default function NavigationSidebar({
   mobileOpened,
   toggleMobile,
+  initialRecipes,
 }: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const os = useOs();
 
   const searchbarRef = useRef<HTMLInputElement>(null);
-  const { focused: searchbarFocused } = useFocusWithin();
   const [searchText, setSearchText] = React.useState<string>("");
   const [debouncedSearchText] = useDebouncedValue(searchText, 300);
 
   const [currentPage, setCurrentPage] = useState(1);
+
+  const updateSearchText = (text: string) => {
+    setSearchText(text);
+    setCurrentPage(1);
+  };
 
   // Load recipes using react-query hook
   const {
     data: recipesResponse,
     isLoading,
     error: queryError
-  } = useRecipes({
-    page: currentPage,
-    limit: 10,
-    q: debouncedSearchText || undefined
-  });
+  } = useRecipes(
+    {
+      page: currentPage,
+      limit: SIDEBAR_RECIPES_PER_PAGE,
+      q: debouncedSearchText || undefined,
+    },
+    { initialData: currentPage === 1 && !debouncedSearchText ? initialRecipes : undefined }
+  );
 
   const recipes = recipesResponse?.items || [];
   const totalResults = recipesResponse?.total || 0;
@@ -167,25 +167,19 @@ export default function NavigationSidebar({
           rightSection={
             searchText ? (
               <CloseButton
-                onClick={() => setSearchText("")}
+                onClick={() => updateSearchText("")}
                 aria-label="Clear search"
               />
             ) : (
               <SearchShortcutText os={os} />
             )
           }
-          rightSectionWidth={searchText ? 35 : (os === "macos" ? 65 : 80)}
+          rightSectionWidth={searchText ? 35 : 80}
           variant="filled"
           ref={searchbarRef}
           value={searchText}
-          onChange={(event) => setSearchText(event.currentTarget.value)}
+          onChange={(event) => updateSearchText(event.currentTarget.value)}
         />
-
-        <Collapse expanded={searchbarFocused} mt="sm">
-          <Button fullWidth disabled={searchText.length === 0}>
-            Search
-          </Button>
-        </Collapse>
 
         <Divider mt="md" mb="sm" />
 
@@ -257,7 +251,7 @@ export default function NavigationSidebar({
           </ActionIcon>
 
           <Text size="sm" fw={600} c="dimmed">
-            Page {currentPage} of {Math.ceil(totalResults / 10) || 1}
+            Page {currentPage} of {Math.ceil(totalResults / SIDEBAR_RECIPES_PER_PAGE) || 1}
           </Text>
 
           <ActionIcon

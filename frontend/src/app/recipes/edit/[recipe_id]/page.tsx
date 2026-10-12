@@ -8,14 +8,13 @@ import EditRecipe from "@/components/recipes/edit/EditRecipe";
 import RecipeEditHeader, { AutoSaveStatus } from "@/components/recipes/edit/header/RecipeEditHeader";
 import { ApiErrorAlert } from "@/components/error-handling";
 import { RecipeDetail, RecipeUpdate } from "@/types/Recipe";
-import RecipeLoadingSkeleton from "@/components/recipes/view/RecipeLoadingSkeleton";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { RecipeDetailSkeleton } from "@/components/loading";
 import { getRecipeValidationStatus, isRecipeValid } from "@/utils/recipeUtils";
-import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
-import { useRecipe } from "@/hooks/useRecipes";
+import { useRecipe, useUpdateRecipe } from "@/hooks/useRecipes";
 import { useRecipePermissions, useUserRecipePermissions } from "@/hooks/useRecipePermissions";
-import { recipeApi } from "@/services/apiServices";
 
 /**
  * Normalizes instruction description by stripping raw HTML paragraph/break tags into plain text for editing.
@@ -56,6 +55,29 @@ function getRecipeSnapshot(recipe: RecipeDetail): string {
   });
 }
 
+function toRecipeUpdate(values: RecipeDetail): RecipeUpdate {
+  return {
+    title: values.title,
+    description: values.description,
+    tags: values.tags,
+    cooking_time: values.cooking_time,
+    serving_size: values.serving_size,
+    ingredients: values.ingredients.map((ing) => ({
+      name: ing.name,
+      quantity: Number(ing.quantity) || 0,
+      unit: ing.unit,
+      subtext: ing.subtext,
+      order_index: ing.order_index,
+    })),
+    instructions: values.instructions.map((inst) => ({
+      title: inst.title,
+      description: inst.description,
+      step_number: inst.step_number,
+      timing: inst.timing,
+    })),
+  };
+}
+
 interface EditRecipeFormProps {
   recipe: RecipeDetail;
   isAdminOverride: boolean;
@@ -89,6 +111,20 @@ function EditRecipeForm({
     getRecipeValidationStatus(recipe)
   );
 
+  const { mutateAsync: updateRecipe } = useUpdateRecipe();
+
+  const saveRecipe = useCallback(async (values: RecipeDetail, snapshot: string) => {
+    setAutoSaveStatus('saving');
+    try {
+      await updateRecipe({ id: values.id, ...toRecipeUpdate(values) });
+      setLastSavedSnapshot(snapshot);
+      setAutoSaveStatus('saved');
+      setLastSavedAt(new Date());
+    } catch {
+      setAutoSaveStatus('error');
+    }
+  }, [updateRecipe]);
+
   // Update validation, snapshot, and unsaved state when form values change
   const handleFormChange = useCallback(() => {
     const values = form.getValues();
@@ -121,42 +157,10 @@ function EditRecipeForm({
       return;
     }
 
-    const timer = setTimeout(async () => {
-      setAutoSaveStatus('saving');
-
-      const updateData: RecipeUpdate = {
-        title: values.title,
-        description: values.description,
-        tags: values.tags,
-        cooking_time: values.cooking_time,
-        serving_size: values.serving_size,
-        ingredients: values.ingredients.map((ing) => ({
-          name: ing.name,
-          quantity: Number(ing.quantity) || 0,
-          unit: ing.unit,
-          subtext: ing.subtext,
-          order_index: ing.order_index,
-        })),
-        instructions: values.instructions.map((inst) => ({
-          title: inst.title,
-          description: inst.description,
-          step_number: inst.step_number,
-          timing: inst.timing,
-        })),
-      };
-
-      try {
-        await recipeApi.updateRecipe(values.id, updateData);
-        setLastSavedSnapshot(currentSnapshot);
-        setAutoSaveStatus('saved');
-        setLastSavedAt(new Date());
-      } catch {
-        setAutoSaveStatus('error');
-      }
-    }, 1200);
+    const timer = setTimeout(() => saveRecipe(values, currentSnapshot), 1200);
 
     return () => clearTimeout(timer);
-  }, [currentSnapshot, lastSavedSnapshot, form]);
+  }, [currentSnapshot, lastSavedSnapshot, form, saveRecipe]);
 
   // Performs manual Cmd+S save
   const performManualSave = useCallback(async () => {
@@ -170,38 +174,8 @@ function EditRecipeForm({
       return;
     }
 
-    setAutoSaveStatus('saving');
-
-    const updateData: RecipeUpdate = {
-      title: values.title,
-      description: values.description,
-      tags: values.tags,
-      cooking_time: values.cooking_time,
-      serving_size: values.serving_size,
-      ingredients: values.ingredients.map((ing) => ({
-        name: ing.name,
-        quantity: Number(ing.quantity) || 0,
-        unit: ing.unit,
-        subtext: ing.subtext,
-        order_index: ing.order_index,
-      })),
-      instructions: values.instructions.map((inst) => ({
-        title: inst.title,
-        description: inst.description,
-        step_number: inst.step_number,
-        timing: inst.timing,
-      })),
-    };
-
-    try {
-      await recipeApi.updateRecipe(values.id, updateData);
-      setLastSavedSnapshot(snap);
-      setAutoSaveStatus('saved');
-      setLastSavedAt(new Date());
-    } catch {
-      setAutoSaveStatus('error');
-    }
-  }, [form, lastSavedSnapshot]);
+    await saveRecipe(values, snap);
+  }, [form, lastSavedSnapshot, saveRecipe]);
 
   // Keyboard shortcut: Cmd+S / Ctrl+S to trigger immediate save
   useEffect(() => {
@@ -235,16 +209,13 @@ function EditRecipeForm({
   );
 }
 
-export default function EditRecipePage() {
+function EditRecipeLoader() {
   const params = useParams();
   const { navigateToRecipe } = useAppNavigation();
-  const auth = useAuth();
   const recipe_id = params?.recipe_id as string;
 
-  // Load the recipe data
   const { data: originalRecipe, isLoading, error, refetch } = useRecipe(recipe_id);
 
-  // Get user permissions for this recipe
   const { canEdit, isAdminOverride, isLoading: isPermissionsLoading } = useUserRecipePermissions(recipe_id);
   const { data: permissions } = useRecipePermissions(recipe_id);
 
@@ -265,17 +236,15 @@ export default function EditRecipePage() {
     };
   }, [originalRecipe]);
 
-  const hasPermission = auth.isAuthenticated && canEdit;
-
   const handleBackClick = useCallback((values: RecipeDetail) => {
     navigateToRecipe(recipe_id, values);
   }, [navigateToRecipe, recipe_id]);
 
   if (isLoading || isPermissionsLoading) {
-    return <RecipeLoadingSkeleton />;
+    return <RecipeDetailSkeleton />;
   }
 
-  if (!hasPermission) {
+  if (!canEdit) {
     const permissionError = new Error('You do not have permission to edit this recipe.');
     return (
       <Container size="xl" py="xl">
@@ -308,5 +277,13 @@ export default function EditRecipePage() {
       authorName={authorName}
       onBack={handleBackClick}
     />
+  );
+}
+
+export default function EditRecipePage() {
+  return (
+    <ProtectedRoute fallback={<RecipeDetailSkeleton />}>
+      <EditRecipeLoader />
+    </ProtectedRoute>
   );
 }

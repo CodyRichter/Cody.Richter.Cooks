@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { apiBaseUrl } from '@/config/environment'
 import { RecipeDetail, RecipeListItem } from '@/types/Recipe'
 import { RecipePermissionWithUser } from '@/types/Permission'
+import { PaginatedResponse } from '@/types/api'
 
 // How long server-rendered recipe pages may be served from cache (seconds)
 export const RECIPE_REVALIDATE_SECONDS = 300
@@ -42,6 +43,25 @@ export const fetchRecipeAuthorForServer = cache(async (id: string): Promise<stri
     return null
   }
 })
+
+/**
+ * One page of recipes, newest first, so lists render with data instead of
+ * skeletons. Returns null when the backend is unavailable; the client then
+ * fetches the list itself.
+ */
+export async function fetchRecipeListForServer(
+  page: number,
+  limit: number
+): Promise<PaginatedResponse<RecipeListItem> | null> {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/v1/recipes/?page=${page}&limit=${limit}`, {
+      next: { revalidate: RECIPE_REVALIDATE_SECONDS },
+    })
+    return response.ok ? await response.json() : null
+  } catch {
+    return null
+  }
+}
 
 /** All recipes, newest first, for the sitemap. Stops at `maxPages` as a safeguard. */
 export async function fetchAllRecipesForServer(maxPages = 50): Promise<RecipeListItem[]> {

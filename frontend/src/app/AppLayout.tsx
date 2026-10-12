@@ -4,8 +4,15 @@ import { AppShell } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import NavigationHeader from "@/components/navigation/header/NavigationHeader";
 import NavigationSidebar from "@/components/navigation/sidebar/NavigationSidebar";
+import { RecipeListItem } from "@/types/Recipe";
+import { PaginatedResponse } from "@/types/api";
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+interface AppLayoutProps {
+  children: React.ReactNode;
+  initialSidebarRecipes?: PaginatedResponse<RecipeListItem>;
+}
+
+export function AppLayout({ children, initialSidebarRecipes }: AppLayoutProps) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
 
@@ -29,7 +36,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         />
       </AppShell.Header>
       <AppShell.Navbar className="navigationSidebarContainer">
-        <NavigationSidebar {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }} />
+        <NavigationSidebar
+          {...{ mobileOpened, desktopOpened, toggleMobile, toggleDesktop }}
+          initialRecipes={initialSidebarRecipes}
+        />
       </AppShell.Navbar>
       <AppShell.Main style={{ backgroundColor: "var(--mantine-color-body)", minHeight: "calc(100vh - 65px)" }}>
         {children}

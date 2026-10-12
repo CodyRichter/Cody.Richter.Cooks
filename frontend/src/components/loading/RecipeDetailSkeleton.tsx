@@ -2,30 +2,22 @@
 
 import React from 'react';
 import { Box, Container, Divider, Grid, Group, Paper, Skeleton, Stack } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
 
 export const RecipeDetailSkeleton: React.FC = () => {
-  const isMobile = useMediaQuery('(max-width: 768px)', false, {
-    getInitialValueInEffect: true,
-  });
-
   return (
     <Container size="xl" px={{ base: 'xs', sm: 'md' }} py={{ base: 'xs', sm: 'md' }}>
-      <Stack gap={isMobile ? 'lg' : 'md'}>
+      <Stack gap="md">
         {/* Section 1: Overview & Details */}
         <Paper
-          shadow={isMobile ? 'none' : 'xs'}
-          p={isMobile ? 0 : 'xl'}
-          radius={isMobile ? 0 : 'lg'}
-          withBorder={!isMobile}
-          bg={isMobile ? 'transparent' : undefined}
+          className="recipe-section"
+          p={{ base: 0, sm: 'xl' }}
         >
           <Stack gap="md">
             {/* Top Bar: Title & Actions */}
             <Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
               <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
                 {/* Title */}
-                <Skeleton height={isMobile ? 32 : 40} width="60%" radius="sm" />
+                <Skeleton h={{ base: 32, sm: 40 }} width="60%" radius="sm" />
 
                 {/* Recipe Metadata Pills */}
                 <Group gap="xs" wrap="wrap">
@@ -87,7 +79,7 @@ export const RecipeDetailSkeleton: React.FC = () => {
           </Stack>
         </Paper>
 
-        {isMobile && <Divider />}
+        <Divider hiddenFrom="sm" />
 
         {/* 2-Column Desktop Grid / Stacked Mobile Flow */}
         <Grid gap="md" style={{ alignItems: 'stretch' }}>
@@ -100,11 +92,8 @@ export const RecipeDetailSkeleton: React.FC = () => {
             }}
           >
             <Paper
-              withBorder={!isMobile}
-              shadow={isMobile ? 'none' : 'xs'}
-              radius={isMobile ? 0 : 'lg'}
-              p={isMobile ? 0 : 'lg'}
-              bg={isMobile ? 'transparent' : undefined}
+              className="recipe-section"
+              p={{ base: 0, sm: 'lg' }}
               h="100%"
               style={{ display: 'flex', flexDirection: 'column' }}
             >
@@ -117,16 +106,7 @@ export const RecipeDetailSkeleton: React.FC = () => {
 
                 {/* Scaling Controls Bar */}
                 <Box
-                  p={isMobile ? '4px 0' : '6px 10px'}
-                  style={{
-                    backgroundColor: isMobile
-                      ? 'transparent'
-                      : 'var(--mantine-color-default-hover)',
-                    borderRadius: 'var(--mantine-radius-md)',
-                    border: isMobile
-                      ? 'none'
-                      : '1px solid var(--mantine-color-default-border)',
-                  }}
+                  className="recipe-scale-bar"
                 >
                   <Group justify="space-between" align="center" gap="xs" wrap="nowrap">
                     <Group gap={6} align="center" wrap="nowrap">
@@ -156,11 +136,9 @@ export const RecipeDetailSkeleton: React.FC = () => {
             </Paper>
           </Grid.Col>
 
-          {isMobile && (
-            <Grid.Col span={12}>
-              <Divider />
-            </Grid.Col>
-          )}
+          <Grid.Col span={12} hiddenFrom="sm">
+            <Divider />
+          </Grid.Col>
 
           {/* Section 3: Instructions */}
           <Grid.Col
@@ -171,11 +149,8 @@ export const RecipeDetailSkeleton: React.FC = () => {
             }}
           >
             <Paper
-              withBorder={!isMobile}
-              shadow={isMobile ? 'none' : 'xs'}
-              radius={isMobile ? 0 : 'lg'}
-              p={isMobile ? 0 : 'lg'}
-              bg={isMobile ? 'transparent' : undefined}
+              className="recipe-section"
+              p={{ base: 0, sm: 'lg' }}
               h="100%"
               style={{ display: 'flex', flexDirection: 'column' }}
             >
