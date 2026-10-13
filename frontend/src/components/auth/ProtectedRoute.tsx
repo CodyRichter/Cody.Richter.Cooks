@@ -3,22 +3,15 @@
 import { ReactNode, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { Center, Loader } from '@mantine/core'
-
-const defaultFallback = (
-  <Center py="xl">
-    <Loader size="lg" />
-  </Center>
-)
 
 interface ProtectedRouteProps {
   children: ReactNode
-  // Shown while the session is being restored; match the page's shape to avoid layout shift
-  fallback?: ReactNode
+  // Shown while the session is being restored: a skeleton shaped like the page
+  fallback: ReactNode
 }
 
 // Renders children only for logged-in users; others go to login and come back afterwards
-export default function ProtectedRoute({ children, fallback = defaultFallback }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const { status } = useAuth()
   const router = useRouter()
   const pathname = usePathname()

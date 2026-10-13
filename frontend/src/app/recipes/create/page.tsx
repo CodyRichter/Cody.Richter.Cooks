@@ -6,6 +6,7 @@ import { useForm, UseFormReturnType } from "@mantine/form";
 
 import EditRecipe from "@/components/recipes/edit/EditRecipe";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { RecipeEditSkeleton } from "@/components/loading";
 import RecipeEditHeader from "@/components/recipes/edit/header/RecipeEditHeader";
 import { getRecipeValidationStatus, isRecipeValid } from "@/utils/recipeUtils";
 import { notifications } from "@mantine/notifications";
@@ -140,7 +141,7 @@ export default function CreateRecipe() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute fallback={<RecipeEditSkeleton />}>
       <Container size="xl" px="md" pb="xl">
         <Stack gap="md">
           <RecipeEditHeader

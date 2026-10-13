@@ -22,6 +22,7 @@ import {
 
 import ChangePasswordModal from "@/components/account/ChangePasswordModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { AccountSkeleton } from "@/components/loading";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogoutAllSessions } from "@/hooks/useAuthMutations";
 import { useDisclosure } from "@mantine/hooks";
@@ -45,7 +46,7 @@ export default function AccountDetailsPage() {
   const emailVerified = true;
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute fallback={<AccountSkeleton />}>
       <Card shadow="sm" radius="md" withBorder pb="lg">
         <Group gap="xs">
           <Title order={4}>Account</Title>

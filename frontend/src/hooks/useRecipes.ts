@@ -219,7 +219,6 @@ export const useRecipeSearch = (query: string) => {
   return {
     ...result,
     data: result.data,
-    isSearching: query !== debouncedQuery,
-    canSearch: query.length >= 3
+    isSearching: query !== debouncedQuery
   }
 }

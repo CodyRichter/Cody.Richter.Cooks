@@ -47,6 +47,19 @@ npm run lint     # Run ESLint (MANDATORY before commit)
     - Use `next/image` for all images.
     - Avoid large imports in Client Components.
 
+### Navigation, Loading & Interaction Rules
+
+> [!IMPORTANT]
+> These keep navigation instant and the UI stable. Follow them for every new page and component.
+
+1.  **Navigate with `<Link>`**: Every in-app navigation is a `next/link` (`component={Link} href=…` on Mantine `NavLink`, `Card`, `Button`, `ActionIcon`, `Menu.Item`, `Anchor`). Only `<Link>` prefetches, and a dynamic route shows its `loading.tsx` instantly only when prefetched. Reserve `router.push`/`replace` for redirects after a mutation or auth change.
+2.  **Pending feedback**: Put `LinkPendingIcon` (`components/navigation/LinkPendingIcon.tsx`) in a link's icon slot so the icon becomes a spinner while its route loads. Clickable cards use the `.interactive-card` class (hover, focus, press and pending styles live in `styles/styles.css`).
+3.  **Route-level loading**: A skeleton shaped like the final page, from `loading.tsx` or the required `ProtectedRoute` `fallback`. Skeletons live in `components/loading/`. Never show a centered spinner for page content.
+4.  **Refreshing in place** (pagination, search): Keep the current content on screen with `className="refreshable" data-refreshing={…}`. Never collapse it back to a skeleton.
+5.  **Actions**: Use the `Button`/`ActionIcon` `loading` prop.
+6.  **No late inserts**: Anything that arrives later either reserves its space or renders only once known. Prefer data the server already has (e.g. the recipe owner passed to `useUserRecipePermissions`) over a client fetch.
+7.  **Errors**: Use `ApiErrorAlert`.
+
 ## 4. Common Tasks
 - **Creating a Component**: Use the standard template:
   ```tsx

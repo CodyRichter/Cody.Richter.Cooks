@@ -7,6 +7,7 @@ import {
     Divider,
     Group,
     Modal,
+    Skeleton,
     Stack,
     Text,
     TextInput,
@@ -159,9 +160,11 @@ export default function ShareRecipeModal({
                     </Text>
 
                     {isLoading ? (
-                        <Text size="sm" c="dimmed">
-                            Loading...
-                        </Text>
+                        <Stack gap="xs">
+                            {[0, 1].map((i) => (
+                                <Skeleton key={i} h={54} radius="md" />
+                            ))}
+                        </Stack>
                     ) : sortedPermissions.length === 0 ? (
                         <Text size="sm" c="dimmed">
                             No collaborators

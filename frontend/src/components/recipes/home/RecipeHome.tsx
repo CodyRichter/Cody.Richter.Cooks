@@ -1,10 +1,11 @@
 'use client';
 
 import {
-  ActionIcon,
   Button,
+  CloseButton,
   Divider,
   Flex,
+  Loader,
   SimpleGrid,
   Text,
   TextInput,
@@ -12,12 +13,10 @@ import {
   Container,
   Stack,
   Center,
-  Alert,
 } from "@mantine/core";
 
 import {
   IconSearch,
-  IconAlertCircle,
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
@@ -25,6 +24,7 @@ import React, { useState } from "react";
 import RecipePreviewCard from "@/components/recipes/preview/RecipePreviewCard";
 import { useRecipeSearch, useRecipes } from "@/hooks/useRecipes";
 import { RecipeListSkeleton } from "@/components/loading";
+import { ApiErrorAlert } from "@/components/error-handling";
 import { HOME_RECIPES_PER_PAGE } from "@/config/pagination";
 import { RecipeListItem } from "@/types/Recipe";
 import { PaginatedResponse } from "@/types/api";
@@ -45,7 +45,6 @@ export default function RecipeHome({ initialRecipes }: RecipeHomeProps) {
     data: searchResults,
     error: searchError,
     isFetching: isSearchFetching,
-    canSearch,
     isSearching,
   } = useRecipeSearch(searchQuery);
 
@@ -89,53 +88,20 @@ export default function RecipeHome({ initialRecipes }: RecipeHomeProps) {
 
         <Divider />
 
-        {/* Search runs as you type; the button is a visual affordance */}
-        <Flex
-          gap="sm"
-          justify="flex-start"
-          align="center"
-          direction="row"
-          wrap="nowrap"
-          mih={75}
-        >
+        {/* Search runs as you type */}
+        <Flex align="center" mih={75}>
           <TextInput
-            leftSection={<IconSearch />}
+            leftSection={
+              isSearchMode && isUpdating ? <Loader size={16} color="orange" /> : <IconSearch size={18} />
+            }
             placeholder="Search recipes by name, ingredients, or tags..."
-            style={{ width: "90%" }}
+            w="100%"
             value={searchQuery}
             onChange={handleSearchInputChange}
             rightSection={
-              searchQuery && (
-                <ActionIcon
-                  variant="subtle"
-                  onClick={handleSearchClear}
-                  size="sm"
-                  aria-label="Clear search"
-                >
-                  ×
-                </ActionIcon>
-              )
+              searchQuery && <CloseButton onClick={handleSearchClear} aria-label="Clear search" />
             }
           />
-          <ActionIcon
-            hiddenFrom="sm"
-            radius="md"
-            size="lg"
-            disabled={!canSearch}
-            loading={isSearchMode && isUpdating}
-            aria-label="Search"
-          >
-            <IconSearch />
-          </ActionIcon>
-          <Button
-            visibleFrom="sm"
-            size="sm"
-            miw={90}
-            disabled={!canSearch}
-            loading={isSearchMode && isUpdating}
-          >
-            Search
-          </Button>
         </Flex>
 
         {isSearchMode && (
@@ -158,11 +124,7 @@ export default function RecipeHome({ initialRecipes }: RecipeHomeProps) {
           </Text>
         )}
 
-        {error && (
-          <Alert icon={<IconAlertCircle size="1rem" />} color="red" variant="light">
-            {error.message || 'Failed to load recipes. Please try again.'}
-          </Alert>
-        )}
+        <ApiErrorAlert error={error} title="Couldn't load recipes" showRetry={false} />
 
         {!activeData ? (
           !error && <RecipeListSkeleton />
@@ -172,7 +134,8 @@ export default function RecipeHome({ initialRecipes }: RecipeHomeProps) {
               cols={{ base: 1, sm: 2, md: 3, lg: 4 }}
               spacing="lg"
               verticalSpacing="lg"
-              style={{ opacity: isUpdating ? 0.6 : 1, transition: "opacity 150ms ease" }}
+              className="refreshable"
+              data-refreshing={isUpdating || undefined}
             >
               {recipes.map((recipe) => (
                 <RecipePreviewCard

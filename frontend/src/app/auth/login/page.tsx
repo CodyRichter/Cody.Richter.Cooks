@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import {
   Button,
   Card,
@@ -14,10 +15,8 @@ import {
 import { GuestRoute } from "@/components/auth/ProtectedRoute";
 import { useLogin } from "@/hooks/useAuthMutations";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const router = useRouter();
   const { mutate: login, isPending } = useLogin();
 
   const [formData, setFormData] = useState({
@@ -79,8 +78,9 @@ export default function LoginPage() {
                   </Text>
                   <Anchor
                     size="xs"
-                    onClick={() => router.push('/auth/forgot-password')}
-                    style={{ cursor: "pointer", fontWeight: 400 }}
+                    component={Link}
+                    href="/auth/forgot-password"
+                    fw={400}
                   >
                     Forgot your password?
                   </Anchor>
@@ -112,8 +112,8 @@ export default function LoginPage() {
                 Don&apos;t have an account?{" "}
                 <Anchor
                   size="sm"
-                  onClick={() => router.push('/auth/register')}
-                  style={{ cursor: "pointer" }}
+                  component={Link}
+                  href="/auth/register"
                 >
                   Create one here
                 </Anchor>

@@ -1,8 +1,9 @@
 import { Card, Text, Badge, Group, Stack, Box, ThemeIcon } from "@mantine/core";
 import { IconClock, IconUsers, IconChefHat } from "@tabler/icons-react";
-import { useAppNavigation } from "@/hooks/useAppNavigation";
-import { memo, useCallback, useMemo } from "react";
+import Link from "next/link";
+import { memo, useMemo } from "react";
 import { RecipeListItem } from "@/types/Recipe";
+import { LinkPendingIcon } from "@/components/navigation/LinkPendingIcon";
 
 interface RecipePreviewCardProps {
   recipe: RecipeListItem;
@@ -11,15 +12,9 @@ interface RecipePreviewCardProps {
 const RecipePreviewCard = memo<RecipePreviewCardProps>(({
   recipe,
 }) => {
-  const { navigateToRecipe } = useAppNavigation();
-
-  const handleClick = useCallback(() => {
-    navigateToRecipe(recipe.id, recipe);
-  }, [navigateToRecipe, recipe]);
-
   // Generate a consistent color based on recipe title
   const cardColor = useMemo(() => {
-    const colors = ['blue', 'green', 'orange', 'purple', 'teal', 'pink', 'indigo', 'cyan'];
+    const colors = ['blue', 'green', 'orange', 'grape', 'teal', 'pink', 'indigo', 'cyan'];
     const hash = recipe.title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
   }, [recipe.title]);
@@ -30,20 +25,10 @@ const RecipePreviewCard = memo<RecipePreviewCardProps>(({
       padding="lg"
       radius="md"
       withBorder
-      onClick={handleClick}
-      style={{
-        cursor: "pointer",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        minHeight: "200px",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "";
-      }}
+      component={Link}
+      href={`/recipes/view/${recipe.id}`}
+      className="interactive-card"
+      mih={200}
     >
       {/* Header section with icon and gradient */}
       <Card.Section>
@@ -88,7 +73,7 @@ const RecipePreviewCard = memo<RecipePreviewCardProps>(({
             color={cardColor}
             radius="md"
           >
-            <IconChefHat size="1.5rem" />
+            <LinkPendingIcon size={24} icon={<IconChefHat size="1.5rem" />} />
           </ThemeIcon>
         </Box>
       </Card.Section>

@@ -177,6 +177,52 @@ code {
   transform: translateX(2px);
 }
 
+/* Matches a sidebar NavLink's height so the list replaces the skeleton without shifting */
+.sidebarSkeletonRow {
+  display: flex;
+  align-items: center;
+  height: 44.4px;
+  padding: 0 12px 0 18px;
+}
+
+/*
+ * Interaction language shared by every clickable surface:
+ * hover lifts, keyboard focus gets the primary ring, press settles, and a
+ * pending navigation (its icon swapped for a Loader) outlines the surface.
+ */
+.interactive-card {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+.interactive-card:active {
+  transform: translateY(0);
+}
+
+.interactive-card:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.interactive-card:has(.mantine-Loader-root) {
+  border-color: var(--mantine-primary-color-filled);
+}
+
+/* Content refreshing in place (pagination, search): stays on screen, dimmed */
+.refreshable {
+  transition: opacity 150ms ease;
+}
+
+.refreshable[data-refreshing] {
+  opacity: 0.55;
+}
+
 .sidebarRecipe + .mantine-Divider-root,
 .activeSidebarRecipe + .mantine-Divider-root {
   margin-left: 8px;
