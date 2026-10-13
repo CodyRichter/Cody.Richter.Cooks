@@ -20,11 +20,8 @@ class EmailService:
         Sends a password reset email to the user.
         """
         if not settings.resend_api_key:
-            if settings.debug:
-                logger.info("RESEND_API_KEY unset; password reset link: %s", reset_link)
-                return True
             logger.warning("RESEND_API_KEY unset; password reset email not sent")
-            return False
+            return settings.debug
 
         html_content = f"""
         <!DOCTYPE html>
