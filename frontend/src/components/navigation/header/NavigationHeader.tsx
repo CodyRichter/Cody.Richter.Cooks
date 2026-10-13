@@ -12,7 +12,6 @@ import {
   Box,
   Skeleton,
   useMantineColorScheme,
-  useComputedColorScheme,
 } from "@mantine/core";
 import {
   IconLogout,
@@ -21,13 +20,17 @@ import {
   IconSun,
   IconUserCircle,
 } from "@tabler/icons-react";
-import { useMounted } from "@mantine/hooks";
 import React from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogout } from "@/hooks/useAuthMutations";
 import Link from "next/link";
 import { LinkPendingIcon } from "@/components/navigation/LinkPendingIcon";
+
+const COLOR_SCHEME_TOGGLES = [
+  { isDark: false, label: "Switch to Dark Mode", hiddenProp: { darkHidden: true } },
+  { isDark: true, label: "Switch to Light Mode", hiddenProp: { lightHidden: true } },
+] as const;
 
 interface NavigationHeaderProps {
   mobileOpened: boolean;
@@ -46,12 +49,6 @@ export default function NavigationHeader({
   const logout = useLogout();
 
   const { toggleColorScheme } = useMantineColorScheme();
-  const computedColorScheme = useComputedColorScheme("light", {
-    getInitialValueInEffect: true,
-  });
-  // The server can't know the stored scheme, so match its light render until mounted
-  const mounted = useMounted();
-  const isDark = mounted && computedColorScheme === "dark";
 
   return (
     <Group h="100%" px={{ base: "xs", sm: "md" }} justify="space-between" align="center" wrap="nowrap">
@@ -106,61 +103,55 @@ export default function NavigationHeader({
       </Group>
 
       <Group gap="xs" wrap="nowrap" align="center" style={{ flexShrink: 0 }}>
-        {/* Mobile Theme Toggle (ActionIcon) */}
-        <Box hiddenFrom="sm">
-          <Tooltip
-            label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            position="bottom"
-            openDelay={150}
-          >
-            <ActionIcon
-              variant="subtle"
-              size="lg"
-              radius="xl"
-              color="gray"
-              onClick={() => toggleColorScheme()}
-              aria-label="Toggle color scheme"
-            >
-              {isDark ? (
-                <IconSun size={20} stroke={2} color="var(--mantine-color-yellow-4)" />
-              ) : (
-                <IconMoonStars size={20} stroke={2} color="var(--mantine-color-blue-6)" />
-              )}
-            </ActionIcon>
-          </Tooltip>
-        </Box>
+        {/* Both states render; the pre-paint color scheme attribute hides the wrong one */}
+        {COLOR_SCHEME_TOGGLES.map(({ isDark, label, hiddenProp }) => (
+          <React.Fragment key={label}>
+            <Box hiddenFrom="sm" {...hiddenProp}>
+              <Tooltip label={label} position="bottom" openDelay={150}>
+                <ActionIcon
+                  variant="subtle"
+                  size="lg"
+                  radius="xl"
+                  color="gray"
+                  onClick={() => toggleColorScheme()}
+                  aria-label="Toggle color scheme"
+                >
+                  {isDark ? (
+                    <IconSun size={20} stroke={2} color="var(--mantine-color-yellow-4)" />
+                  ) : (
+                    <IconMoonStars size={20} stroke={2} color="var(--mantine-color-blue-6)" />
+                  )}
+                </ActionIcon>
+              </Tooltip>
+            </Box>
 
-        {/* Desktop Theme Toggle (Switch) */}
-        <Box visibleFrom="sm">
-          <Tooltip
-            label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            withArrow
-            position="bottom"
-            openDelay={150}
-          >
-            <Switch
-              size="md"
-              color="dark.4"
-              checked={isDark}
-              onChange={() => toggleColorScheme()}
-              onLabel={
-                <IconSun
-                  size={16}
-                  stroke={2.5}
-                  color="var(--mantine-color-yellow-4)"
+            <Box visibleFrom="sm" {...hiddenProp}>
+              <Tooltip label={label} withArrow position="bottom" openDelay={150}>
+                <Switch
+                  size="md"
+                  color="dark.4"
+                  checked={isDark}
+                  onChange={() => toggleColorScheme()}
+                  onLabel={
+                    <IconSun
+                      size={16}
+                      stroke={2.5}
+                      color="var(--mantine-color-yellow-4)"
+                    />
+                  }
+                  offLabel={
+                    <IconMoonStars
+                      size={16}
+                      stroke={2.5}
+                      color="var(--mantine-color-blue-6)"
+                    />
+                  }
+                  aria-label="Toggle dark mode"
                 />
-              }
-              offLabel={
-                <IconMoonStars
-                  size={16}
-                  stroke={2.5}
-                  color="var(--mantine-color-blue-6)"
-                />
-              }
-              aria-label="Toggle dark mode"
-            />
-          </Tooltip>
-        </Box>
+              </Tooltip>
+            </Box>
+          </React.Fragment>
+        ))}
 
         {status === "loading" ? (
           // Same footprint as the logged-out buttons while the session is restored
