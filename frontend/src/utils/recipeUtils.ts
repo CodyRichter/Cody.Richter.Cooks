@@ -76,6 +76,19 @@ export interface RecipeValidationStatus {
   issues: string[];
 }
 
+function htmlToText(html: string): string {
+  if (typeof window !== "undefined") {
+    return new DOMParser().parseFromString(html, "text/html").body.textContent ?? "";
+  }
+  let previous: string;
+  let text = html;
+  do {
+    previous = text;
+    text = text.replace(/<[^>]*>/g, "");
+  } while (text !== previous);
+  return text;
+}
+
 /**
  * Evaluates the validation state of a recipe and returns detailed progress information.
  * @param recipe The recipe to check
@@ -102,9 +115,7 @@ export function getRecipeValidationStatus(recipe: RecipeDetail): RecipeValidatio
     issues.push("Recipe title (min 3 characters)");
   }
 
-  const strippedDescription = (recipe.description || "")
-    .replace(/<[^>]*>/g, "")
-    .trim();
+  const strippedDescription = htmlToText(recipe.description || "").trim();
   const descriptionValid = !!recipe.description && strippedDescription.length > 0;
   if (!descriptionValid) {
     issues.push("Short description / story");
@@ -128,7 +139,7 @@ export function getRecipeValidationStatus(recipe: RecipeDetail): RecipeValidatio
     hasInstructions &&
     recipe.instructions.every(
       (inst: InstructionStep) => {
-        const strippedInstDesc = (inst.description || "").replace(/<[^>]*>/g, "").trim();
+        const strippedInstDesc = htmlToText(inst.description || "").trim();
         return !!inst.title?.trim() && (!!inst.description?.trim() && strippedInstDesc.length > 0);
       }
     );

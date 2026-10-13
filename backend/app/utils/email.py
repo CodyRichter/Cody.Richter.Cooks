@@ -2,9 +2,13 @@
 Email service utility for sending emails via Resend.
 """
 
+import logging
+
 import resend
 from datetime import datetime
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 resend.api_key = settings.resend_api_key
 
@@ -16,10 +20,8 @@ class EmailService:
         Sends a password reset email to the user.
         """
         if not settings.resend_api_key:
-            print(
-                f"[EmailService] Missing RESEND_API_KEY. Would have sent reset email to {to_email} with link: {reset_link}"
-            )
-            return True
+            logger.warning("RESEND_API_KEY unset; password reset email not sent")
+            return settings.debug
 
         html_content = f"""
         <!DOCTYPE html>
@@ -141,5 +143,5 @@ class EmailService:
             )
             return True
         except Exception as e:
-            print(f"[EmailService] Failed to send email: {e}")
+            logger.error("Failed to send password reset email: %s", e)
             return False
