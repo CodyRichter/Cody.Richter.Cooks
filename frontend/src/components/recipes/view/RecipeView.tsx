@@ -9,7 +9,6 @@ import {
   Grid,
   Group,
   Paper,
-  Skeleton,
   Stack,
   Text,
   Title,
@@ -26,6 +25,7 @@ import {
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { ApiErrorAlert } from "@/components/error-handling";
@@ -36,7 +36,7 @@ import { RecipeDetailSkeleton } from "@/components/loading";
 import ShareRecipeModal from "@/components/recipes/share/ShareRecipeModal";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import { formatRecipeDate, titleize } from "@/utils/recipeUtils";
-import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { LinkPendingIcon } from "@/components/navigation/LinkPendingIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecipeDetail } from "@/types/Recipe";
 import { useRecipe } from "@/hooks/useRecipes";
@@ -53,7 +53,6 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
   const auth = useAuth();
   const router = useRouter();
 
-  const { navigateToRecipeEdit } = useAppNavigation();
   const [deleteModalOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const [shareModalOpened, { open: openShare, close: closeShare }] = useDisclosure(false);
   const [scaleFactor, setScaleFactor] = useState(1);
@@ -65,8 +64,7 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
     canDelete,
     isOwner,
     isAdminOverride,
-    isLoading: isPermissionsLoading,
-  } = useUserRecipePermissions(recipe_id);
+  } = useUserRecipePermissions(recipe_id, initialAuthorName);
   const { data: permissions } = useRecipePermissions(recipe_id);
 
   const authorName = useMemo(() => {
@@ -74,10 +72,6 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
     const owner = permissions.find((p) => p.role === 'owner');
     return owner ? owner.user_username : null;
   }, [permissions, initialAuthorName]);
-
-  const handleEditClick = () => {
-    navigateToRecipeEdit(recipe_id, recipe);
-  };
 
   const handleDescriptionClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
@@ -109,8 +103,7 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
   }
 
   const hasActions = auth.isAuthenticated && (canEdit || canDelete);
-  // Holds the action buttons' space while a logged-in user's permissions load
-  const showActionsSkeleton = auth.isAuthenticated && isPermissionsLoading && !hasActions;
+  const editHref = `/recipes/edit/${recipe_id}`;
 
   return (
     <Container size="xl" px={{ base: "xs", sm: "md" }} py={{ base: "xs", sm: "md" }}>
@@ -199,14 +192,6 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
                 )}
               </Stack>
 
-              {showActionsSkeleton && (
-                <Group gap="xs" visibleFrom="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
-                  <Skeleton h={36} w={75} radius="md" />
-                  <Skeleton h={36} w={85} radius="md" />
-                  <Skeleton h={36} w={90} radius="md" />
-                </Group>
-              )}
-
               {/* Desktop Action Buttons (encapsulated with subtle red dotted border if admin override) */}
               {hasActions && (
                 <Box
@@ -247,8 +232,9 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
                             color="orange"
                             size="sm"
                             radius="md"
-                            leftSection={<IconEdit size="1rem" stroke={1.75} />}
-                            onClick={handleEditClick}
+                            leftSection={<LinkPendingIcon icon={<IconEdit size="1rem" stroke={1.75} />} />}
+                            component={Link}
+                            href={editHref}
                             style={{ fontWeight: 600 }}
                           >
                             Edit
@@ -284,14 +270,6 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
                 </Box>
               )}
             </Group>
-
-            {showActionsSkeleton && (
-              <Group gap="xs" grow hiddenFrom="sm" mt="xs">
-                <Skeleton h={36} radius="md" />
-                <Skeleton h={36} radius="md" />
-                <Skeleton h={36} radius="md" />
-              </Group>
-            )}
 
             {/* Mobile Action Bar (encapsulated with subtle red dotted border if admin override) */}
             {hasActions && (
@@ -334,8 +312,9 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
                           color="orange"
                           size="sm"
                           radius="md"
-                          leftSection={<IconEdit size="1rem" stroke={1.75} />}
-                          onClick={handleEditClick}
+                          leftSection={<LinkPendingIcon icon={<IconEdit size="1rem" stroke={1.75} />} />}
+                          component={Link}
+                          href={editHref}
                           style={{ fontWeight: 600 }}
                         >
                           Edit

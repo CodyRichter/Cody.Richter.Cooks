@@ -60,7 +60,10 @@ export async function generateMetadata({ params }: RecipePageProps): Promise<Met
 
 export default async function RecipePage({ params }: RecipePageProps) {
   const { recipe_id } = await params;
-  const result = await fetchRecipeForServer(recipe_id);
+  const [result, author] = await Promise.all([
+    fetchRecipeForServer(recipe_id),
+    fetchRecipeAuthorForServer(recipe_id),
+  ]);
 
   if (result.status === "not_found") notFound();
 
@@ -69,7 +72,6 @@ export default async function RecipePage({ params }: RecipePageProps) {
     return <RecipeView recipeId={recipe_id} />;
   }
 
-  const author = await fetchRecipeAuthorForServer(recipe_id);
   const jsonLd = buildRecipeJsonLd(result.recipe, recipeUrl(result.recipe.id), author);
 
   return (

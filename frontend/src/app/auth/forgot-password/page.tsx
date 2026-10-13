@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { Button, Card, Container, Text, TextInput, Title, Anchor, Group } from '@mantine/core';
 import { useRouter } from 'next/navigation';
@@ -100,8 +101,8 @@ export default function ForgotPasswordPage() {
           <Group justify="center">
             <Anchor
               size="sm"
-              onClick={() => router.push('/auth/login')}
-              style={{ cursor: "pointer" }}
+              component={Link}
+              href="/auth/login"
               c="dimmed"
             >
               Back to Login

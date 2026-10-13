@@ -20,8 +20,12 @@ export const useRecipePermissions = (recipeId: string) => {
   })
 }
 
-// Hook to check current user's permissions for a recipe
-export const useUserRecipePermissions = (recipeId: string): UserRecipePermissions => {
+// Hook to check current user's permissions for a recipe. `ownerUsername` (known from the
+// server render) answers for owners and admins while the permissions request is pending or failed.
+export const useUserRecipePermissions = (
+  recipeId: string,
+  ownerUsername?: string | null
+): UserRecipePermissions => {
   const { status, user } = useAuth()
   const { data: permissions, isLoading, error } = useRecipePermissions(recipeId)
 
@@ -38,6 +42,20 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
     }
 
     const isAdmin = Boolean(user.is_admin)
+
+    if ((isLoading || error) && ownerUsername) {
+      const isOwner = ownerUsername === user.username
+      if (isOwner || isAdmin) {
+        return {
+          canEdit: true,
+          canDelete: true,
+          userRole: isOwner ? 'owner' : null,
+          isOwner,
+          isAdminOverride: !isOwner,
+          isLoading: false,
+        }
+      }
+    }
 
     // While loading, do not assume admin override as the user might be the owner/editor
     if (isLoading) {
@@ -90,5 +108,5 @@ export const useUserRecipePermissions = (recipeId: string): UserRecipePermission
       isAdminOverride: isAdmin && !isOwner,
       isLoading: false,
     }
-  }, [status, user, permissions, isLoading, error])
+  }, [status, user, permissions, isLoading, error, ownerUsername])
 }

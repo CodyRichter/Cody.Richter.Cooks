@@ -9,10 +9,10 @@ import RecipeEditHeader, { AutoSaveStatus } from "@/components/recipes/edit/head
 import { ApiErrorAlert } from "@/components/error-handling";
 import { RecipeDetail, RecipeUpdate } from "@/types/Recipe";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { RecipeDetailSkeleton } from "@/components/loading";
+import { RecipeEditSkeleton } from "@/components/loading";
 import { getRecipeValidationStatus, isRecipeValid } from "@/utils/recipeUtils";
 import { useParams } from "next/navigation";
-import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRecipe, useUpdateRecipe } from "@/hooks/useRecipes";
 import { useRecipePermissions, useUserRecipePermissions } from "@/hooks/useRecipePermissions";
 
@@ -199,6 +199,7 @@ function EditRecipeForm({
           validationStatus={validationStatus}
           autoSaveStatus={autoSaveStatus}
           lastSavedAt={lastSavedAt}
+          backHref={`/recipes/view/${recipe.id}`}
           onBack={() => onBack(form.getValues())}
           isAdminOverride={isAdminOverride}
           authorName={authorName}
@@ -211,7 +212,7 @@ function EditRecipeForm({
 
 function EditRecipeLoader() {
   const params = useParams();
-  const { navigateToRecipe } = useAppNavigation();
+  const queryClient = useQueryClient();
   const recipe_id = params?.recipe_id as string;
 
   const { data: originalRecipe, isLoading, error, refetch } = useRecipe(recipe_id);
@@ -236,12 +237,13 @@ function EditRecipeLoader() {
     };
   }, [originalRecipe]);
 
+  // The view page renders from this cache, so it shows edits that haven't been refetched yet
   const handleBackClick = useCallback((values: RecipeDetail) => {
-    navigateToRecipe(recipe_id, values);
-  }, [navigateToRecipe, recipe_id]);
+    queryClient.setQueryData(['recipe', recipe_id], values);
+  }, [queryClient, recipe_id]);
 
   if (isLoading || isPermissionsLoading) {
-    return <RecipeDetailSkeleton />;
+    return <RecipeEditSkeleton />;
   }
 
   if (!canEdit) {
@@ -282,7 +284,7 @@ function EditRecipeLoader() {
 
 export default function EditRecipePage() {
   return (
-    <ProtectedRoute fallback={<RecipeDetailSkeleton />}>
+    <ProtectedRoute fallback={<RecipeEditSkeleton />}>
       <EditRecipeLoader />
     </ProtectedRoute>
   );

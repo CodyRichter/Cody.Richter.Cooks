@@ -18,12 +18,16 @@ import {
 } from "@tabler/icons-react";
 import React, { useEffect, useRef, useState } from "react";
 
-import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { RecipeListItem } from "@/types/Recipe";
 import { PaginatedResponse } from "@/types/api";
 import { useRecipes, useRecipe } from "@/hooks/useRecipes";
 import { useDebouncedValue, useOs } from "@mantine/hooks";
 import { SIDEBAR_RECIPES_PER_PAGE } from "@/config/pagination";
+import { LinkPendingIcon } from "@/components/navigation/LinkPendingIcon";
+import { SidebarListSkeleton } from "@/components/loading";
+import { ApiErrorAlert } from "@/components/error-handling";
 
 interface NavigationSidebarProps {
   mobileOpened: boolean;
@@ -49,7 +53,6 @@ export default function NavigationSidebar({
   toggleMobile,
   initialRecipes,
 }: NavigationSidebarProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const os = useOs();
 
@@ -68,7 +71,8 @@ export default function NavigationSidebar({
   const {
     data: recipesResponse,
     isLoading,
-    error: queryError
+    isPlaceholderData,
+    error,
   } = useRecipes(
     {
       page: currentPage,
@@ -82,7 +86,6 @@ export default function NavigationSidebar({
   const totalResults = recipesResponse?.total || 0;
   const hasNextPage = recipesResponse?.has_next || false;
   const hasPrevPage = recipesResponse?.has_prev || false;
-  const error = queryError ? (queryError as Error).message : null;
 
   const activeRecipeMatch = pathname.match(/^\/recipes\/view\/([^/]+)/);
   const activeRecipeId = activeRecipeMatch ? activeRecipeMatch[1] : null;
@@ -97,21 +100,8 @@ export default function NavigationSidebar({
     enabled: shouldFetchActiveRecipe,
   });
 
-  const displayRecipes = [...recipes];
-  let injectedRecipeId: string | null = null;
-
-  if (shouldFetchActiveRecipe && activeRecipeData) {
-    if (!displayRecipes.some((r) => r.id === activeRecipeData.id)) {
-      displayRecipes.unshift({
-        id: activeRecipeData.id,
-        title: activeRecipeData.title,
-        cooking_time: activeRecipeData.cooking_time,
-        serving_size: activeRecipeData.serving_size,
-        created_at: activeRecipeData.created_at,
-      });
-      injectedRecipeId = activeRecipeData.id;
-    }
-  }
+  // Known from the URL alone, so the slot is laid out before the recipe's title arrives
+  const showCurrentlyViewing = shouldFetchActiveRecipe && !isLoading;
 
   // Handle Focus Searchbar on Cmd/Ctrl + K
   useEffect(() => {
@@ -145,9 +135,8 @@ export default function NavigationSidebar({
     }
   }
 
-  function handleRecipeClick(recipeId: string) {
-    router.push(`/recipes/view/${recipeId}`);
-
+  // The destination's skeleton shows instantly, so the drawer can close right away
+  function handleRecipeClick() {
     if (mobileOpened) {
       toggleMobile();
     }
@@ -183,40 +172,51 @@ export default function NavigationSidebar({
 
         <Divider mt="md" mb="sm" />
 
+        {showCurrentlyViewing && activeRecipeId && (
+          <>
+            <Text size="xs" c="dimmed" fw={700} ml="xs" mt="xs" mb={4} style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+              Currently Viewing
+            </Text>
+            <NavLink
+              component={Link}
+              href={`/recipes/view/${activeRecipeId}`}
+              w="100%"
+              miw="44px"
+              onClick={handleRecipeClick}
+              label={activeRecipeData?.title ?? <Skeleton h={18} w="70%" radius="sm" />}
+              rightSection={<IconChefHatFilled size={20} color="var(--mantine-color-orange-4)" />}
+              active
+              variant="filled"
+              className="activeSidebarRecipe"
+              style={{
+                borderLeft: '3px solid var(--mantine-color-orange-4)',
+                backgroundColor: 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))',
+              }}
+            />
+            <Divider my="xs" variant="dotted" />
+          </>
+        )}
+
         {isLoading ? (
-          <Stack gap="md" mt="md">
-            {[...Array(10)].map((_, idx) => (
-              <Skeleton
-                h={22}
-                w="90%"
-                radius="sm"
-                key={`sidebar-skeleton-${idx}`}
-                ml="sm"
-              />
-            ))}
-          </Stack>
+          <SidebarListSkeleton />
         ) : error ? (
-           <div style={{ padding: 'var(--mantine-spacing-md)', color: 'var(--mantine-color-error)' }}>
-             {error}
-           </div>
+          <ApiErrorAlert error={error} size="sm" title="Couldn't load recipes" showRetry={false} />
         ) : (
-          displayRecipes.map((recipe: RecipeListItem) => (
-            <React.Fragment key={`sidebar-recipe-${recipe.id}`}>
-              {injectedRecipeId === recipe.id && (
-                <Text size="xs" c="dimmed" fw={700} ml="xs" mt="xs" mb={4} style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                  Currently Viewing
-                </Text>
-              )}
+          <Stack gap={0} className="refreshable" data-refreshing={isPlaceholderData || undefined}>
+            {recipes.map((recipe: RecipeListItem) => (
               <NavLink
+                key={`sidebar-recipe-${recipe.id}`}
+                component={Link}
+                href={`/recipes/view/${recipe.id}`}
                 w="100%"
                 miw="44px"
-                onClick={() => handleRecipeClick(recipe.id)}
+                onClick={handleRecipeClick}
                 label={recipe.title}
                 rightSection={
                   isRecipeActive(recipe.id) ? (
                     <IconChefHatFilled size={20} color="var(--mantine-color-orange-4)" />
                   ) : (
-                    <IconArrowNarrowRight size={20} color="gray" />
+                    <LinkPendingIcon size={20} icon={<IconArrowNarrowRight size={20} color="gray" />} />
                   )
                 }
                 active={isRecipeActive(recipe.id)}
@@ -226,14 +226,9 @@ export default function NavigationSidebar({
                     ? "activeSidebarRecipe"
                     : "sidebarRecipe"
                 }
-                style={injectedRecipeId === recipe.id ? {
-                  borderLeft: '3px solid var(--mantine-color-orange-4)',
-                  backgroundColor: 'light-dark(var(--mantine-color-orange-0), rgba(247, 103, 7, 0.15))',
-                } : undefined}
               />
-              {injectedRecipeId === recipe.id && <Divider my="xs" variant="dotted" />}
-            </React.Fragment>
-          ))
+            ))}
+          </Stack>
         )}
       </Stack>
       <div>

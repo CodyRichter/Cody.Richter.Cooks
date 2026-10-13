@@ -12,9 +12,8 @@ export default function Loading() {
           Welcome to Cody Richter Cooks
         </Title>
         <Divider />
-        <Flex gap="sm" align="center" mih={75}>
-          <Skeleton h={36} w="90%" radius="sm" />
-          <Skeleton h={36} miw={90} radius="sm" style={{ flex: 1 }} />
+        <Flex align="center" mih={75}>
+          <Skeleton h={36} w="100%" radius="md" />
         </Flex>
         <Divider />
         <Stack gap={8} align="center" mb="xl">

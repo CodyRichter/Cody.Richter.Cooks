@@ -26,7 +26,8 @@ import React from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogout } from "@/hooks/useAuthMutations";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { LinkPendingIcon } from "@/components/navigation/LinkPendingIcon";
 
 interface NavigationHeaderProps {
   mobileOpened: boolean;
@@ -41,7 +42,6 @@ export default function NavigationHeader({
   toggleMobile,
   toggleDesktop,
 }: NavigationHeaderProps) {
-  const router = useRouter();
   const { status } = useAuth();
   const logout = useLogout();
 
@@ -74,19 +74,20 @@ export default function NavigationHeader({
         <Divider orientation="vertical" size="xs" mx="xs" />
 
         <Text
-          component="span"
+          component={Link}
+          href="/"
+          c="inherit"
+          td="none"
           fw={500}
           style={{
             fontFamily: "var(--font-inter), sans-serif",
             fontSize: "clamp(1.0rem, 4vw, 1.4rem)",
-            cursor: "pointer",
             letterSpacing: "-0.7px",
             lineHeight: 1,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
           }}
-          onClick={() => router.push("/")}
         >
           Cody Richter Cooks
         </Text>
@@ -176,22 +177,24 @@ export default function NavigationHeader({
               hiddenFrom="sm"
               radius="xl"
               color="gray"
-              onClick={() => router.push("/recipes/create")}
+              component={Link}
+              href="/recipes/create"
               aria-label="Create recipe"
             >
-              <IconPencilPlus size={22} />
+              <LinkPendingIcon size={20} icon={<IconPencilPlus size={22} />} />
             </ActionIcon>
 
             <Divider orientation="vertical" size="xs" mx={4} visibleFrom="sm" />
 
             {/* Desktop Create Recipe Button */}
             <Button
-              leftSection={<IconPencilPlus size={20} />}
+              component={Link}
+              href="/recipes/create"
+              leftSection={<LinkPendingIcon size={18} icon={<IconPencilPlus size={20} />} />}
               variant="default"
               radius="xl"
               h={38}
               visibleFrom="sm"
-              onClick={() => router.push("/recipes/create")}
             >
               Create Recipe
             </Button>
@@ -213,8 +216,9 @@ export default function NavigationHeader({
               <Menu.Dropdown>
                 <Menu.Label>Account</Menu.Label>
                 <Menu.Item
+                  component={Link}
+                  href="/auth/account"
                   leftSection={<IconUserCircle size={16} />}
-                  onClick={() => router.push("/auth/account")}
                 >
                   Account Settings
                 </Menu.Item>
@@ -235,7 +239,8 @@ export default function NavigationHeader({
               variant="subtle"
               size="sm"
               hiddenFrom="sm"
-              onClick={() => router.push("/auth/login")}
+              component={Link}
+              href="/auth/login"
               color="gray"
             >
               Log in
@@ -245,7 +250,8 @@ export default function NavigationHeader({
               radius="xl"
               h={38}
               visibleFrom="sm"
-              onClick={() => router.push("/auth/login")}
+              component={Link}
+              href="/auth/login"
             >
               Log in
             </Button>

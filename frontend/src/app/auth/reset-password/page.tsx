@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { Button, Card, Container, Text, TextInput, PasswordInput, Title, Anchor, Group, Center, Loader } from '@mantine/core';
+import Link from 'next/link';
+import { useState, Suspense } from 'react';
+import { Button, Card, Container, Text, TextInput, PasswordInput, Title, Anchor, Group } from '@mantine/core';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/utils/apiClient';
+import { FormCardSkeleton } from '@/components/loading';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -14,23 +16,18 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(!!token);
 
-  // Verify token and fetch username on mount
-  useEffect(() => {
-    if (token) {
-      apiClient.get<{ username: string }>(`/api/v1/users/reset-password/verify/?token=${token}`, false)
-        .then(data => {
-          setUsername(data.username);
-          setIsVerifying(false);
-        })
-        .catch((error) => {
-          console.error('Password reset token verification failed:', error);
-          setIsVerifying(false);
-        });
-    }
-  }, [token]);
+  const { data: verification, isLoading: isVerifying } = useQuery({
+    queryKey: ['reset-password-verify', token],
+    queryFn: () =>
+      apiClient.get<{ username: string }>(
+        `/api/v1/users/reset-password/verify/?token=${encodeURIComponent(token ?? '')}`,
+        false
+      ),
+    enabled: !!token,
+    retry: false,
+  });
+  const username = verification?.username ?? null;
 
   const mutation = useMutation({
     mutationFn: async (data: { token: string; new_password: string }) => {
@@ -76,16 +73,10 @@ function ResetPasswordForm() {
   };
 
   if (isVerifying) {
-    return (
-      <Container size="xs" mt="xl">
-        <Center>
-          <Loader size="xl" />
-        </Center>
-      </Container>
-    );
+    return <FormCardSkeleton fields={3} />;
   }
 
-  if (!token || (!username && !isVerifying)) {
+  if (!token || !username) {
     return (
       <Container size="xs" mt="xl">
         <Card shadow="md" padding="xl" radius="md" withBorder>
@@ -95,7 +86,7 @@ function ResetPasswordForm() {
           <Text ta="center" mb="xl">
             This password reset link is invalid or missing. Please request a new one.
           </Text>
-          <Button fullWidth onClick={() => router.push('/auth/forgot-password')}>
+          <Button fullWidth component={Link} href="/auth/forgot-password">
             Request New Link
           </Button>
         </Card>
@@ -172,8 +163,8 @@ function ResetPasswordForm() {
           <Group justify="center">
             <Anchor
               size="sm"
-              onClick={() => router.push('/auth/login')}
-              style={{ cursor: "pointer" }}
+              component={Link}
+              href="/auth/login"
               c="dimmed"
             >
               Back to Login
@@ -187,13 +178,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <Container size="xs" mt="xl">
-        <Center>
-          <Loader size="xl" />
-        </Center>
-      </Container>
-    }>
+    <Suspense fallback={<FormCardSkeleton fields={3} />}>
       <ResetPasswordForm />
     </Suspense>
   );

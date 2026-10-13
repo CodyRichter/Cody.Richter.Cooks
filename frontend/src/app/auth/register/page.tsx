@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import {
   Button,
   Card,
@@ -180,8 +181,8 @@ export default function RegisterPage() {
                 Already have an account?{" "}
                 <Anchor
                   size="sm"
-                  onClick={() => router.push('/auth/login')}
-                  style={{ cursor: "pointer" }}
+                  component={Link}
+                  href="/auth/login"
                 >
                   Sign in here
                 </Anchor>

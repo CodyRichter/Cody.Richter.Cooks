@@ -28,6 +28,8 @@ import {
 import { RecipeValidationStatus } from '@/utils/recipeUtils';
 import { useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
+import Link from 'next/link';
+import { LinkPendingIcon } from '@/components/navigation/LinkPendingIcon';
 
 export type AutoSaveStatus = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error';
 
@@ -39,7 +41,9 @@ interface RecipeEditHeaderProps {
   autoSaveStatus?: AutoSaveStatus;
   lastSavedAt?: Date | null;
   onSave?: () => void;
-  onBack: () => void;
+  // With `backHref` the back button is a link and `onBack` runs before it navigates
+  backHref?: string;
+  onBack?: () => void;
   isAdminOverride?: boolean;
   authorName?: string | null;
 }
@@ -52,6 +56,7 @@ export default function RecipeEditHeader({
   autoSaveStatus = 'idle',
   lastSavedAt,
   onSave,
+  backHref,
   onBack,
   isAdminOverride,
   authorName,
@@ -88,16 +93,31 @@ export default function RecipeEditHeader({
         {/* Left Side: Navigation & Title */}
         <Group gap="xs" wrap="nowrap" style={{ minWidth: 0, flexShrink: 1 }}>
           <Tooltip label="Go back" position="bottom" withArrow>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size={isMobile ? 'md' : 'lg'}
-              radius="md"
-              onClick={onBack}
-              aria-label="Back"
-            >
-              <IconArrowLeft size={18} />
-            </ActionIcon>
+            {backHref ? (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size={isMobile ? 'md' : 'lg'}
+                radius="md"
+                component={Link}
+                href={backHref}
+                onClick={onBack}
+                aria-label="Back"
+              >
+                <LinkPendingIcon icon={<IconArrowLeft size={18} />} />
+              </ActionIcon>
+            ) : (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size={isMobile ? 'md' : 'lg'}
+                radius="md"
+                onClick={onBack}
+                aria-label="Back"
+              >
+                <IconArrowLeft size={18} />
+              </ActionIcon>
+            )}
           </Tooltip>
 
           <Stack gap={0} style={{ minWidth: 0 }}>
@@ -142,9 +162,9 @@ export default function RecipeEditHeader({
 
         {/* Right Side: Status Badges & Actions */}
         <Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
-          {/* Auto-save Status Badge (Shown in edit mode) */}
-          {mode === 'edit' && autoSaveStatus !== 'idle' && (
-            <>
+          {/* Auto-save status; a fixed-width slot so switching states doesn't shift the header */}
+          {mode === 'edit' && (
+            <Group justify="flex-end" wrap="nowrap" miw={isMobile ? 80 : 165}>
               {autoSaveStatus === 'saving' && (
                 <Badge
                   size={isMobile ? 'sm' : 'md'}
@@ -215,7 +235,7 @@ export default function RecipeEditHeader({
                   </Badge>
                 </Tooltip>
               )}
-            </>
+            </Group>
           )}
 
           {/* Validation Checklist Popover Button */}
