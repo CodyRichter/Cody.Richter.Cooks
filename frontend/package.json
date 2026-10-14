@@ -11,15 +11,15 @@
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
-    "@mantine/core": "^9.5.1",
-    "@mantine/form": "^9.5.1",
-    "@mantine/hooks": "^9.5.1",
-    "@mantine/modals": "^9.5.1",
-    "@mantine/notifications": "^9.5.1",
-    "@mantine/tiptap": "^9.5.1",
-    "@marsidev/react-turnstile": "^1.5.1",
-    "@tabler/icons-react": "^3.35.0",
-    "@tanstack/react-query": "^5.90.5",
+    "@mantine/core": "^9.7.1",
+    "@mantine/form": "^9.7.1",
+    "@mantine/hooks": "^9.7.1",
+    "@mantine/modals": "^9.7.1",
+    "@mantine/notifications": "^9.7.1",
+    "@mantine/tiptap": "^9.7.1",
+    "@marsidev/react-turnstile": "^1.6.1",
+    "@tabler/icons-react": "^3.49.0",
+    "@tanstack/react-query": "^5.104.1",
     "@tiptap/extension-highlight": "^3.32.0",
     "@tiptap/extension-link": "^3.32.0",
     "@tiptap/extension-placeholder": "^3.32.0",
@@ -30,10 +30,10 @@
     "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^3.32.0",
     "browser-image-compression": "^2.0.2",
-    "html-react-parser": "^5.2.7",
+    "html-react-parser": "^6.1.8",
     "next": "^16.3.8",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "react-icons": "^5.5.0",
     "xss": "^1.0.15"
   },
@@ -41,20 +41,20 @@
     "node": "24.x"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.4",
-    "baseline-browser-mapping": "^2.9.11",
-    "eslint": "9.38.0",
+    "@types/node": "^24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "baseline-browser-mapping": "^2.11.28",
+    "eslint": "10.12.0",
     "eslint-config-next": "^16.3.8",
     "mini-css-extract-plugin": "^2.9.4",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.29",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.4"
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
   }
 }

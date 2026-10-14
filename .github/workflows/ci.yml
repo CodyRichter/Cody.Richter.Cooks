@@ -33,8 +33,8 @@ jobs:
       DEBUG: 'true'
       DATABASE_URL: postgresql://recipe_user:recipe_password@localhost:5432/recipe_db
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
           cache: pip
@@ -53,8 +53,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: frontend/.nvmrc
           cache: npm
