@@ -101,7 +101,7 @@ def update_recipe_internal(
     for field, value in update_data.items():
         setattr(recipe, field, value)
 
-    if recipe_data.ingredients is not None:
+    if "ingredients" in recipe_data.model_fields_set:
         db.query(Ingredient).filter(Ingredient.recipe_id == recipe_id).delete()
         for ingredient_data in recipe_data.ingredients:
             db_ingredient = Ingredient(
@@ -114,7 +114,7 @@ def update_recipe_internal(
             )
             db.add(db_ingredient)
 
-    if recipe_data.instructions is not None:
+    if "instructions" in recipe_data.model_fields_set:
         db.query(Instruction).filter(Instruction.recipe_id == recipe_id).delete()
         for instruction_data in recipe_data.instructions:
             db_instruction = Instruction(
