@@ -27,6 +27,8 @@ class SecurityEventType(str, Enum):
     PROFILE_UPDATED = "profile_updated"
     RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
     SUSPICIOUS_ACTIVITY = "suspicious_activity"
+    API_TOKEN_CREATED = "api_token_created"
+    API_TOKEN_REVOKED = "api_token_revoked"
 
 
 class SecurityRiskLevel(str, Enum):

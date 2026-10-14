@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 import logging
 
 from app.core.config import settings
+from app.handlers.mcp_server import mcp_app
 from app.handlers.system import router as system_router
 from app.handlers.users import router as users_router
 from app.handlers.recipes import router as recipes_router
@@ -39,7 +40,8 @@ async def lifespan(app: FastAPI):
     logger.info(f"Database: {db_log_url}")
     logger.info(f"CORS origins: {settings.cors_origins_list}")
 
-    yield
+    async with mcp_app.lifespan():
+        yield
 
     # Shutdown
     logger.info(f"Shutting down {settings.app_name}")
@@ -75,6 +77,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(system_router)
 app.include_router(users_router)
 app.include_router(recipes_router)
+app.add_route("/mcp", mcp_app)
 
 
 # Root endpoint

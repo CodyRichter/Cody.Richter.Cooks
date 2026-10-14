@@ -2,6 +2,8 @@
 User API endpoints for registration, authentication, and profile management.
 """
 
+from typing import List
+
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
@@ -17,8 +19,12 @@ from app.handlers.users.impl_v1 import (
     reset_password_internal,
     verify_reset_token_internal,
     logout_all_sessions_internal,
+    create_api_token_internal,
+    list_api_tokens_internal,
+    revoke_api_token_internal,
 )
 from app.models.user import User
+from app.schemas.api_token import ApiTokenCreate, ApiTokenCreated, ApiTokenDetail
 from app.schemas.auth import (
     AuthTokenResponse,
     AuthTokenRefreshRequest,
@@ -262,3 +268,51 @@ def logout_all_sessions(
 ):
     """Revoke all tokens for the current user."""
     logout_all_sessions_internal(request, current_user, db)
+
+
+@router.post(
+    "/api-tokens/",
+    response_model=ApiTokenCreated,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a personal API token",
+    description="Create a scoped personal API token for the MCP endpoint (/mcp). The plaintext token is returned only in this response. API tokens are not accepted by REST endpoints.",
+)
+@limiter.limit("10/hour")
+def create_api_token(
+    request: Request,
+    token_data: ApiTokenCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Create a personal API token for the current user."""
+    return create_api_token_internal(token_data, request, current_user, db)
+
+
+@router.get(
+    "/api-tokens/",
+    response_model=List[ApiTokenDetail],
+    summary="List personal API tokens",
+    description="List the current user's personal API tokens, including revoked and expired ones. Secrets are never returned.",
+)
+def list_api_tokens(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """List personal API tokens for the current user."""
+    return list_api_tokens_internal(current_user, db)
+
+
+@router.delete(
+    "/api-tokens/{token_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revoke a personal API token",
+    description="Revoke one of the current user's personal API tokens. Revocation is immediate and permanent.",
+)
+def revoke_api_token(
+    token_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Revoke a personal API token owned by the current user."""
+    revoke_api_token_internal(token_id, request, current_user, db)

@@ -11,6 +11,7 @@ from app.models.recipe import Recipe
 from app.models.recipe_permission import RecipePermission, PermissionRole
 from app.models.ingredient import Ingredient
 from app.models.instruction import Instruction
+from app.models.api_token import ApiToken
 from app.models.security_audit_log import (
     SecurityAuditLog,
     SecurityEventType,
@@ -25,6 +26,7 @@ __all__ = [
     "PermissionRole",
     "Ingredient",
     "Instruction",
+    "ApiToken",
     "SecurityAuditLog",
     "SecurityEventType",
     "SecurityRiskLevel",

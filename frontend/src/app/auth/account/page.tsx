@@ -20,6 +20,7 @@ import {
   IconShieldCheck,
 } from "@tabler/icons-react";
 
+import ApiTokensSection from "@/components/account/ApiTokensSection";
 import ChangePasswordModal from "@/components/account/ChangePasswordModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { AccountSkeleton } from "@/components/loading";
@@ -143,6 +144,8 @@ export default function AccountDetailsPage() {
           </Button>
         </Flex>
       </Card>
+
+      <ApiTokensSection />
 
       <ChangePasswordModal
         opened={isChangePasswordDialogOpen}

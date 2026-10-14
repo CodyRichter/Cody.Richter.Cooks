@@ -12,6 +12,34 @@ from app.models.recipe import Recipe
 class TestGranularRecipeUpdates:
     """Test suite for granular PATCH and sub-resource API endpoints."""
 
+    def test_put_without_lists_keeps_ingredients_and_instructions(
+        self, client: TestClient, auth_headers: dict, test_recipe_with_details: Recipe
+    ):
+        """Omitting ingredients/instructions from a PUT must not delete them."""
+        response = client.put(
+            f"/api/v1/recipes/{test_recipe_with_details.id}/",
+            json={"title": "Renamed via PUT"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "Renamed via PUT"
+        assert len(data["ingredients"]) == 2
+        assert len(data["instructions"]) == 2
+
+    def test_put_with_empty_list_clears_ingredients(
+        self, client: TestClient, auth_headers: dict, test_recipe_with_details: Recipe
+    ):
+        response = client.put(
+            f"/api/v1/recipes/{test_recipe_with_details.id}/",
+            json={"ingredients": []},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        assert response.json()["ingredients"] == []
+
     def test_patch_recipe_metadata_only(
         self, client: TestClient, auth_headers: dict, test_recipe_with_details: Recipe
     ):

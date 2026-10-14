@@ -46,6 +46,9 @@ export type {
   UserRecipePermissions
 } from '@/types/Permission';
 
+// Personal API token types
+export type { ApiToken, ApiTokenCreate, ApiTokenCreated, ApiTokenScope } from '@/types/ApiToken';
+
 // API types
 export type {
   ApiResponse,
