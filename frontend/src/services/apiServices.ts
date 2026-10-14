@@ -5,6 +5,7 @@ import { RecipeDetail, RecipeListItem, RecipeCreate, RecipeUpdate, RecipePatch, 
 import { InstructionStep, InstructionCreate, InstructionPatch } from '@/types/InstructionStep'
 import { Ingredient, IngredientCreate, IngredientPatch } from '@/types/Ingredient'
 import { PaginatedResponse } from '@/types/api'
+import { ApiToken, ApiTokenCreate, ApiTokenCreated } from '@/types/ApiToken'
 
 // Auth API - specialized due to different patterns
 export const authApi = {
@@ -29,6 +30,18 @@ export const authApi = {
 
   logoutAll: (): Promise<void> =>
     apiClient.post('/api/v1/users/logout-all')
+}
+
+// Personal API tokens for the MCP endpoint
+export const apiTokenApi = {
+  list: (): Promise<ApiToken[]> =>
+    apiClient.get('/api/v1/users/api-tokens'),
+
+  create: (data: ApiTokenCreate): Promise<ApiTokenCreated> =>
+    apiClient.post('/api/v1/users/api-tokens', data),
+
+  revoke: (id: string): Promise<void> =>
+    apiClient.delete(`/api/v1/users/api-tokens/${id}`)
 }
 
 // Recipe API - uses generic service with custom methods

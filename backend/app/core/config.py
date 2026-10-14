@@ -77,6 +77,8 @@ class Settings(BaseSettings):
 
     # External Integrations
     frontend_url: str = "http://localhost:3000"
+    # Public base URL of this API; the MCP server advertises it as its OAuth issuer
+    api_public_url: str = "http://localhost:8000"
     resend_api_key: str = ""
     email_from_address: str = "noreply@cooking.cody.richter.codes"
     turnstile_secret_key: str = TURNSTILE_TEST_SECRET_KEY

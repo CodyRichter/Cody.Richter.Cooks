@@ -1,10 +1,14 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import HTTPException, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
+from app.models.api_token import ApiToken
 from app.models.security_audit_log import SecurityEventType
 from app.models.user import User
+from app.schemas.api_token import ApiTokenCreate, ApiTokenCreated, ApiTokenDetail
 from app.schemas.auth import (
     AuthTokenResponse,
     AuthTokenRefreshRequest,
@@ -19,6 +23,7 @@ from app.schemas.user import (
     UserProfileUpdate,
     UserChangePassword,
 )
+from app.utils.api_tokens import generate_api_token, hash_api_token
 from app.utils.audit_logger import get_audit_logger
 from app.utils.auth import (
     authenticate_user,
@@ -500,3 +505,72 @@ def verify_reset_token_internal(token: str, db: Session) -> dict:
         )
 
     return {"username": user.username}
+
+
+def create_api_token_internal(
+    token_data: ApiTokenCreate, request: Request, current_user: User, db: Session
+) -> ApiTokenCreated:
+    token = generate_api_token()
+    expires_at = (
+        datetime.now(timezone.utc) + timedelta(days=token_data.expires_in_days)
+        if token_data.expires_in_days
+        else None
+    )
+    api_token = ApiToken(
+        user_id=current_user.id,
+        name=token_data.name,
+        token_hash=hash_api_token(token),
+        token_prefix=token[:12],
+        scopes=list(dict.fromkeys(token_data.scopes)),
+        expires_at=expires_at,
+    )
+    db.add(api_token)
+    db.commit()
+    db.refresh(api_token)
+
+    get_audit_logger(db).log_event(
+        event_type=SecurityEventType.API_TOKEN_CREATED,
+        request=request,
+        user=current_user,
+        success=True,
+        details={"token_id": api_token.id, "scopes": api_token.scopes},
+    )
+
+    return ApiTokenCreated(
+        **ApiTokenDetail.model_validate(api_token).model_dump(), token=token
+    )
+
+
+def list_api_tokens_internal(current_user: User, db: Session) -> list[ApiTokenDetail]:
+    tokens = (
+        db.query(ApiToken)
+        .filter(ApiToken.user_id == current_user.id)
+        .order_by(ApiToken.created_at.desc())
+        .all()
+    )
+    return [ApiTokenDetail.model_validate(token) for token in tokens]
+
+
+def revoke_api_token_internal(
+    token_id: str, request: Request, current_user: User, db: Session
+) -> None:
+    api_token = (
+        db.query(ApiToken)
+        .filter(ApiToken.id == token_id, ApiToken.user_id == current_user.id)
+        .first()
+    )
+    if api_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="API token not found"
+        )
+    if api_token.revoked_at is None:
+        api_token.revoked_at = datetime.now(timezone.utc)
+        db.commit()
+
+        get_audit_logger(db).log_event(
+            event_type=SecurityEventType.API_TOKEN_REVOKED,
+            request=request,
+            user=current_user,
+            success=True,
+            details={"token_id": api_token.id},
+        )

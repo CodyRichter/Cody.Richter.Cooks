@@ -49,6 +49,9 @@ class User(Base):
         foreign_keys="RecipePermission.user_id",
         cascade="all, delete-orphan",
     )
+    api_tokens = relationship(
+        "ApiToken", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Database indices for optimized lookups
     __table_args__ = (

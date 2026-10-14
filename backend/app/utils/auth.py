@@ -131,8 +131,12 @@ def create_token_pair(user: "User") -> tuple[str, str]:
 
 
 def revoke_user_tokens(user: "User") -> None:
-    """Invalidate every token issued to the user so far. Caller commits."""
+    """Invalidate every token issued to the user so far, API tokens included. Caller commits."""
     user.token_version = (user.token_version or 0) + 1
+    now = datetime.now(timezone.utc)
+    for api_token in user.api_tokens:
+        if api_token.revoked_at is None:
+            api_token.revoked_at = now
 
 
 def get_user_from_token(db: Session, token: str, token_type: str) -> Optional["User"]:
