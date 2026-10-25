@@ -1,13 +1,43 @@
 # Cody Richter Cooks
 
-A modern full-stack recipe management application built with FastAPI (backend) and Next.js (frontend).
+[![CI](https://github.com/CodyRichter/Cody.Richter.Cooks/actions/workflows/ci.yml/badge.svg)](https://github.com/CodyRichter/Cody.Richter.Cooks/actions/workflows/ci.yml)
+
+Full-stack recipe platform: Next.js + FastAPI/PostgreSQL on Cloud Run, with an MCP server for AI-assisted recipe editing.
+
+**Live site:** [cooking.cody.richter.codes](https://cooking.cody.richter.codes)
+
+![Cody Richter Cooks homepage](docs/screenshot.png)
+
+## Key Features
+
+- **MCP server for AI-assisted recipe editing.** A Streamable HTTP endpoint at `/mcp` lets Claude and other MCP clients search, read, create and update recipes.
+  - Auth uses personal API tokens with scopes (`recipes:read`, `recipes:write`). Tokens have a `crc_` prefix, are stored only as SHA-256 hashes, and are created and revoked from the account page.
+  - API tokens work only on the MCP endpoint. The REST API and token management still require a JWT, and changing credentials revokes every token.
+  - Tools come from an explicit allowlist (no delete, sharing or account tools). They go through the same permission checks and HTML sanitization as the REST API.
+  - Connect a client: `claude mcp add --transport http cooking <API_URL>/mcp --header "Authorization: Bearer <token>"`
+- **Recipe management:** create and edit recipes with a rich text editor, ordered ingredients and instructions, tags, and search and filtering.
+- **Authentication and security:** JWT access and refresh tokens with rotation and version-based revocation, per-IP rate limiting, Cloudflare Turnstile on sign-up, and security audit logging.
 
 ## Architecture
 
-- **Backend**: FastAPI with PostgreSQL database
-- **Frontend**: Next.js with Mantine UI components
-- **Authentication**: JWT-based with access/refresh tokens
-- **Development**: Docker Compose for backend services
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│     Vercel      │────▶│    Cloud Run    │────▶│    Supabase     │
+│   (Frontend)    │     │    (Backend)    │     │  (PostgreSQL)   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+- **Frontend**: Next.js (App Router) + TypeScript with Mantine UI, deployed on Vercel
+- **Backend**: FastAPI + SQLAlchemy with Alembic migrations, deployed on Google Cloud Run
+- **Database**: PostgreSQL
+- **Local development**: Docker Compose and the scripts in `scripts/local/`
+
+## CI/CD & Code Quality
+
+- **GitHub Actions:** `ci.yml` runs backend lint and tests against PostgreSQL, plus frontend lint and build, on every push. `deploy-backend.yml` deploys the backend to Cloud Run after CI passes on `master`.
+- **Dependabot:** weekly grouped update PRs for npm, pip, the backend Docker image and GitHub Actions.
+- **CodeQL:** weekly code scanning for Python, TypeScript/JavaScript and GitHub Actions.
+- **pre-commit:** ruff and ruff-format for the backend, ESLint for the frontend, plus whitespace, YAML and large-file checks.
 
 ## Quick Start
 
@@ -98,32 +128,6 @@ The frontend will be available at `http://localhost:3000`
 └── docker-compose.yml      # Docker services
 ```
 
-## Key Features
-
-### Authentication
-- JWT-based authentication with secure token management
-- Automatic token refresh
-- Protected routes and API endpoints
-
-### Recipe Management
-- Create, edit, and delete recipes
-- Rich text editor for descriptions
-- Ingredient and instruction management
-- Recipe search and filtering
-
-### Modern Frontend
-- React with TypeScript
-- Mantine UI component library
-- Optimistic updates for better UX
-- Code splitting and lazy loading
-- Progressive loading states
-
-### Robust Backend
-- FastAPI with automatic API documentation
-- PostgreSQL with Alembic migrations
-- Comprehensive error handling
-- Security audit logging
-
 ## Environment Configuration
 
 ### Backend (.env in project root or backend/)
@@ -169,14 +173,6 @@ npm run build
 ```
 
 ## Deployment
-
-### Production Architecture
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│     Vercel      │────▶│    Cloud Run    │────▶│    Supabase     │
-│   (Frontend)    │     │    (Backend)    │     │  (PostgreSQL)   │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
 
 ### Backend (Google Cloud Run)
 
