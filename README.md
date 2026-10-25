@@ -6,7 +6,7 @@ Full-stack recipe platform: Next.js + FastAPI/PostgreSQL on Cloud Run, with an M
 
 **Live site:** [cooking.cody.richter.codes](https://cooking.cody.richter.codes)
 
-![Cody Richter Cooks homepage](docs/screenshot.png)
+![Cody Richter Cooks recipe page](docs/screenshot.png)
 
 ## Key Features
 
