@@ -1,5 +1,5 @@
 # FastAPI and related dependencies
-fastapi==0.161.0
+fastapi==0.162.0
 uvicorn[standard]==0.54.0
 
 # Database dependencies
@@ -16,18 +16,18 @@ slowapi==0.1.10
 mcp==2.3.0
 
 # Validation and serialization
-pydantic[email]==2.14.1
-pydantic-settings==2.16.1
+pydantic[email]==2.14.2
+pydantic-settings==2.16.2
 email-validator==2.3.0
 
 # Utilities
 python-dotenv==1.2.4
 nh3==0.3.7
-resend==2.50.0
+resend==2.50.1
 
 # Testing dependencies
-pytest==9.1.1
-pytest-asyncio==1.4.0
+pytest==9.2.0
+pytest-asyncio==1.4.1
 httpx==0.28.1
 pytest-mock==3.17.0
 pytest-cov==7.1.0
