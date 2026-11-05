@@ -4,11 +4,14 @@ User API endpoints for registration, authentication, and profile management.
 
 from typing import List
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.handlers.users.impl_v1 import (
+    delete_avatar_internal,
+    get_avatar_internal,
+    set_avatar_internal,
     get_user_profile_internal,
     login_user_internal,
     refresh_token_internal,
@@ -316,3 +319,79 @@ def revoke_api_token(
 ):
     """Revoke a personal API token owned by the current user."""
     revoke_api_token_internal(token_id, request, current_user, db)
+
+
+@router.put(
+    "/me/avatar",
+    response_model=UserResponseSchema,
+    summary="Upload or replace your avatar",
+    description="Upload a profile picture as multipart field 'file'. PNG, JPEG, WebP or GIF only (detected from file contents), max 2 MB. Returns the updated user with avatar_url.",
+)
+def set_my_avatar(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Set the current user's avatar."""
+    return set_avatar_internal(current_user.id, file, request, current_user, db)
+
+
+@router.delete(
+    "/me/avatar",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove your avatar",
+    description="Remove the current user's avatar. Succeeds even if no avatar is set.",
+)
+def delete_my_avatar(
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Remove the current user's avatar."""
+    delete_avatar_internal(current_user.id, request, current_user, db)
+
+
+@router.put(
+    "/{user_id}/avatar",
+    response_model=UserResponseSchema,
+    summary="Upload or replace a user's avatar",
+    description="Same as PUT /me/avatar for the given user. Allowed only for that user or an administrator.",
+)
+def set_user_avatar(
+    user_id: str,
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Set a user's avatar (self or admin)."""
+    return set_avatar_internal(user_id, file, request, current_user, db)
+
+
+@router.delete(
+    "/{user_id}/avatar",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a user's avatar",
+    description="Remove the given user's avatar. Allowed only for that user or an administrator. Succeeds even if no avatar is set.",
+)
+def delete_user_avatar(
+    user_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Remove a user's avatar (self or admin)."""
+    delete_avatar_internal(user_id, request, current_user, db)
+
+
+@router.get(
+    "/{user_id}/avatar",
+    response_class=Response,
+    responses={200: {"content": {"image/*": {}}}, 304: {}, 404: {}},
+    summary="Get a user's avatar image",
+    description="Public, unauthenticated. Returns the raw image bytes with the stored content type, or 404 if the user has no avatar. Supports ETag / If-None-Match.",
+)
+def get_user_avatar(user_id: str, request: Request, db: Session = Depends(get_db)):
+    """Serve a user's avatar image."""
+    return get_avatar_internal(user_id, request, db)
