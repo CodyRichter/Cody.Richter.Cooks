@@ -97,6 +97,7 @@ class UserResponseSchema(BaseModel):
                 "username": "chef_cody",
                 "email": "cody@example.com",
                 "is_admin": False,
+                "avatar_url": "/api/v1/users/U-12345-ABCDE/avatar?v=1767225600",
                 "created_at": "2026-01-01T00:00:00Z",
                 "updated_at": "2026-01-01T00:00:00Z",
             }
@@ -107,6 +108,9 @@ class UserResponseSchema(BaseModel):
     username: str
     email: str
     is_admin: bool
+    avatar_url: Optional[str] = Field(
+        None, description="Public URL of the user's avatar, or null if none is set"
+    )
     created_at: datetime
     updated_at: datetime
 

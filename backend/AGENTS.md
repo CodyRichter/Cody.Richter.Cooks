@@ -62,6 +62,21 @@ pip install -r requirements.txt
 - Connect a client: `claude mcp add --transport http cooking <API_URL>/mcp --header "Authorization: Bearer <token>"`. Tokens are created on the frontend account page.
 - OAuth (needed for claude.ai web connectors) is not implemented; `AuthSettings.issuer_url` comes from `API_PUBLIC_URL`, and the token verifier is the extension point.
 
+## 6a. User Avatars (`app/handlers/users`, `app/utils/avatar.py`)
+Profile pictures are stored in Postgres on `users` (`avatar_data` LargeBinary, deferred so ordinary user queries never load the bytes; `avatar_content_type`; `avatar_updated_at`). `UserResponseSchema.avatar_url` is `/api/v1/users/{id}/avatar?v=<avatar_updated_at epoch>` or `null`; the bytes are never in JSON.
+
+| Endpoint | Auth | Behavior |
+|---|---|---|
+| `PUT /api/v1/users/me/avatar` | JWT | Multipart field `file`. Returns `UserResponseSchema`. |
+| `DELETE /api/v1/users/me/avatar` | JWT | `204`; idempotent. |
+| `PUT /api/v1/users/{user_id}/avatar` | JWT, that user or `is_admin` | Same as above for another user. Others get `403` (checked before existence, so non-admins cannot probe ids); admins get `404` for an unknown user. |
+| `DELETE /api/v1/users/{user_id}/avatar` | JWT, that user or `is_admin` | `204`; idempotent. |
+| `GET /api/v1/users/{user_id}/avatar` | none | Raw bytes with the stored `Content-Type`, `ETag` (honors `If-None-Match` with `304`), `Cache-Control`, `X-Content-Type-Options: nosniff`; `404` if the user has no avatar. |
+
+- Allowed types: png, jpeg, webp, gif, identified from **magic bytes** (`sniff_image_type`); the declared Content-Type and filename are ignored and the stored type is the detected one. Anything else is `415`. Max 2 MB (`MAX_AVATAR_BYTES`), otherwise `413`.
+- Avatar changes are written to the audit log as `profile_updated` events (`details.changes.avatar` is `updated` or `removed`, plus `target_user_id`); deleting when there is no avatar logs nothing.
+- Uploads need `python-multipart` (in `requirements.txt`).
+
 ## 7. Testing Guidelines
 - **Coverage**: target 80%+.
 - **Fixtures**: Use `conftest.py` for DB sessions and test data.
