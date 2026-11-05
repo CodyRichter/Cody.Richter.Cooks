@@ -4,6 +4,8 @@ export interface User {
   username: string
   email: string
   is_admin: boolean
+  // Path relative to the API base, or null when no picture is set
+  avatar_url: string | null
   created_at: string
   updated_at: string
 }

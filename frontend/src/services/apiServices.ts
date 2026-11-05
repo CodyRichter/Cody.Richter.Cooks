@@ -29,7 +29,16 @@ export const authApi = {
     }),
 
   logoutAll: (): Promise<void> =>
-    apiClient.post('/api/v1/users/logout-all')
+    apiClient.post('/api/v1/users/logout-all'),
+
+  uploadAvatar: (file: File): Promise<User> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiClient.putForm('/api/v1/users/me/avatar', formData)
+  },
+
+  deleteAvatar: (): Promise<void> =>
+    apiClient.delete('/api/v1/users/me/avatar')
 }
 
 // Personal API tokens for the MCP endpoint
