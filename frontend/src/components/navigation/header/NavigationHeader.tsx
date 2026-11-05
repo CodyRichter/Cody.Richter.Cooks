@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Avatar,
   Burger,
   Button,
   Divider,
@@ -24,6 +25,7 @@ import React from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogout } from "@/hooks/useAuthMutations";
+import { getAvatarSrc } from "@/utils/avatar";
 import Link from "next/link";
 import { LinkPendingIcon } from "@/components/navigation/LinkPendingIcon";
 
@@ -45,8 +47,9 @@ export default function NavigationHeader({
   toggleMobile,
   toggleDesktop,
 }: NavigationHeaderProps) {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const logout = useLogout();
+  const avatarSrc = getAvatarSrc(user);
 
   const { toggleColorScheme } = useMantineColorScheme();
 
@@ -200,7 +203,11 @@ export default function NavigationHeader({
                   color="gray"
                   aria-label="Account menu"
                 >
-                  <IconUserCircle size={24} />
+                  {avatarSrc ? (
+                    <Avatar src={avatarSrc} name={user?.username} color="initials" size={28} radius="xl" />
+                  ) : (
+                    <IconUserCircle size={24} />
+                  )}
                 </ActionIcon>
               </Menu.Target>
 

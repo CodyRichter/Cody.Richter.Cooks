@@ -1,6 +1,7 @@
 # FastAPI and related dependencies
 fastapi==0.162.0
 uvicorn[standard]==0.54.0
+python-multipart==0.0.20
 
 # Database dependencies
 sqlalchemy==2.1.6
