@@ -116,10 +116,9 @@ export class ApiClient {
     )
   }
 
-  private getHeaders(skipAuth = false): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json'
-    }
+  private getHeaders(skipAuth = false, isMultipart = false): HeadersInit {
+    // For multipart bodies the browser must set Content-Type to add the boundary
+    const headers: HeadersInit = isMultipart ? {} : { 'Content-Type': 'application/json' }
 
     if (!skipAuth) {
       const token = getAccessToken()
@@ -146,11 +145,12 @@ export class ApiClient {
     const finalEndpoint = query ? `${finalPath}?${query}` : finalPath
 
     const url = `${this.baseUrl}${finalEndpoint}`
+    const isMultipart = fetchOptions.body instanceof FormData
 
     let response = await fetch(url, {
       ...fetchOptions,
       headers: {
-        ...this.getHeaders(skipAuth),
+        ...this.getHeaders(skipAuth, isMultipart),
         ...fetchOptions.headers
       }
     })
@@ -168,7 +168,7 @@ export class ApiClient {
       response = await fetch(url, {
         ...fetchOptions,
         headers: {
-          ...this.getHeaders(false),
+          ...this.getHeaders(false, isMultipart),
           ...fetchOptions.headers
         }
       })
@@ -204,6 +204,10 @@ export class ApiClient {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined
     })
+  }
+
+  putForm<T>(endpoint: string, formData: FormData): Promise<T> {
+    return this.request<T>(endpoint, { method: 'PUT', body: formData })
   }
 
   patch<T>(endpoint: string, data?: unknown): Promise<T> {
