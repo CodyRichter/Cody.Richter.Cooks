@@ -288,6 +288,9 @@ img {
 .avatar-picker {
   position: relative;
   display: block;
+  width: fit-content;
+  line-height: 0;
+  overflow: hidden;
   border-radius: 50%;
   flex-shrink: 0;
   cursor: pointer;

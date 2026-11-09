@@ -105,7 +105,7 @@ export default function AvatarSection() {
             onClick={openPicker}
             aria-label={hasAvatar ? "Change profile picture" : "Upload a profile picture"}
           >
-            <UserAvatar avatarUrl={user?.avatar_url} username={user?.username} size={88} />
+            <UserAvatar avatarUrl={user?.avatar_url} username={user?.username} size={88} decorative />
             <Box component="span" className="avatar-picker-overlay">
               {isBusy ? <Loader size="sm" color="white" /> : <IconCamera size={28} stroke={1.75} />}
             </Box>

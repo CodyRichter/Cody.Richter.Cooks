@@ -6,10 +6,20 @@ interface UserAvatarProps extends Omit<AvatarProps, 'src' | 'name' | 'alt' | 'co
   // Path relative to the API, as returned by the backend
   avatarUrl?: string | null
   username?: string | null
+  // Set when a surrounding control already names the picture, e.g. a labelled button
+  decorative?: boolean
 }
 
 // A user's profile picture, or their initials on a name-derived color when they have none
-export function UserAvatar({ avatarUrl, username, size = 'md', radius = 'xl', className, ...props }: UserAvatarProps) {
+export function UserAvatar({
+  avatarUrl,
+  username,
+  decorative = false,
+  size = 'md',
+  radius = '50%',
+  className,
+  ...props
+}: UserAvatarProps) {
   return (
     <Avatar
       {...props}
@@ -19,7 +29,7 @@ export function UserAvatar({ avatarUrl, username, size = 'md', radius = 'xl', cl
       color="initials"
       size={size}
       radius={radius}
-      alt={username ? `${username}'s profile picture` : 'Profile picture'}
+      alt={decorative ? '' : username ? `${username}'s profile picture` : 'Profile picture'}
     />
   )
 }
