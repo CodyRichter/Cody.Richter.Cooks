@@ -27,7 +27,12 @@ from app.schemas.user import (
 )
 from app.utils.api_tokens import generate_api_token, hash_api_token
 from app.utils.audit_logger import get_audit_logger
-from app.utils.avatar import MAX_AVATAR_BYTES, sniff_image_type
+from app.utils.avatar import (
+    MAX_AVATAR_BYTES,
+    InvalidAvatarError,
+    normalize_avatar,
+    sniff_image_type,
+)
 from app.utils.auth import (
     authenticate_user,
     create_token_pair,
@@ -619,12 +624,18 @@ def set_avatar_internal(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=f"Avatar must be at most {MAX_AVATAR_BYTES // (1024 * 1024)} MB",
         )
-    content_type = sniff_image_type(data)
-    if content_type is None:
+    if sniff_image_type(data) is None:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Avatar must be a PNG, JPEG, WebP, or GIF image",
         )
+    try:
+        data, content_type = normalize_avatar(data)
+    except InvalidAvatarError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Avatar could not be processed: {exc}",
+        ) from exc
 
     target.avatar_data = data
     target.avatar_content_type = content_type
