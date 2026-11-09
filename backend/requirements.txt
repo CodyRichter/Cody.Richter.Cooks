@@ -23,7 +23,7 @@ email-validator==2.3.0
 # Utilities
 python-dotenv==1.2.4
 nh3==0.3.7
-resend==2.51.0
+resend==2.52.0
 
 # Testing dependencies
 pytest==9.2.0
