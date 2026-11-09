@@ -79,6 +79,7 @@ Profile pictures are stored in Postgres on `users` (`avatar_data` LargeBinary, d
 - Avatar changes are written to the audit log as `profile_updated` events (`details.changes.avatar` is `updated` or `removed`, plus `target_user_id`); deleting when there is no avatar logs nothing.
 - `GET /api/v1/recipes/{id}/permissions/` returns `user_avatar_url` (same value as `User.avatar_url`, or `null`) next to `user_username` for every listed permission, including the owner-only list shown to the public.
 - Uploads need `python-multipart` (in `requirements.txt`).
+- Every avatar route is also registered with a trailing slash (hidden from the schema), because the frontend `apiClient` always appends `/`. Do not rely on FastAPI's slash redirect: behind Cloud Run it redirects to `http://`, which browsers block on an HTTPS page.
 
 ## 7. Testing Guidelines
 - **Coverage**: target 80%+.

@@ -327,6 +327,7 @@ def revoke_api_token(
     summary="Upload or replace your avatar",
     description="Upload a profile picture as multipart field 'file'. PNG, JPEG, WebP or GIF only (detected from file contents), max 10 MB. The image is resized to at most 512 px and re-encoded as WebP. Returns the updated user with avatar_url.",
 )
+@router.put("/me/avatar/", response_model=UserResponseSchema, include_in_schema=False)
 def set_my_avatar(
     request: Request,
     file: UploadFile = File(...),
@@ -343,6 +344,9 @@ def set_my_avatar(
     summary="Remove your avatar",
     description="Remove the current user's avatar. Succeeds even if no avatar is set.",
 )
+@router.delete(
+    "/me/avatar/", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=False
+)
 def delete_my_avatar(
     request: Request,
     current_user: User = Depends(get_current_active_user),
@@ -357,6 +361,9 @@ def delete_my_avatar(
     response_model=UserResponseSchema,
     summary="Upload or replace a user's avatar",
     description="Same as PUT /me/avatar for the given user. Allowed only for that user or an administrator.",
+)
+@router.put(
+    "/{user_id}/avatar/", response_model=UserResponseSchema, include_in_schema=False
 )
 def set_user_avatar(
     user_id: str,
@@ -375,6 +382,11 @@ def set_user_avatar(
     summary="Remove a user's avatar",
     description="Remove the given user's avatar. Allowed only for that user or an administrator. Succeeds even if no avatar is set.",
 )
+@router.delete(
+    "/{user_id}/avatar/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    include_in_schema=False,
+)
 def delete_user_avatar(
     user_id: str,
     request: Request,
@@ -392,6 +404,7 @@ def delete_user_avatar(
     summary="Get a user's avatar image",
     description="Public, unauthenticated. Returns the raw image bytes with the stored content type, or 404 if the user has no avatar. Supports ETag / If-None-Match.",
 )
+@router.get("/{user_id}/avatar/", response_class=Response, include_in_schema=False)
 def get_user_avatar(user_id: str, request: Request, db: Session = Depends(get_db)):
     """Serve a user's avatar image."""
     return get_avatar_internal(user_id, request, db)
