@@ -34,6 +34,8 @@ export interface RecipePermissionResponse extends RecipePermissionBase {
 export interface RecipePermissionWithUser extends RecipePermissionResponse {
   user_username: string
   user_email: string
+  // Path relative to the API base, or null when the user has no picture
+  user_avatar_url: string | null
 }
 
 // Permission with recipe details matching backend RecipePermissionWithRecipe

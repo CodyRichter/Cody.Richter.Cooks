@@ -13,9 +13,10 @@ import {
     TextInput,
     Tooltip,
 } from '@mantine/core'
-import { IconTrash, IconUserPlus, IconInfoCircle, IconUser, IconShieldCheck } from '@tabler/icons-react'
+import { IconTrash, IconUserPlus, IconInfoCircle, IconShieldCheck } from '@tabler/icons-react'
 import { useMediaQuery } from '@mantine/hooks'
 import { useState } from 'react'
+import { UserAvatar } from '@/components/common/UserAvatar'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRecipePermissions } from '@/hooks/useRecipePermissions'
 import {
@@ -162,7 +163,7 @@ export default function ShareRecipeModal({
                     {isLoading ? (
                         <Stack gap="xs">
                             {[0, 1].map((i) => (
-                                <Skeleton key={i} h={54} radius="md" />
+                                <Skeleton key={i} h={58} radius="md" />
                             ))}
                         </Stack>
                     ) : sortedPermissions.length === 0 ? (
@@ -188,9 +189,13 @@ export default function ShareRecipeModal({
                                                 : 'transparent',
                                         }}
                                     >
-                                        <Group gap="sm">
-                                            <IconUser size="1.2rem" stroke={1.5} />
-                                            <Box>
+                                        <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+                                            <UserAvatar
+                                                avatarUrl={permission.user_avatar_url}
+                                                username={permission.user_username}
+                                                size={32}
+                                            />
+                                            <Box style={{ minWidth: 0 }}>
                                                 <Text size="sm" fw={500}>
                                                     {permission.user_username}
                                                     {isCurrentUser && (

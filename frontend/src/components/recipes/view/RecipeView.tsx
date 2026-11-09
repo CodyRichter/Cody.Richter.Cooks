@@ -15,7 +15,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import {
-  IconChefHat,
   IconClock,
   IconEdit,
   IconShieldCheck,
@@ -29,6 +28,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { ApiErrorAlert } from "@/components/error-handling";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import DeleteRecipeModal from "@/components/recipes/delete/DeleteRecipeModal";
 import RecipeIngredientCard from "@/components/recipes/view/RecipeIngredientCard";
 import RecipeInstructionsCard from "@/components/recipes/view/RecipeInstructionsCard";
@@ -67,10 +67,16 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
   } = useUserRecipePermissions(recipe_id, initialAuthorName);
   const { data: permissions } = useRecipePermissions(recipe_id);
 
-  const authorName = useMemo(() => {
-    if (!permissions || !Array.isArray(permissions)) return initialAuthorName ?? null;
+  // The server render knows only the author's name; their picture arrives with the permissions
+  const { authorName, authorAvatarUrl } = useMemo(() => {
+    if (!permissions || !Array.isArray(permissions)) {
+      return { authorName: initialAuthorName ?? null, authorAvatarUrl: null };
+    }
     const owner = permissions.find((p) => p.role === 'owner');
-    return owner ? owner.user_username : null;
+    return {
+      authorName: owner?.user_username ?? null,
+      authorAvatarUrl: owner?.user_avatar_url ?? null,
+    };
   }, [permissions, initialAuthorName]);
 
   const handleDescriptionClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -131,8 +137,9 @@ export default function RecipeView({ recipeId: recipe_id, initialRecipe, initial
                 <Group gap="xs" c="dimmed" wrap="wrap">
                   {authorName && (
                     <>
-                      <Group gap={4} align="center">
-                        <IconChefHat size="0.95rem" stroke={1.75} />
+                      <Group gap={6} align="center" wrap="nowrap">
+                        {/* Initials hold the picture's space until it loads */}
+                        <UserAvatar avatarUrl={authorAvatarUrl} username={authorName} size={20} />
                         <Text size="xs" fw={600}>
                           By {authorName}
                         </Text>

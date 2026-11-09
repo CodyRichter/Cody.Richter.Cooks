@@ -12,6 +12,7 @@
 - **State Management**: [React Query](https://tanstack.com/query/latest) (`@tanstack/react-query`)
   - **Rule**: All server data fetching MUST use React Query. Do not use `useEffect` + `fetch` manually.
 - **Editor**: [Tiptap](https://tiptap.dev/) for rich text.
+- **Avatars**: Render every user picture with `UserAvatar` (`components/common/UserAvatar.tsx`), which takes the backend's relative `avatar_url` and falls back to initials. Account uploads are cropped with `react-easy-crop` (pinned) and re-encoded to a 512×512 WebP by `cropAvatar` (`utils/avatar.ts`) before upload.
 
 ## 2. Directory Structure (`src/`)
 - `app/`: Next.js App Router pages and layouts.
@@ -89,7 +90,7 @@ npm run lint     # Run ESLint (MANDATORY before commit)
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
