@@ -24,6 +24,7 @@ email-validator==2.3.0
 # Utilities
 python-dotenv==1.2.4
 nh3==0.3.7
+pillow==13.0.0
 resend==2.52.0
 
 # Testing dependencies
