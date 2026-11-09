@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Avatar,
   Burger,
   Button,
   Divider,
@@ -25,7 +24,7 @@ import React from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogout } from "@/hooks/useAuthMutations";
-import { getAvatarSrc } from "@/utils/avatar";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import Link from "next/link";
 import { LinkPendingIcon } from "@/components/navigation/LinkPendingIcon";
 
@@ -49,7 +48,6 @@ export default function NavigationHeader({
 }: NavigationHeaderProps) {
   const { status, user } = useAuth();
   const logout = useLogout();
-  const avatarSrc = getAvatarSrc(user);
 
   const { toggleColorScheme } = useMantineColorScheme();
 
@@ -194,7 +192,7 @@ export default function NavigationHeader({
             </Button>
 
             {/* Account Menu (Mobile & Desktop) */}
-            <Menu shadow="md" width={200} position="bottom-end" withArrow>
+            <Menu shadow="md" width={220} position="bottom-end" withArrow>
               <Menu.Target>
                 <ActionIcon
                   variant="subtle"
@@ -203,16 +201,23 @@ export default function NavigationHeader({
                   color="gray"
                   aria-label="Account menu"
                 >
-                  {avatarSrc ? (
-                    <Avatar src={avatarSrc} name={user?.username} color="initials" size={28} radius="xl" />
-                  ) : (
-                    <IconUserCircle size={24} />
-                  )}
+                  <UserAvatar avatarUrl={user?.avatar_url} username={user?.username} size={30} />
                 </ActionIcon>
               </Menu.Target>
 
               <Menu.Dropdown>
-                <Menu.Label>Account</Menu.Label>
+                <Group gap="sm" px="sm" py="xs" wrap="nowrap">
+                  <UserAvatar avatarUrl={user?.avatar_url} username={user?.username} size={36} />
+                  <Box style={{ minWidth: 0 }}>
+                    <Text size="sm" fw={600} truncate>
+                      {user?.username}
+                    </Text>
+                    <Text size="xs" c="dimmed" truncate>
+                      {user?.email}
+                    </Text>
+                  </Box>
+                </Group>
+                <Menu.Divider />
                 <Menu.Item
                   component={Link}
                   href="/auth/account"

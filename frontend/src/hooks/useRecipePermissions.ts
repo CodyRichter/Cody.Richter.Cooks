@@ -7,14 +7,15 @@ import {
   UserRecipePermissions,
 } from '@/types/Permission'
 
-// Keyed by user so one account never sees another's cached permissions
+// Keyed by user so one account never sees another's cached permissions. Signed-out
+// visitors get the public view (the owner only), which carries the author's picture.
 export const useRecipePermissions = (recipeId: string) => {
-  const { user } = useAuth()
+  const { status, user } = useAuth()
 
   return useQuery<RecipePermissionWithUser[]>({
     queryKey: ['recipe-permissions', recipeId, user?.id],
     queryFn: () => recipePermissionApi.getRecipePermissions(recipeId),
-    enabled: !!recipeId && !!user,
+    enabled: !!recipeId && status !== 'loading',
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000
   })
