@@ -35,6 +35,9 @@ class RecipePermissionDetail(BaseModel):
     user_username: Optional[str] = Field(
         None, description="Username of the user with permission"
     )
+    user_avatar_url: Optional[str] = Field(
+        None, description="Public avatar URL of the user, or null if none is set"
+    )
     user_email: Optional[str] = Field(
         None, description="Email of the user with permission"
     )
@@ -49,6 +52,7 @@ class RecipePermissionDetail(BaseModel):
                 "recipe_id": "R-1GL2S-18XXB",
                 "granted_at": "2026-01-15T12:00:00Z",
                 "user_username": "sous_chef",
+                "user_avatar_url": "/api/v1/users/U-98765-XYZWV/avatar?v=1767225600",
                 "user_email": "souschef@example.com",
             }
         },
@@ -97,6 +101,7 @@ class RecipePermissionList(BaseModel):
                         "recipe_id": "R-1GL2S-18XXB",
                         "granted_at": "2026-01-15T12:00:00Z",
                         "user_username": "sous_chef",
+                        "user_avatar_url": "/api/v1/users/U-98765-XYZWV/avatar?v=1767225600",
                         "user_email": "souschef@example.com",
                     }
                 ]

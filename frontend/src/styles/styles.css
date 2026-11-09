@@ -265,6 +265,84 @@ img {
   box-sizing: border-box;
 }
 
+/* Images outside recipe content opt out of the global img treatment above */
+.user-avatar .mantine-Avatar-image {
+  max-width: none;
+  margin: 0;
+  border-radius: inherit;
+  box-shadow: none;
+}
+
+/* react-easy-crop sizes and centres its image itself */
+.avatar-cropper img {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.avatar-cropper .reactEasyCrop_CropArea:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* Account page: the avatar is the upload button; a camera overlay appears on hover/focus */
+.avatar-picker {
+  position: relative;
+  display: block;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.avatar-picker:hover {
+  box-shadow: var(--mantine-shadow-md);
+}
+
+.avatar-picker:active {
+  transform: scale(0.97);
+}
+
+.avatar-picker:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 3px;
+}
+
+.avatar-picker:disabled {
+  cursor: progress;
+}
+
+.avatar-picker-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--mantine-color-white);
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.avatar-picker:hover .avatar-picker-overlay,
+.avatar-picker:focus-visible .avatar-picker-overlay,
+.avatar-picker[data-busy] .avatar-picker-overlay,
+.avatar-dropzone[data-dragging] .avatar-picker-overlay {
+  opacity: 1;
+}
+
+.avatar-dropzone {
+  border: 1.5px dashed transparent;
+  border-radius: var(--mantine-radius-md);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.avatar-dropzone[data-dragging] {
+  border-color: var(--mantine-primary-color-filled);
+  background-color: var(--mantine-primary-color-light);
+}
+
 .recipe-description-content {
   line-height: 1.7;
   font-size: 0.98rem;

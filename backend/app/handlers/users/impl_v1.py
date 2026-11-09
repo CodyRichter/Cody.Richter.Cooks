@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import HTTPException, Request, status
+import hashlib
+
+from fastapi import HTTPException, Request, Response, UploadFile, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
@@ -25,6 +27,12 @@ from app.schemas.user import (
 )
 from app.utils.api_tokens import generate_api_token, hash_api_token
 from app.utils.audit_logger import get_audit_logger
+from app.utils.avatar import (
+    MAX_AVATAR_BYTES,
+    InvalidAvatarError,
+    normalize_avatar,
+    sniff_image_type,
+)
 from app.utils.auth import (
     authenticate_user,
     create_token_pair,
@@ -574,3 +582,124 @@ def revoke_api_token_internal(
             success=True,
             details={"token_id": api_token.id},
         )
+
+
+AVATAR_CACHE_CONTROL = "public, max-age=300, must-revalidate"
+
+
+def _resolve_avatar_target(user_id: str, current_user: User, db: Session) -> User:
+    """Return the user whose avatar is being changed; only that user or an admin may."""
+    if user_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not allowed to modify another user's avatar",
+        )
+    target = current_user if user_id == current_user.id else db.get(User, user_id)
+    if target is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    return target
+
+
+def _avatar_etag(user: User) -> str:
+    digest = hashlib.sha256(
+        f"{user.id}:{user.avatar_updated_at.isoformat()}".encode()
+    ).hexdigest()
+    return f'"{digest[:32]}"'
+
+
+def set_avatar_internal(
+    user_id: str,
+    file: UploadFile,
+    request: Request,
+    current_user: User,
+    db: Session,
+) -> UserResponseSchema:
+    target = _resolve_avatar_target(user_id, current_user, db)
+
+    data = file.file.read(MAX_AVATAR_BYTES + 1)
+    if len(data) > MAX_AVATAR_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"Avatar must be at most {MAX_AVATAR_BYTES // (1024 * 1024)} MB",
+        )
+    if sniff_image_type(data) is None:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Avatar must be a PNG, JPEG, WebP, or GIF image",
+        )
+    try:
+        data, content_type = normalize_avatar(data)
+    except InvalidAvatarError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Avatar could not be processed: {exc}",
+        ) from exc
+
+    target.avatar_data = data
+    target.avatar_content_type = content_type
+    target.avatar_updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(target)
+
+    get_audit_logger(db).log_event(
+        event_type=SecurityEventType.PROFILE_UPDATED,
+        request=request,
+        user=current_user,
+        success=True,
+        details={
+            "changes": {"avatar": "updated"},
+            "target_user_id": target.id,
+            "content_type": content_type,
+            "size_bytes": len(data),
+        },
+    )
+
+    return UserResponseSchema.model_validate(target)
+
+
+def delete_avatar_internal(
+    user_id: str, request: Request, current_user: User, db: Session
+) -> None:
+    target = _resolve_avatar_target(user_id, current_user, db)
+    if target.avatar_updated_at is None:
+        return
+
+    target.avatar_data = None
+    target.avatar_content_type = None
+    target.avatar_updated_at = None
+    db.commit()
+
+    get_audit_logger(db).log_event(
+        event_type=SecurityEventType.PROFILE_UPDATED,
+        request=request,
+        user=current_user,
+        success=True,
+        details={"changes": {"avatar": "removed"}, "target_user_id": target.id},
+    )
+
+
+def get_avatar_internal(user_id: str, request: Request, db: Session) -> Response:
+    user = db.get(User, user_id)
+    if user is None or user.avatar_updated_at is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Avatar not found"
+        )
+
+    headers = {
+        "ETag": _avatar_etag(user),
+        "Cache-Control": AVATAR_CACHE_CONTROL,
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+    }
+    candidates = {
+        tag.strip().removeprefix("W/")
+        for tag in request.headers.get("if-none-match", "").split(",")
+    }
+    if headers["ETag"] in candidates or "*" in candidates:
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+
+    return Response(
+        content=user.avatar_data, media_type=user.avatar_content_type, headers=headers
+    )

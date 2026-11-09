@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Box,
   Button,
   Card,
   Divider,
@@ -21,6 +22,7 @@ import {
 } from "@tabler/icons-react";
 
 import ApiTokensSection from "@/components/account/ApiTokensSection";
+import AvatarSection from "@/components/account/AvatarSection";
 import ChangePasswordModal from "@/components/account/ChangePasswordModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { AccountSkeleton } from "@/components/loading";
@@ -62,7 +64,10 @@ export default function AccountDetailsPage() {
           profile settings.
         </Text>
 
-        {/* // Add username */}
+        <Box mt="md">
+          <AvatarSection />
+        </Box>
+
         <Text mt="md" size="md">
           <strong>Username:</strong> {username}
         </Text>
