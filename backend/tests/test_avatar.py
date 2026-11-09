@@ -66,6 +66,43 @@ def upload(
     )
 
 
+class TestTrailingSlashRoutes:
+    """The frontend apiClient always appends "/"; a redirect breaks behind HTTPS proxies."""
+
+    def test_own_avatar_routes_answer_without_redirect(
+        self, client: TestClient, auth_headers: dict, test_user: User
+    ):
+        response = client.put(
+            "/api/v1/users/me/avatar/",
+            files={"file": ("avatar.bin", PNG, "image/png")},
+            headers=auth_headers,
+            follow_redirects=False,
+        )
+        assert response.status_code == 200
+        avatar_path = f"/api/v1/users/{test_user.id}/avatar/"
+        assert client.get(avatar_path, follow_redirects=False).status_code == 200
+        response = client.delete(
+            "/api/v1/users/me/avatar/", headers=auth_headers, follow_redirects=False
+        )
+        assert response.status_code == 204
+
+    def test_user_avatar_routes_answer_without_redirect(
+        self, client: TestClient, admin_auth_headers: dict, test_user: User
+    ):
+        path = f"/api/v1/users/{test_user.id}/avatar/"
+        response = client.put(
+            path,
+            files={"file": ("avatar.bin", PNG, "image/png")},
+            headers=admin_auth_headers,
+            follow_redirects=False,
+        )
+        assert response.status_code == 200
+        response = client.delete(
+            path, headers=admin_auth_headers, follow_redirects=False
+        )
+        assert response.status_code == 204
+
+
 class TestOwnAvatar:
     def test_upload_view_replace_delete(
         self, client: TestClient, auth_headers: dict, test_user: User
