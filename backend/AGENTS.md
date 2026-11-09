@@ -73,8 +73,11 @@ Profile pictures are stored in Postgres on `users` (`avatar_data` LargeBinary, d
 | `DELETE /api/v1/users/{user_id}/avatar` | JWT, that user or `is_admin` | `204`; idempotent. |
 | `GET /api/v1/users/{user_id}/avatar` | none | Raw bytes with the stored `Content-Type`, `ETag` (honors `If-None-Match` with `304`), `Cache-Control`, `X-Content-Type-Options: nosniff`; `404` if the user has no avatar. |
 
-- Allowed types: png, jpeg, webp, gif, identified from **magic bytes** (`sniff_image_type`); the declared Content-Type and filename are ignored and the stored type is the detected one. Anything else is `415`. Max 2 MB (`MAX_AVATAR_BYTES`), otherwise `413`.
+- Allowed input types: png, jpeg, webp, gif, identified from **magic bytes** (`sniff_image_type`); the declared Content-Type and filename are ignored. Anything else is `415`. Max raw upload 10 MB (`MAX_AVATAR_BYTES`), otherwise `413`.
+- Every upload is **normalized** by `normalize_avatar` (Pillow, pinned in `requirements.txt`): decoded, EXIF orientation applied, downscaled so the longest side is at most 512 px (`MAX_AVATAR_DIMENSION`; aspect ratio kept, never upscaled), and re-encoded as WebP (quality 85; animated GIFs keep the first frame) so all metadata (EXIF, GPS, ICC, XMP) is dropped. The stored bytes are always `image/webp`.
+- Images over `MAX_IMAGE_PIXELS` (50 million, checked from the header before decoding; also sets Pillow's `Image.MAX_IMAGE_PIXELS` and catches `DecompressionBombError`) and undecodable or corrupt files are rejected with `415`.
 - Avatar changes are written to the audit log as `profile_updated` events (`details.changes.avatar` is `updated` or `removed`, plus `target_user_id`); deleting when there is no avatar logs nothing.
+- `GET /api/v1/recipes/{id}/permissions/` returns `user_avatar_url` (same value as `User.avatar_url`, or `null`) next to `user_username` for every listed permission, including the owner-only list shown to the public.
 - Uploads need `python-multipart` (in `requirements.txt`).
 
 ## 7. Testing Guidelines

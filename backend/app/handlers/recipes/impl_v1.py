@@ -619,6 +619,7 @@ def list_recipe_permissions_internal(recipe_id: str, user: Optional[User], db: S
     for permission in permissions:
         response = RecipePermissionDetail.model_validate(permission)
         response.user_username = permission.user.username
+        response.user_avatar_url = permission.user.avatar_url
         # Only expose email to owners/editors
         if is_privileged:
             response.user_email = permission.user.email

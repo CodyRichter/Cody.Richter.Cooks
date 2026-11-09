@@ -325,7 +325,7 @@ def revoke_api_token(
     "/me/avatar",
     response_model=UserResponseSchema,
     summary="Upload or replace your avatar",
-    description="Upload a profile picture as multipart field 'file'. PNG, JPEG, WebP or GIF only (detected from file contents), max 2 MB. Returns the updated user with avatar_url.",
+    description="Upload a profile picture as multipart field 'file'. PNG, JPEG, WebP or GIF only (detected from file contents), max 10 MB. The image is resized to at most 512 px and re-encoded as WebP. Returns the updated user with avatar_url.",
 )
 def set_my_avatar(
     request: Request,
