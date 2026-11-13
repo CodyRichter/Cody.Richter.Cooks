@@ -13,6 +13,7 @@
   - **Rule**: All server data fetching MUST use React Query. Do not use `useEffect` + `fetch` manually.
 - **Editor**: [Tiptap](https://tiptap.dev/) for rich text.
 - **Avatars**: Render every user picture with `UserAvatar` (`components/common/UserAvatar.tsx`), which takes the backend's relative `avatar_url` and falls back to initials. Account uploads are cropped with `react-easy-crop` (pinned) and re-encoded to a 512×512 WebP by `cropAvatar` (`utils/avatar.ts`) before upload.
+- **Settings pages**: Build account-style pages from `SettingsSection` and `SettingRow` (`components/account/Settings.tsx`): row actions are short `variant="default"` buttons that share one width, and destructive actions confirm through `ConfirmModal` (`components/common/ConfirmModal.tsx`), whose button is the only red. Use sentence case, show form errors inline on the field, and keep explanatory text out of dialogs.
 
 ## 2. Directory Structure (`src/`)
 - `app/`: Next.js App Router pages and layouts.

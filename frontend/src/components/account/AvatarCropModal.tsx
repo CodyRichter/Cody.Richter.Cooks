@@ -1,6 +1,6 @@
-import { ActionIcon, Box, Button, Group, Modal, Slider, Stack, Text } from "@mantine/core";
+import { ActionIcon, Box, Button, Group, Modal, Slider, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX, IconZoomIn, IconZoomOut } from "@tabler/icons-react";
+import { IconX, IconZoomIn, IconZoomOut } from "@tabler/icons-react";
 import { useState } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 
@@ -108,22 +108,17 @@ function CropEditor({ imageSrc, uploading, onCancel, onSave }: CropEditorProps) 
         </ActionIcon>
       </Group>
 
-      <Text size="xs" c="dimmed">
-        Drag to reposition and zoom to frame your face. Saved as a 512 × 512 picture.
-      </Text>
-
       <Group justify="flex-end" gap="xs">
         <Button variant="default" onClick={onCancel} disabled={uploading}>
           Cancel
         </Button>
         <Button
-          leftSection={<IconCheck size={16} />}
           loading={isProcessing || uploading}
           disabled={!cropPixels}
           onClick={handleSave}
           data-autofocus
         >
-          Save Picture
+          Save
         </Button>
       </Group>
     </Stack>
@@ -143,7 +138,7 @@ export default function AvatarCropModal({
       opened={opened}
       onClose={onCancel}
       onExitTransitionEnd={onExited}
-      title="Crop profile picture"
+      title="Adjust profile picture"
       centered
       closeOnClickOutside={!uploading}
       closeOnEscape={!uploading}

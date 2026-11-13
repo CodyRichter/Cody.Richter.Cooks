@@ -284,21 +284,37 @@ img {
   outline-offset: 2px;
 }
 
-/* Account page: the avatar is the upload button; a camera overlay appears on hover/focus */
+/* Account page settings rows, divided by a hairline */
+.settings-row {
+  padding-block: var(--mantine-spacing-md);
+}
+
+.settings-row + .settings-row {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.settings-row:last-child {
+  padding-bottom: 0;
+}
+
+/* One width for every row action so the buttons line up down the page */
+.settings-row-action {
+  flex-shrink: 0;
+}
+
+.settings-row-action .mantine-Button-root {
+  min-width: 96px;
+}
+
+/* Account page: the avatar is the picture control; the pencil badge keeps it discoverable on touch */
 .avatar-picker {
   position: relative;
   display: block;
-  width: fit-content;
   line-height: 0;
-  overflow: hidden;
   border-radius: 50%;
   flex-shrink: 0;
   cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.avatar-picker:hover {
-  box-shadow: var(--mantine-shadow-md);
+  transition: transform 150ms ease;
 }
 
 .avatar-picker:active {
@@ -329,13 +345,36 @@ img {
 }
 
 .avatar-picker:hover .avatar-picker-overlay,
-.avatar-picker:focus-visible .avatar-picker-overlay,
+.avatar-picker[data-expanded] .avatar-picker-overlay,
 .avatar-picker[data-busy] .avatar-picker-overlay,
 .avatar-dropzone[data-dragging] .avatar-picker-overlay {
   opacity: 1;
 }
 
+.avatar-picker-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--mantine-color-text);
+  background-color: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  box-shadow: var(--mantine-shadow-xs);
+  pointer-events: none;
+}
+
+.avatar-picker[data-busy] .avatar-picker-badge {
+  display: none;
+}
+
 .avatar-dropzone {
+  margin: calc(var(--mantine-spacing-xs) * -1);
+  padding: var(--mantine-spacing-xs);
   border: 1.5px dashed transparent;
   border-radius: var(--mantine-radius-md);
   transition: border-color 150ms ease, background-color 150ms ease;

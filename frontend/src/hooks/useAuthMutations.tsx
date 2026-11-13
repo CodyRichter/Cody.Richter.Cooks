@@ -7,7 +7,7 @@ import { authQueryKeys } from '@/contexts/AuthContext'
 import { clearTokens, setCachedUser, setSession, setTokens } from '@/utils/auth'
 import { ApiError } from '@/utils/apiClient'
 import { formatNotificationError } from '@/utils/notificationUtils'
-import { LoginRequest, User, UserRegistration } from '@/types/User'
+import { LoginRequest, User, UserRegistration, UserUpdate } from '@/types/User'
 
 interface ChangePasswordParams {
   currentPassword: string
@@ -188,11 +188,26 @@ export const useRemoveAvatar = () => {
   })
 }
 
+// Callers show field-level errors, so failures are not notified here
+export const useUpdateProfile = () => {
+  const refreshUser = useRefreshUser()
+
+  return useMutation({
+    mutationFn: (data: UserUpdate) => authApi.updateProfile(data),
+    onSuccess: refreshUser,
+  })
+}
+
 export const useChangePassword = () => {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: ({ currentPassword, newPassword }: ChangePasswordParams) =>
       authApi.changePassword(currentPassword, newPassword),
-    // Every other session was revoked; continue this one with the fresh tokens
-    onSuccess: (tokens) => setTokens(tokens.access_token, tokens.refresh_token)
+    // Every other session and AI token was revoked; continue this one with the fresh tokens
+    onSuccess: (tokens) => {
+      setTokens(tokens.access_token, tokens.refresh_token)
+      queryClient.invalidateQueries({ queryKey: ['api-tokens'] })
+    },
   })
 }

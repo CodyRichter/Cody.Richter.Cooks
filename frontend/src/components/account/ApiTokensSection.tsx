@@ -2,32 +2,34 @@ import {
   ActionIcon,
   Alert,
   Badge,
+  Box,
   Button,
-  Card,
-  Checkbox,
   Code,
   CopyButton,
   Group,
   Modal,
+  Radio,
   Select,
   Skeleton,
   Stack,
-  Table,
   Tabs,
   Text,
   TextInput,
-  Title,
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconCopy, IconKey, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 
+import { SettingRow, SettingsSection } from "@/components/account/Settings";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { apiBaseUrl } from "@/config/environment";
 import { useApiTokens, useCreateApiToken, useRevokeApiToken } from "@/hooks/useApiTokens";
 import { ApiToken, ApiTokenCreated, ApiTokenScope } from "@/types/ApiToken";
 
 const mcpUrl = `${apiBaseUrl}/mcp`;
+
+type Access = "edit" | "read";
 
 const expiryOptions = [
   { value: "30", label: "30 days" },
@@ -36,16 +38,29 @@ const expiryOptions = [
   { value: "never", label: "Never" },
 ];
 
-function formatDate(value: string | null) {
-  return value ? new Date(value).toLocaleDateString() : "Never";
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
-function tokenStatus(token: ApiToken) {
-  if (token.revoked_at) return <Badge color="gray" variant="light">Revoked</Badge>;
-  if (token.expires_at && new Date(token.expires_at) <= new Date()) {
-    return <Badge color="orange" variant="light">Expired</Badge>;
-  }
-  return <Badge color="green" variant="light">Active</Badge>;
+function inactiveReason(token: ApiToken): "Revoked" | "Expired" | null {
+  if (token.revoked_at) return "Revoked";
+  if (token.expires_at && new Date(token.expires_at) <= new Date()) return "Expired";
+  return null;
+}
+
+function tokenSummary(token: ApiToken) {
+  const access = token.scopes.includes("recipes:write") ? "View and edit" : "View only";
+  const lastUsed = token.last_used_at ? `Last used ${formatDate(token.last_used_at)}` : "Never used";
+  const expiry = token.revoked_at
+    ? `Revoked ${formatDate(token.revoked_at)}`
+    : token.expires_at
+      ? `${inactiveReason(token) ? "Expired" : "Expires"} ${formatDate(token.expires_at)}`
+      : "No expiry";
+  return [access, lastUsed, expiry].join(" · ");
 }
 
 function CopyableCode({ value }: { value: string }) {
@@ -57,7 +72,12 @@ function CopyableCode({ value }: { value: string }) {
       <CopyButton value={value}>
         {({ copied, copy }) => (
           <Tooltip label={copied ? "Copied" : "Copy"} withArrow>
-            <ActionIcon variant="subtle" color={copied ? "teal" : "gray"} onClick={copy}>
+            <ActionIcon
+              variant="subtle"
+              color={copied ? "teal" : "gray"}
+              aria-label="Copy"
+              onClick={copy}
+            >
               {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
             </ActionIcon>
           </Tooltip>
@@ -81,14 +101,13 @@ function NewTokenDetails({ created }: { created: ApiTokenCreated }) {
 
   return (
     <Stack>
-      <Alert color="yellow" title="Copy this token now">
-        It will not be shown again. Anyone with it can use the access you granted.
-      </Alert>
+      <Alert color="yellow">Copy this token now. You won&apos;t see it again.</Alert>
       <CopyableCode value={created.token} />
       <Tabs defaultValue="claude">
         <Tabs.List>
           <Tabs.Tab value="claude">Claude Code</Tabs.Tab>
           <Tabs.Tab value="gemini">Gemini CLI</Tabs.Tab>
+          <Tabs.Tab value="other">Other</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="claude" pt="sm">
           <Text size="sm" mb="xs">Run in a terminal:</Text>
@@ -98,6 +117,12 @@ function NewTokenDetails({ created }: { created: ApiTokenCreated }) {
           <Text size="sm" mb="xs">Add to <Code>~/.gemini/settings.json</Code>:</Text>
           <CopyableCode value={geminiConfig} />
         </Tabs.Panel>
+        <Tabs.Panel value="other" pt="sm">
+          <Text size="sm" mb="xs">MCP server URL (Streamable HTTP):</Text>
+          <CopyableCode value={mcpUrl} />
+          <Text size="sm" mt="sm" mb="xs">Send the token as a header:</Text>
+          <CopyableCode value={`Authorization: Bearer ${created.token}`} />
+        </Tabs.Panel>
       </Tabs>
     </Stack>
   );
@@ -105,14 +130,14 @@ function NewTokenDetails({ created }: { created: ApiTokenCreated }) {
 
 function CreateTokenModal({ opened, close }: { opened: boolean; close: () => void }) {
   const [name, setName] = useState("");
-  const [allowWrite, setAllowWrite] = useState(true);
+  const [access, setAccess] = useState<Access>("edit");
   const [expiry, setExpiry] = useState<string | null>("90");
   const [created, setCreated] = useState<ApiTokenCreated | null>(null);
   const createToken = useCreateApiToken();
 
   function resetAndClose() {
     setName("");
-    setAllowWrite(true);
+    setAccess("edit");
     setExpiry("90");
     setCreated(null);
     createToken.reset();
@@ -120,9 +145,8 @@ function CreateTokenModal({ opened, close }: { opened: boolean; close: () => voi
   }
 
   function handleCreate() {
-    const scopes: ApiTokenScope[] = allowWrite
-      ? ["recipes:read", "recipes:write"]
-      : ["recipes:read"];
+    const scopes: ApiTokenScope[] =
+      access === "edit" ? ["recipes:read", "recipes:write"] : ["recipes:read"];
     createToken.mutate(
       {
         name: name.trim(),
@@ -137,8 +161,9 @@ function CreateTokenModal({ opened, close }: { opened: boolean; close: () => voi
     <Modal
       opened={opened}
       onClose={resetAndClose}
-      title={created ? "Token Created" : "Create AI Access Token"}
+      title={created ? "Token created" : "New token"}
       size="lg"
+      centered
     >
       {created ? (
         <Stack>
@@ -148,39 +173,46 @@ function CreateTokenModal({ opened, close }: { opened: boolean; close: () => voi
           </Group>
         </Stack>
       ) : (
-        <Stack>
-          <TextInput
-            label="Name"
-            placeholder="e.g. Claude Code on laptop"
-            value={name}
-            onChange={(event) => setName(event.currentTarget.value)}
-            maxLength={100}
-            data-autofocus
-          />
-          <Checkbox
-            label="Allow creating and editing recipes"
-            description="Without this, the token can only search and read recipes."
-            checked={allowWrite}
-            onChange={(event) => setAllowWrite(event.currentTarget.checked)}
-          />
-          <Select
-            label="Expires after"
-            data={expiryOptions}
-            value={expiry}
-            onChange={setExpiry}
-            allowDeselect={false}
-          />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={resetAndClose}>Cancel</Button>
-            <Button
-              onClick={handleCreate}
-              loading={createToken.isPending}
-              disabled={!name.trim()}
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (name.trim()) handleCreate();
+          }}
+        >
+          <Stack>
+            <TextInput
+              label="Name"
+              placeholder="e.g. Claude Code on laptop"
+              value={name}
+              onChange={(event) => setName(event.currentTarget.value)}
+              maxLength={100}
+              data-autofocus
+            />
+            <Radio.Group
+              label="Access"
+              value={access}
+              onChange={(value) => setAccess(value as Access)}
             >
-              Create Token
-            </Button>
-          </Group>
-        </Stack>
+              <Stack gap="xs" mt={6}>
+                <Radio value="edit" label="View and edit recipes" />
+                <Radio value="read" label="View recipes" />
+              </Stack>
+            </Radio.Group>
+            <Select
+              label="Expires after"
+              data={expiryOptions}
+              value={expiry}
+              onChange={setExpiry}
+              allowDeselect={false}
+            />
+            <Group justify="flex-end" gap="xs" mt="xs">
+              <Button variant="default" onClick={resetAndClose}>Cancel</Button>
+              <Button type="submit" loading={createToken.isPending} disabled={!name.trim()}>
+                Create token
+              </Button>
+            </Group>
+          </Stack>
+        </form>
       )}
     </Modal>
   );
@@ -188,78 +220,86 @@ function CreateTokenModal({ opened, close }: { opened: boolean; close: () => voi
 
 export default function ApiTokensSection() {
   const [isCreateOpen, { open: openCreate, close: closeCreate }] = useDisclosure(false);
+  const [tokenToRevoke, setTokenToRevoke] = useState<ApiToken | null>(null);
   const { data: tokens, isLoading } = useApiTokens();
   const revokeToken = useRevokeApiToken();
 
   return (
-    <Card shadow="sm" radius="md" withBorder pb="lg" mt="md">
-      <Group justify="space-between">
-        <Group gap="xs">
-          <IconKey size={20} />
-          <Title order={4}>AI Assistant Access</Title>
-        </Group>
-        <Button size="compact-sm" leftSection={<IconPlus size={16} />} onClick={openCreate}>
-          Create Token
+    <SettingsSection
+      title="AI assistant access"
+      description="Connect AI assistants like Claude Code to your recipes."
+      action={
+        <Button
+          variant="default"
+          leftSection={<IconPlus size={16} />}
+          onClick={openCreate}
+          style={{ flexShrink: 0 }}
+        >
+          New token
         </Button>
-      </Group>
-      <Text mt="md" size="sm" c="dimmed">
-        Tokens let AI assistants such as Claude Code or Gemini CLI add and edit your
-        recipes through the MCP server at <Code>{mcpUrl}</Code>. They cannot delete
-        recipes, change sharing, or access your account.
-      </Text>
-
+      }
+    >
       {isLoading ? (
-        <Skeleton height={80} mt="md" />
+        <Box className="settings-row">
+          <Skeleton h={18} w={160} radius="sm" />
+          <Skeleton h={14} w={280} radius="sm" mt={6} />
+        </Box>
       ) : tokens && tokens.length > 0 ? (
-        <Table.ScrollContainer minWidth={560} mt="md">
-          <Table verticalSpacing="xs">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Name</Table.Th>
-                <Table.Th>Token</Table.Th>
-                <Table.Th>Access</Table.Th>
-                <Table.Th>Last Used</Table.Th>
-                <Table.Th>Expires</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th />
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {tokens.map((token) => (
-                <Table.Tr key={token.id}>
-                  <Table.Td>{token.name}</Table.Td>
-                  <Table.Td><Code>{token.token_prefix}…</Code></Table.Td>
-                  <Table.Td>
-                    {token.scopes.includes("recipes:write") ? "Read & write" : "Read only"}
-                  </Table.Td>
-                  <Table.Td>{formatDate(token.last_used_at)}</Table.Td>
-                  <Table.Td>{formatDate(token.expires_at)}</Table.Td>
-                  <Table.Td>{tokenStatus(token)}</Table.Td>
-                  <Table.Td>
-                    {!token.revoked_at && (
-                      <Tooltip label="Revoke" withArrow>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          aria-label={`Revoke ${token.name}`}
-                          loading={revokeToken.isPending && revokeToken.variables === token.id}
-                          onClick={() => revokeToken.mutate(token.id)}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </Table.ScrollContainer>
+        tokens.map((token) => {
+          const inactive = inactiveReason(token);
+          return (
+            <SettingRow
+              key={token.id}
+              label={
+                <Group gap="xs" component="span">
+                  {token.name}
+                  {inactive && (
+                    <Badge color="gray" variant="light" size="sm">
+                      {inactive}
+                    </Badge>
+                  )}
+                </Group>
+              }
+              value={
+                <>
+                  <Code>{token.token_prefix}…</Code> {tokenSummary(token)}
+                </>
+              }
+              action={
+                !inactive && (
+                  <Button
+                    variant="default"
+                    aria-label={`Revoke ${token.name}`}
+                    onClick={() => setTokenToRevoke(token)}
+                  >
+                    Revoke
+                  </Button>
+                )
+              }
+            />
+          );
+        })
       ) : (
-        <Text mt="md" size="sm">No tokens yet.</Text>
+        <Text className="settings-row" size="sm" c="dimmed">
+          No tokens yet.
+        </Text>
       )}
 
       <CreateTokenModal opened={isCreateOpen} close={closeCreate} />
-    </Card>
+
+      <ConfirmModal
+        opened={tokenToRevoke !== null}
+        title="Revoke token?"
+        confirmLabel="Revoke"
+        loading={revokeToken.isPending}
+        onClose={() => setTokenToRevoke(null)}
+        onConfirm={() =>
+          tokenToRevoke &&
+          revokeToken.mutate(tokenToRevoke.id, { onSuccess: () => setTokenToRevoke(null) })
+        }
+      >
+        <strong>{tokenToRevoke?.name}</strong> will stop working immediately.
+      </ConfirmModal>
+    </SettingsSection>
   );
 }
