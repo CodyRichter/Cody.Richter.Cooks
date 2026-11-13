@@ -120,12 +120,14 @@ class UserLogin(BaseModel):
 
     username: str = Field(..., description="Username or email for login")
     password: str = Field(..., description="User password")
+    captcha_token: str = Field(..., description="Cloudflare Turnstile token")
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "username": "chef_cody",
                 "password": "SuperSecretPassword123!",
+                "captcha_token": "0.XXXXX-turnstile-token-XXXXX",
             }
         }
     )

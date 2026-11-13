@@ -132,9 +132,30 @@ class TestUserAPI(APITestBase):
     @pytest.mark.parametrize(
         "login_data,should_succeed",
         [
-            ({"username": "testuser", "password": "TestPassword123!"}, True),
-            ({"username": "testuser", "password": "wrongpassword"}, False),
-            ({"username": "nonexistent", "password": "TestPassword123!"}, False),
+            (
+                {
+                    "username": "testuser",
+                    "password": "TestPassword123!",
+                    "captcha_token": "test",
+                },
+                True,
+            ),
+            (
+                {
+                    "username": "testuser",
+                    "password": "wrongpassword",
+                    "captcha_token": "test",
+                },
+                False,
+            ),
+            (
+                {
+                    "username": "nonexistent",
+                    "password": "TestPassword123!",
+                    "captcha_token": "test",
+                },
+                False,
+            ),
         ],
     )
     def test_user_login(
@@ -164,7 +185,11 @@ class TestUserAPI(APITestBase):
         """Test login using email instead of username."""
         response = client.post(
             "/api/v1/users/login",
-            json={"username": test_user.email, "password": "TestPassword123!"},
+            json={
+                "username": test_user.email,
+                "password": "TestPassword123!",
+                "captcha_token": "test",
+            },
         )
 
         data = self.assert_success_response(response)
@@ -175,7 +200,11 @@ class TestUserAPI(APITestBase):
         # Login to get tokens
         login_response = client.post(
             "/api/v1/users/login",
-            json={"username": test_user.username, "password": "TestPassword123!"},
+            json={
+                "username": test_user.username,
+                "password": "TestPassword123!",
+                "captcha_token": "test",
+            },
         )
         tokens = self.assert_success_response(login_response)
 
@@ -209,7 +238,11 @@ class TestUserAPI(APITestBase):
             # Get access token and try to use as refresh token
             login_response = client.post(
                 "/api/v1/users/login",
-                json={"username": test_user.username, "password": "TestPassword123!"},
+                json={
+                    "username": test_user.username,
+                    "password": "TestPassword123!",
+                    "captcha_token": "test",
+                },
             )
             tokens = login_response.json()
             refresh_data = {"refresh_token": tokens["access_token"]}
@@ -300,7 +333,11 @@ class TestUserAPI(APITestBase):
         self, client: TestClient, test_user: User
     ):
         """Changing the password signs out every other session."""
-        login = {"username": test_user.username, "password": "TestPassword123!"}
+        login = {
+            "username": test_user.username,
+            "password": "TestPassword123!",
+            "captcha_token": "test",
+        }
         other_session = client.post("/api/v1/users/login", json=login).json()
         this_session = client.post("/api/v1/users/login", json=login).json()
 
@@ -329,7 +366,11 @@ class TestUserAPI(APITestBase):
     def test_logout_all_revokes_every_session(
         self, client: TestClient, test_user: User
     ):
-        login = {"username": test_user.username, "password": "TestPassword123!"}
+        login = {
+            "username": test_user.username,
+            "password": "TestPassword123!",
+            "captcha_token": "test",
+        }
         tokens = client.post("/api/v1/users/login", json=login).json()
         headers = {"Authorization": f"Bearer {tokens['access_token']}"}
 
@@ -347,13 +388,68 @@ class TestUserAPI(APITestBase):
 
         limiter.reset()
         limiter.enabled = True
-        login = {"username": test_user.username, "password": "wrong"}
+        login = {
+            "username": test_user.username,
+            "password": "wrong",
+            "captcha_token": "test",
+        }
         statuses = [
             client.post("/api/v1/users/login", json=login).status_code
             for _ in range(11)
         ]
         assert statuses[:10] == [401] * 10
         assert statuses[10] == 429
+
+    def test_login_requires_captcha(self, client: TestClient, test_user: User):
+        login = {"username": test_user.username, "password": "TestPassword123!"}
+        response = client.post("/api/v1/users/login", json=login)
+        assert response.status_code == 422
+
+    def test_login_rejects_invalid_captcha(
+        self, client: TestClient, test_user: User, monkeypatch
+    ):
+        monkeypatch.setattr(
+            "app.handlers.users.impl_v1.verify_turnstile_token", lambda token: False
+        )
+        login = {
+            "username": test_user.username,
+            "password": "TestPassword123!",
+            "captcha_token": "forged",
+        }
+        response = client.post("/api/v1/users/login", json=login)
+        self.assert_error_response(response, 400, "Invalid captcha token")
+
+    def test_profile_update_is_rate_limited(
+        self, client: TestClient, test_user: User, auth_headers: dict
+    ):
+        from app.utils.rate_limit import limiter
+
+        limiter.reset()
+        limiter.enabled = True
+        statuses = [
+            client.put(
+                "/api/v1/users/profile",
+                json={"username": test_user.username},
+                headers=auth_headers,
+            ).status_code
+            for _ in range(11)
+        ]
+        assert statuses[:10] == [200] * 10
+        assert statuses[10] == 429
+
+    def test_avatar_changes_are_rate_limited(
+        self, client: TestClient, auth_headers: dict
+    ):
+        from app.utils.rate_limit import limiter
+
+        limiter.reset()
+        limiter.enabled = True
+        statuses = [
+            client.delete("/api/v1/users/me/avatar", headers=auth_headers).status_code
+            for _ in range(21)
+        ]
+        assert statuses[:20] == [204] * 20
+        assert statuses[20] == 429
 
     def test_user_profile_unauthorized(self, client: TestClient):
         """Test profile operations without authentication."""
@@ -436,7 +532,11 @@ class TestUserAPI(APITestBase):
         # 4. Submit new password
         existing_session = client.post(
             "/api/v1/users/login/",
-            json={"username": test_user.username, "password": "TestPassword123!"},
+            json={
+                "username": test_user.username,
+                "password": "TestPassword123!",
+                "captcha_token": "test",
+            },
         ).json()
         new_password = "NewStrongPassword123!"
         reset_resp = client.post(
@@ -453,7 +553,11 @@ class TestUserAPI(APITestBase):
         # 5. Login with new password succeeds
         login_resp = client.post(
             "/api/v1/users/login/",
-            json={"username": test_user.username, "password": new_password},
+            json={
+                "username": test_user.username,
+                "password": new_password,
+                "captcha_token": "test",
+            },
         )
         assert login_resp.status_code == 200
         assert "access_token" in login_resp.json()
@@ -461,7 +565,11 @@ class TestUserAPI(APITestBase):
         # 6. Login with old password fails
         old_login_resp = client.post(
             "/api/v1/users/login/",
-            json={"username": test_user.username, "password": "TestPassword123!"},
+            json={
+                "username": test_user.username,
+                "password": "TestPassword123!",
+                "captcha_token": "test",
+            },
         )
         assert old_login_resp.status_code == 401
 

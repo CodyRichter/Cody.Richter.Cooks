@@ -10,7 +10,7 @@ echo "Logging in as $USERNAME..."
 # Login and get access token
 LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/users/login/" \
      -H "Content-Type: application/json" \
-     -d "{\"username\": \"$USERNAME\", \"password\": \"$PASSWORD\"}")
+     -d "{\"username\": \"$USERNAME\", \"password\": \"$PASSWORD\", \"captcha_token\": \"local\"}")
 
 TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.access_token')
 

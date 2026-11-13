@@ -38,6 +38,7 @@ export interface TokenResponse {
 export interface LoginRequest {
   username: string
   password: string
+  captcha_token: string
 }
 
 // Token refresh request interface

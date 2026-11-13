@@ -80,7 +80,7 @@ def register_user(
     "/login/",
     response_model=AuthTokenResponse,
     summary="User login and JWT token generation",
-    description="Authenticate with username/email and password to receive JWT access and refresh tokens along with user information. Use this tool to establish an authenticated session.",
+    description="Authenticate with username/email, password and a Cloudflare Turnstile captcha token to receive JWT access and refresh tokens along with user information. Use this tool to establish an authenticated session.",
 )
 @limiter.limit("10/minute")
 def login_user(login_data: UserLogin, request: Request, db: Session = Depends(get_db)):
@@ -126,6 +126,8 @@ def get_user_profile(current_user: User = Depends(get_current_active_user)):
     summary="Update current user profile",
     description="Update profile information such as username and email for the currently authenticated user. Changing email requires current_password. Use this tool when modifying account details.",
 )
+# Limited because changing email checks current_password
+@limiter.limit("10/hour")
 def update_user_profile(
     profile_data: UserProfileUpdate,
     request: Request,
@@ -328,6 +330,7 @@ def revoke_api_token(
     description="Upload a profile picture as multipart field 'file'. PNG, JPEG, WebP or GIF only (detected from file contents), max 10 MB. The image is resized to at most 512 px and re-encoded as WebP. Returns the updated user with avatar_url.",
 )
 @router.put("/me/avatar/", response_model=UserResponseSchema, include_in_schema=False)
+@limiter.limit("20/hour")
 def set_my_avatar(
     request: Request,
     file: UploadFile = File(...),
@@ -347,6 +350,7 @@ def set_my_avatar(
 @router.delete(
     "/me/avatar/", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=False
 )
+@limiter.limit("20/hour")
 def delete_my_avatar(
     request: Request,
     current_user: User = Depends(get_current_active_user),
@@ -365,6 +369,7 @@ def delete_my_avatar(
 @router.put(
     "/{user_id}/avatar/", response_model=UserResponseSchema, include_in_schema=False
 )
+@limiter.limit("20/hour")
 def set_user_avatar(
     user_id: str,
     request: Request,
@@ -387,6 +392,7 @@ def set_user_avatar(
     status_code=status.HTTP_204_NO_CONTENT,
     include_in_schema=False,
 )
+@limiter.limit("20/hour")
 def delete_user_avatar(
     user_id: str,
     request: Request,
