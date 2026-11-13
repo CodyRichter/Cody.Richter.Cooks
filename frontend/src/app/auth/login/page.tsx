@@ -14,10 +14,13 @@ import {
 } from "@mantine/core";
 import { GuestRoute } from "@/components/auth/ProtectedRoute";
 import { useLogin } from "@/hooks/useAuthMutations";
-import { useState } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+import { useRef, useState } from "react";
 
 export default function LoginPage() {
   const { mutate: login, isPending } = useLogin();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
 
   const [formData, setFormData] = useState({
     identifier: "",
@@ -44,8 +47,17 @@ export default function LoginPage() {
   // GuestRoute redirects once the session is set
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    login({ username: formData.identifier, password: formData.password });
+    if (!validateForm() || !captchaToken) return;
+    login(
+      { username: formData.identifier, password: formData.password, captcha_token: captchaToken },
+      {
+        // Captcha tokens are single-use, so a failed attempt needs a fresh one
+        onError: () => {
+          setCaptchaToken(null);
+          turnstileRef.current?.reset();
+        },
+      }
+    );
   };
 
   return (
@@ -95,11 +107,23 @@ export default function LoginPage() {
               error={formErrors.password}
             />
 
+            <Group justify="center" mb="md">
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                options={{
+                  appearance: 'execute',
+                }}
+              />
+            </Group>
+
             <Button
               type="submit"
               fullWidth
               loading={isPending}
-              disabled={!formData.identifier || !formData.password}
+              disabled={!formData.identifier || !formData.password || !captchaToken}
               mb="md"
             >
               Sign In
