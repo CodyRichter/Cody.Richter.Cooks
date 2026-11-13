@@ -1,161 +1,108 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Card,
-  Divider,
-  Flex,
-  Group,
-  Text,
-  Title,
-  Tooltip,
-  noop,
-  Badge,
-} from "@mantine/core";
-import {
-  IconAlertTriangle,
-  IconBrandTelegram,
-  IconCircleDashedCheck,
-  IconLogout,
-  IconShieldCheck,
-} from "@tabler/icons-react";
+import { Anchor, Badge, Box, Button, Container, Stack, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconShieldCheck } from "@tabler/icons-react";
 
 import ApiTokensSection from "@/components/account/ApiTokensSection";
-import AvatarSection from "@/components/account/AvatarSection";
 import ChangePasswordModal from "@/components/account/ChangePasswordModal";
+import EditEmailModal from "@/components/account/EditEmailModal";
+import EditUsernameModal from "@/components/account/EditUsernameModal";
+import ProfileHeader from "@/components/account/ProfileHeader";
+import { SettingRow, SettingsSection } from "@/components/account/Settings";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { AccountSkeleton } from "@/components/loading";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogoutAllSessions } from "@/hooks/useAuthMutations";
-import { useDisclosure } from "@mantine/hooks";
 
-export default function AccountDetailsPage() {
-  const auth = useAuth();
-
-  // Change Password Dialog State
-  const [
-    isChangePasswordDialogOpen,
-    { toggle: toggleChangePasswordDialog, close: closeChangePasswordDialog },
-  ] = useDisclosure(false);
-
-  const { mutate: signOutEverywhere, isPending: isSigningOutEverywhere } = useLogoutAllSessions();
-
-  const username = auth.user?.username || "<Username Not Found>";
-  const email = auth.user?.email || "<Email Not Found>";
-  const isAdmin = auth.user?.is_admin || false;
-
-  // For now, assume email is verified since we don't have email verification in the backend yet
-  const emailVerified = true;
+export default function AccountPage() {
+  const { user } = useAuth();
+  const [isUsernameOpen, usernameModal] = useDisclosure(false);
+  const [isEmailOpen, emailModal] = useDisclosure(false);
+  const [isPasswordOpen, passwordModal] = useDisclosure(false);
+  const [isSignOutOpen, signOutModal] = useDisclosure(false);
+  const signOutEverywhere = useLogoutAllSessions();
 
   return (
     <ProtectedRoute fallback={<AccountSkeleton />}>
-      <Card shadow="sm" radius="md" withBorder pb="lg">
-        <Group gap="xs">
-          <Title order={4}>Account</Title>
-          {isAdmin && (
-            <Badge color="red" variant="light" leftSection={<IconShieldCheck size={14} />}>
-              Administrator
-            </Badge>
-          )}
-        </Group>
-        <Text mt="md" size="sm" color="dimmed">
-          From this page, you can view your account details and manage your
-          profile settings.
-        </Text>
+      <Container size="md" px={0}>
+        <Stack gap="lg">
+          <Title order={1} size="h2">
+            Account
+          </Title>
 
-        <Box mt="md">
-          <AvatarSection />
-        </Box>
-
-        <Text mt="md" size="md">
-          <strong>Username:</strong> {username}
-        </Text>
-        <Flex
-          gap="xs"
-          justify="flex-start"
-          align="flex-end"
-          direction="row"
-          wrap="wrap"
-        >
-          <Text mt="md" size="md">
-            <strong>Email Address:</strong> {email}
-          </Text>
-
-          {emailVerified ? (
-            <Tooltip label="Email Is Verified" withArrow position="right">
-              <IconCircleDashedCheck color="#12b987" size={24} />
-            </Tooltip>
-          ) : (
-            <>
-              <Tooltip label="Email Is Not Verified" withArrow position="right">
-                <IconAlertTriangle color="#ff5454" size={24} />
-              </Tooltip>
-
-              <Button
-                size="compact-sm"
-                variant="subtle"
-                className="verifyEmailButton"
-                onClick={() => noop()}
-                rightSection={<IconBrandTelegram size={16} />}
-              >
-                Send Verification Email
-              </Button>
-            </>
-          )}
-        </Flex>
-
-        <Divider my="md" />
-
-        <Flex
-          gap="xs"
-          justify="flex-start"
-          align="flex-end"
-          direction="row"
-          wrap="wrap"
-        >
-          {/* Change Password using JWT API */}
-          <Text mt="md" size="md">
-            <strong>Password:</strong>
-          </Text>
-          <Button
-            size="compact-sm"
-            variant="subtle"
-            onClick={toggleChangePasswordDialog}
+          <SettingsSection
+            title="Profile"
+            action={
+              user?.is_admin && (
+                <Badge
+                  color="red"
+                  variant="light"
+                  size="lg"
+                  leftSection={<IconShieldCheck size={16} />}
+                  style={{ flexShrink: 0 }}
+                >
+                  Administrator
+                </Badge>
+              )
+            }
           >
-            Change Password
-          </Button>
-        </Flex>
+            <ProfileHeader />
+            <SettingRow
+              label="Username"
+              value={user?.username}
+              action={
+                <Button variant="default" onClick={usernameModal.open}>
+                  Edit
+                </Button>
+              }
+            />
+            <SettingRow
+              label="Email"
+              value={user?.email}
+              action={
+                <Button variant="default" onClick={emailModal.open}>
+                  Edit
+                </Button>
+              }
+            />
+          </SettingsSection>
 
-        <Flex
-          gap="xs"
-          justify="flex-start"
-          align="flex-end"
-          direction="row"
-          wrap="wrap"
-        >
-          <Text mt="md" size="md">
-            <strong>Sessions:</strong>
-          </Text>
-          <Button
-            size="compact-sm"
-            variant="subtle"
-            color="red"
-            loading={isSigningOutEverywhere}
-            onClick={() => signOutEverywhere()}
-            leftSection={<IconLogout size={16} />}
-          >
-            Sign Out of All Devices
-          </Button>
-        </Flex>
-      </Card>
+          <SettingsSection title="Security">
+            <SettingRow
+              label="Password"
+              value="••••••••"
+              action={
+                <Button variant="default" onClick={passwordModal.open}>
+                  Change
+                </Button>
+              }
+            />
+            <Box className="settings-row">
+              <Anchor component="button" type="button" size="sm" c="dimmed" onClick={signOutModal.open}>
+                Sign out of all devices
+              </Anchor>
+            </Box>
+          </SettingsSection>
 
-      <ApiTokensSection />
+          <ApiTokensSection />
+        </Stack>
+      </Container>
 
-      <ChangePasswordModal
-        opened={isChangePasswordDialogOpen}
-        close={closeChangePasswordDialog}
-      />
+      <EditUsernameModal opened={isUsernameOpen} close={usernameModal.close} />
+      <EditEmailModal opened={isEmailOpen} close={emailModal.close} />
+      <ChangePasswordModal opened={isPasswordOpen} close={passwordModal.close} />
+      <ConfirmModal
+        opened={isSignOutOpen}
+        title="Sign out of all devices?"
+        confirmLabel="Sign out"
+        loading={signOutEverywhere.isPending}
+        onClose={signOutModal.close}
+        onConfirm={() => signOutEverywhere.mutate(undefined, { onSettled: signOutModal.close })}
+      >
+        This includes this device, and revokes your AI assistant tokens. This can&apos;t be undone.
+      </ConfirmModal>
     </ProtectedRoute>
   );
 }

@@ -1,10 +1,11 @@
-import { Box, Button, Group, Loader, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Box, Group, Loader, Menu, Text, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconCamera, IconPhotoUp, IconTrash, IconX } from "@tabler/icons-react";
+import { IconCamera, IconPencil, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 
 import AvatarCropModal from "@/components/account/AvatarCropModal";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRemoveAvatar, useUploadAvatar } from "@/hooks/useAuthMutations";
@@ -12,7 +13,8 @@ import { AVATAR_MIME_TYPES, validateAvatarFile } from "@/utils/avatar";
 
 const hasFiles = (event: DragEvent) => event.dataTransfer.types.includes("Files");
 
-export default function AvatarSection() {
+// The account's identity: picture (click or drop a photo to change it), username and join date
+export default function ProfileHeader() {
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -24,6 +26,9 @@ export default function AvatarSection() {
 
   const hasAvatar = Boolean(user?.avatar_url);
   const isBusy = uploadAvatar.isPending || removeAvatar.isPending;
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" })
+    : null;
 
   function openPicker() {
     inputRef.current?.click();
@@ -78,72 +83,61 @@ export default function AvatarSection() {
     setCropSrc(null);
   }
 
-  function handleSave(file: File) {
-    uploadAvatar.mutate(file, { onSuccess: closeCrop });
-  }
-
-  function handleConfirmRemove() {
-    removeAvatar.mutate(undefined, { onSuccess: closeConfirm });
-  }
+  const avatarButton = (
+    <UnstyledButton
+      className="avatar-picker"
+      data-busy={isBusy || undefined}
+      disabled={isBusy}
+      onClick={hasAvatar ? undefined : openPicker}
+      aria-label={hasAvatar ? "Edit profile picture" : "Add a profile picture"}
+    >
+      <UserAvatar avatarUrl={user?.avatar_url} username={user?.username} size={80} decorative />
+      <Box component="span" className="avatar-picker-overlay">
+        {isBusy ? <Loader size="sm" color="white" /> : <IconCamera size={24} stroke={1.75} />}
+      </Box>
+      <Box component="span" className="avatar-picker-badge">
+        <IconPencil size={14} />
+      </Box>
+    </UnstyledButton>
+  );
 
   return (
-    <>
-      <Box
+    <Box className="settings-row">
+      <Group
         className="avatar-dropzone"
         data-dragging={isDragging || undefined}
-        p="sm"
-        mx="calc(var(--mantine-spacing-sm) * -1)"
+        gap="lg"
+        wrap="nowrap"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <Group gap="lg" wrap="nowrap" align="center">
-          <UnstyledButton
-            className="avatar-picker"
-            data-busy={isBusy || undefined}
-            disabled={isBusy}
-            onClick={openPicker}
-            aria-label={hasAvatar ? "Change profile picture" : "Upload a profile picture"}
-          >
-            <UserAvatar avatarUrl={user?.avatar_url} username={user?.username} size={88} decorative />
-            <Box component="span" className="avatar-picker-overlay">
-              {isBusy ? <Loader size="sm" color="white" /> : <IconCamera size={28} stroke={1.75} />}
-            </Box>
-          </UnstyledButton>
+        {hasAvatar ? (
+          <Menu position="bottom-start" shadow="md">
+            <Menu.Target>{avatarButton}</Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item leftSection={<IconUpload size={16} />} onClick={openPicker}>
+                Upload new picture
+              </Menu.Item>
+              <Menu.Item color="red" leftSection={<IconTrash size={16} />} onClick={openConfirm}>
+                Remove picture
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        ) : (
+          avatarButton
+        )}
 
-          <Stack gap={4} style={{ minWidth: 0 }}>
-            <Text fw={600}>Profile Picture</Text>
+        <Box miw={0}>
+          <Text fw={600} size="xl" truncate>
+            {user?.username}
+          </Text>
+          {memberSince && (
             <Text size="sm" c="dimmed">
-              {isDragging
-                ? "Drop your photo to crop it."
-                : "Click your picture or drop a photo here. PNG, JPEG, WebP or GIF."}
+              Member since {memberSince}
             </Text>
-            <Group gap="xs" mt={6}>
-              <Button
-                size="compact-sm"
-                variant="light"
-                loading={uploadAvatar.isPending}
-                disabled={isBusy}
-                onClick={openPicker}
-                leftSection={<IconPhotoUp size={16} />}
-              >
-                {hasAvatar ? "Change Picture" : "Upload Picture"}
-              </Button>
-              {hasAvatar && (
-                <Button
-                  size="compact-sm"
-                  variant="subtle"
-                  color="red"
-                  disabled={isBusy}
-                  onClick={openConfirm}
-                  leftSection={<IconTrash size={16} />}
-                >
-                  Remove
-                </Button>
-              )}
-            </Group>
-          </Stack>
-        </Group>
+          )}
+        </Box>
 
         <input
           ref={inputRef}
@@ -154,33 +148,25 @@ export default function AvatarSection() {
           tabIndex={-1}
           aria-hidden
         />
-      </Box>
+      </Group>
 
       <AvatarCropModal
         imageSrc={cropSrc}
         opened={isCropOpen}
         uploading={uploadAvatar.isPending}
         onCancel={closeCrop}
-        onSave={handleSave}
+        onSave={(file) => uploadAvatar.mutate(file, { onSuccess: closeCrop })}
         onExited={handleCropExited}
       />
 
-      <Modal opened={isConfirmOpen} onClose={closeConfirm} title="Remove profile picture?" centered>
-        <Group gap="md" wrap="nowrap" align="center">
-          <UserAvatar avatarUrl={user?.avatar_url} username={user?.username} size={48} />
-          <Text size="sm">
-            Your picture will be removed and your initials will be shown instead.
-          </Text>
-        </Group>
-        <Group justify="flex-end" gap="xs" mt="lg">
-          <Button variant="default" onClick={closeConfirm} disabled={removeAvatar.isPending}>
-            Cancel
-          </Button>
-          <Button color="red" loading={removeAvatar.isPending} onClick={handleConfirmRemove}>
-            Remove Picture
-          </Button>
-        </Group>
-      </Modal>
-    </>
+      <ConfirmModal
+        opened={isConfirmOpen}
+        title="Remove profile picture?"
+        confirmLabel="Remove"
+        loading={removeAvatar.isPending}
+        onClose={closeConfirm}
+        onConfirm={() => removeAvatar.mutate(undefined, { onSuccess: closeConfirm })}
+      />
+    </Box>
   );
 }

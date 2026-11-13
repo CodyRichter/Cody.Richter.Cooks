@@ -29,7 +29,7 @@ export const useCreateApiToken = () => {
     },
     onError: (error) => {
       notifications.show({
-        title: 'Failed to Create Token',
+        title: 'Could not create token',
         message: formatNotificationError(error),
         color: 'red',
         icon: <IconAlertTriangle size={20} />,
@@ -47,7 +47,7 @@ export const useRevokeApiToken = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apiTokensKey(user?.id) })
       notifications.show({
-        title: 'Token Revoked',
+        title: 'Token revoked',
         message: 'AI tools using this token can no longer access your recipes.',
         color: 'green',
         icon: <IconCheck size={20} />,
@@ -55,7 +55,7 @@ export const useRevokeApiToken = () => {
     },
     onError: (error) => {
       notifications.show({
-        title: 'Failed to Revoke Token',
+        title: 'Could not revoke token',
         message: formatNotificationError(error),
         color: 'red',
         icon: <IconAlertTriangle size={20} />,
